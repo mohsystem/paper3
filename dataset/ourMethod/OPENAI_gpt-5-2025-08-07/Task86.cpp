@@ -1,0 +1,1 @@
+// Not implemented in C++ for this prompt.

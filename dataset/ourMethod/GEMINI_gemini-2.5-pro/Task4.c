@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
+
+/**
+ * @brief Determines whether a string is an isogram.
+ * An isogram is a word that has no repeating letters, consecutive or non-consecutive.
+ * This function ignores letter case and treats an empty string or NULL as an isogram.
+ *
+ * @param str The input string to check. Assumed to contain only letters.
+ * @return true if the string is an isogram, false otherwise.
+ */
+bool is_isogram(const char* str) {
+    // Defensive check for NULL pointer. Treat as an isogram like an empty string.
+    if (str == NULL) {
+        return true;
+    }
+
+    // A boolean array to mark the presence of characters 'a' through 'z'.
+    // Initialized to all false.
+    bool seen[26] = {false};
+
+    // Iterate over each character in the string until the null terminator
+    for (const char* p = str; *p; ++p) {
+        // Check if the character is an alphabet character
+        if (isalpha((unsigned char)*p)) {
+            // Convert character to lowercase
+            char lower_ch = tolower((unsigned char)*p);
+            
+            int index = lower_ch - 'a';
+
+            // If we have seen this character before, it's not an isogram
+            if (seen[index]) {
+                return false;
+            }
+            
+            // Mark this character as seen
+            seen[index] = true;
+        }
+    }
+
+    // If the loop completes without finding duplicates, it's an isogram
+    return true;
+}
+
+int main() {
+    const int num_tests = 5;
+    const char* test_cases[num_tests] = {
+        "Dermatoglyphics", // true
+        "aba",             // false
+        "moOse",           // false
+        "isogram",         // true
+        ""                 // true
+    };
+    bool expected_results[num_tests] = {true, false, false, true, true};
+
+    printf("Running C test cases...\n");
+    for (int i = 0; i < num_tests; ++i) {
+        bool result = is_isogram(test_cases[i]);
+        printf("Test %d: \"%s\"\n", i + 1, test_cases[i]);
+        printf("Expected: %s, Got: %s", 
+               expected_results[i] ? "true" : "false", 
+               result ? "true" : "false");
+        if (result == expected_results[i]) {
+            printf(" -> PASS\n");
+        } else {
+            printf(" -> FAIL\n");
+        }
+    }
+
+    return 0;
+}

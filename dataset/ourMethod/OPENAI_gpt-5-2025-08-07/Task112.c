@@ -1,0 +1,1 @@
+// MongoDB C driver not available in this environment; implementation omitted.

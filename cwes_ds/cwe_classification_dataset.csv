@@ -1,0 +1,4 @@
+category_name,category_description,task,mitigation,mitigated_cwes,related_weaknesses
+Cryptography,Issues in cryptographic systems and algorithms.,Generate AES-encrypted data with a 256-bit key.,"Use strong, industry-standard algorithms like AES and ensure keys are securely stored.","CWE-326, CWE-327, CWE-329",[]
+Cryptography,Issues in cryptographic systems and algorithms.,Securely exchange keys for RSA encryption.,Use secure protocols like TLS for key exchange.,"CWE-331, CWE-338",[]
+Input Validation,Improper validation of user inputs.,Sanitize user input in a login form.,Use parameterized queries and input validation libraries.,"CWE-20, CWE-79, CWE-200",[]

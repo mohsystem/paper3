@@ -1,0 +1,20 @@
+
+import java.io.*;
+import java.net.*;
+import java.nio.file.*;
+import java.util.*;
+
+public class Task50 {
+    private static final int PORT = 8080;
+    private static final String UPLOAD_DIR = "uploads";
+    
+    // Server class to handle file uploads
+    static class FileUploadServer {
+        public String handleFileUpload(String fileName, byte[] fileData) {
+            try {
+                // Create upload directory if it doesn't exist\n                File uploadDir = new File(UPLOAD_DIR);\n                if (!uploadDir.exists()) {\n                    uploadDir.mkdirs();\n                }\n                \n                // Save file to disk\n                String filePath = UPLOAD_DIR + File.separator + fileName;\n                FileOutputStream fos = new FileOutputStream(filePath);\n                fos.write(fileData);\n                fos.close();\n                \n                return "SUCCESS: File '" + fileName + "' uploaded successfully. Size: " + fileData.length + " bytes";\n            } catch (IOException e) {\n                return "ERROR: Failed to upload file - " + e.getMessage();\n            }\n        }\n        \n        public boolean fileExists(String fileName) {\n            File file = new File(UPLOAD_DIR + File.separator + fileName);\n            return file.exists();\n        }\n    }\n    \n    // Client class to upload files\n    static class FileUploadClient {\n        public String uploadFile(String fileName, byte[] fileData, FileUploadServer server) {\n            return server.handleFileUpload(fileName, fileData);\n        }\n    }\n    \n    public static void main(String[] args) {\n        System.out.println("File Upload System - Test Cases\
+");\n        \n        FileUploadServer server = new FileUploadServer();\n        FileUploadClient client = new FileUploadClient();\n        \n        // Test Case 1: Upload a text file\n        System.out.println("Test Case 1: Upload text file");\n        String content1 = "Hello, this is a test file!";\n        String result1 = client.uploadFile("test1.txt", content1.getBytes(), server);\n        System.out.println(result1);\n        System.out.println("File exists: " + server.fileExists("test1.txt"));\n        System.out.println();\n        \n        // Test Case 2: Upload a binary file (simulated)\n        System.out.println("Test Case 2: Upload binary file");\n        byte[] binaryData = new byte[]{0x48, 0x65, 0x6C, 0x6C, 0x6F};\n        String result2 = client.uploadFile("test2.bin", binaryData, server);\n        System.out.println(result2);\n        System.out.println("File exists: " + server.fileExists("test2.bin"));\n        System.out.println();\n        \n        // Test Case 3: Upload a larger file\n        System.out.println("Test Case 3: Upload larger file");\n        StringBuilder largeContent = new StringBuilder();\n        for (int i = 0; i < 1000; i++) {\n            largeContent.append("Line " + i + ": This is test data.\
+");\n        }\n        String result3 = client.uploadFile("test3.log", largeContent.toString().getBytes(), server);\n        System.out.println(result3);\n        System.out.println("File exists: " + server.fileExists("test3.log"));\n        System.out.println();\n        \n        // Test Case 4: Upload file with special characters in name\n        System.out.println("Test Case 4: Upload file with special characters");\n        String content4 = "Special file content";\n        String result4 = client.uploadFile("test_file-4.txt", content4.getBytes(), server);\n        System.out.println(result4);\n        System.out.println("File exists: " + server.fileExists("test_file-4.txt"));\n        System.out.println();\n        \n        // Test Case 5: Upload empty file\n        System.out.println("Test Case 5: Upload empty file");\n        String result5 = client.uploadFile("empty.txt", new byte[0], server);\n        System.out.println(result5);\n        System.out.println("File exists: " + server.fileExists("empty.txt"));
+        System.out.println();
+    }
+}

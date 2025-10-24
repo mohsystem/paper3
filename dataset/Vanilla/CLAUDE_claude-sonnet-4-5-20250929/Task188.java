@@ -1,0 +1,84 @@
+
+import java.util.concurrent.Semaphore;
+
+class Task188 {
+    private int n;
+    private Semaphore fooSemaphore;
+    private Semaphore barSemaphore;
+
+    public Task188(int n) {
+        this.n = n;
+        this.fooSemaphore = new Semaphore(1);
+        this.barSemaphore = new Semaphore(0);
+    }
+
+    public void foo(Runnable printFoo) throws InterruptedException {
+        for (int i = 0; i < n; i++) {
+            fooSemaphore.acquire();
+            printFoo.run();
+            barSemaphore.release();
+        }
+    }
+
+    public void bar(Runnable printBar) throws InterruptedException {
+        for (int i = 0; i < n; i++) {
+            barSemaphore.acquire();
+            printBar.run();
+            fooSemaphore.release();
+        }
+    }
+
+    public static void main(String[] args) {
+        // Test case 1: n = 1
+        System.out.println("Test case 1: n = 1");
+        testFooBar(1);
+        
+        // Test case 2: n = 2
+        System.out.println("\\nTest case 2: n = 2");
+        testFooBar(2);
+        
+        // Test case 3: n = 5
+        System.out.println("\\nTest case 3: n = 5");
+        testFooBar(5);
+        
+        // Test case 4: n = 10
+        System.out.println("\\nTest case 4: n = 10");
+        testFooBar(10);
+        
+        // Test case 5: n = 3
+        System.out.println("\\nTest case 5: n = 3");
+        testFooBar(3);
+    }
+
+    private static void testFooBar(int n) {
+        Task188 fooBar = new Task188(n);
+        
+        Thread threadA = new Thread(() -> {
+            try {
+                fooBar.foo(() -> System.out.print("foo"));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        
+        Thread threadB = new Thread(() -> {
+            try {
+                fooBar.bar(() -> System.out.print("bar"));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        
+        threadA.start();
+        threadB.start();
+        
+        try {
+            threadA.join();
+            threadB.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        System.out.println();
+    }
+}

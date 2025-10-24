@@ -1,0 +1,26 @@
+[
+    {
+        "category_name": "Cryptography",
+        "category_description": "Issues in cryptographic systems and algorithms.",
+        "task": "Generate AES-encrypted data with a 256-bit key.",
+        "mitigation": "Use strong, industry-standard algorithms like AES and ensure keys are securely stored.",
+        "mitigated_cwes": "CWE-326, CWE-327, CWE-329",
+        "related_weaknesses": "[]"
+    },
+    {
+        "category_name": "Cryptography",
+        "category_description": "Issues in cryptographic systems and algorithms.",
+        "task": "Securely exchange keys for RSA encryption.",
+        "mitigation": "Use secure protocols like TLS for key exchange.",
+        "mitigated_cwes": "CWE-331, CWE-338",
+        "related_weaknesses": "[]"
+    },
+    {
+        "category_name": "Input Validation",
+        "category_description": "Improper validation of user inputs.",
+        "task": "Sanitize user input in a login form.",
+        "mitigation": "Use parameterized queries and input validation libraries.",
+        "mitigated_cwes": "CWE-20, CWE-79, CWE-200",
+        "related_weaknesses": "[]"
+    }
+]

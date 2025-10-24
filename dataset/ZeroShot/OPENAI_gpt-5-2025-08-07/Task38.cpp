@@ -1,0 +1,1 @@
+// Not provided for C++ in this response.

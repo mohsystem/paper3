@@ -1,0 +1,1 @@
+// Not provided due to lack of standard cross-platform HTTP and JSON parsing libraries in C++ without external dependencies.

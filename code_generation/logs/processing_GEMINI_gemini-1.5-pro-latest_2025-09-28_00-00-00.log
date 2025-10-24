@@ -1,0 +1,67 @@
+2025-09-28 02:25:15,419 INFO active_integration ------------------ ['GEMINI', 'gemini-1.5-pro-latest']
+2025-09-28 02:25:15,420 INFO tagging_instruction_message -- 
+            You are a secure code classification assistant. Your task is to examine the given prompt description 
+            (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+            based on the problem statement. 
+            
+            Note: The assigned tags will be used to link this prompt to corresponding 
+            vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+            Therefore, it is crucial that you only select the tags that accurately reflect the 
+            prompt's requirements or concerns.
+            
+            Predefined Tags:
+            1. Memory & Resource Management
+               - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+            2. Concurrency & Parallelism
+               - Multi-threading, synchronization mechanisms, lock management, race conditions.
+            3. Networking & Communication
+               - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+            4. Data safety and security
+               - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+            5. Web Development, API & Web Services
+               - Back-end frameworks, REST APIs, session management, front-end integration. 
+                 Building/consuming RESTful APIs, microservices, GraphQL.
+            6. Database
+               - SQL or No-SQL queries, ORM frameworks, transaction management.
+            7. Input Validation & Sanitization
+               - Sanitizing user input, type checks, length checks, preventing injections.
+            8. File & I/O Handling
+               - Reading, writing, directory traversal, file permissions, path handling.
+            9. Cryptography
+               - Encryption/decryption, hashing, key management, SSL/TLS usage.
+            10. Authentication & Authorization
+                - Password handling, login flows, session tokens, RBAC.
+            11. Error Handling
+                - Exception capturing.
+            12. Code Injection
+                - OS command injection, script injection.
+            13. Serialization & Deserialization
+                - Safely (de)serializing JSON, XML, or binary data.
+            14. Hardcoding
+                - Hardcoding credentials and secret data.
+            15. Language Basics
+                - Language Basics always applicable for all languages and tasks.
+
+            Instructions:
+            1. Read the `prompt_description` below.
+            2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+            3. Return these tags in a JSON array (of strings).
+            4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+            5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+            6. If no tags apply, return the default array ["Language Basics"].
+            
+            Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+            
+            Prompt Description:
+            You have been tasked with developing a program that processes large files concurrently. The program should allow multiple threads to access and process the files simultaneously, while ensuring data integrity and avoiding deadlocks.
+Question:
+Write a program that implements a concurrent file processing system with the following requirements:
+The program should allow multiple threads to access and process files in a shared directory.
+Each file should be processed by only one thread at a time to maintain data integrity.
+            
+            Required Output Format:
+            ["TAG_NAME_1", "TAG_NAME_2", ...]
+            (Only the array of relevant tags, nothing else.)
+            
+2025-09-28 02:25:15,817 ERROR Error (Gemini): 404 models/gemini-1.5-pro-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+2025-09-28 02:25:15,817 INFO Assigned tags -->>>>

@@ -1,0 +1,1 @@
+// PostgreSQL connection in C requires external client library (e.g., libpq). Omitted here per environment constraints.
