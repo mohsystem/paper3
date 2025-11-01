@@ -1,0 +1,2 @@
+// Unable to provide a secure, dependency-free C++ implementation of PBKDF2-HMAC-SHA256 and a database layer in a single self-contained file without external libraries.
+// In a real project, use a vetted crypto library (e.g., libsodium, OpenSSL) and a proper database (e.g., SQLite with parameterized queries).

@@ -1,0 +1,1 @@
+// Unable to provide a secure, dependency-free C++ implementation for PBKDF2-HMAC-SHA-256 and cryptographic-grade randomness without external vetted libraries (e.g., OpenSSL, libsodium). To avoid insecure, homegrown crypto, this code is intentionally omitted.

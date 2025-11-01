@@ -1,0 +1,47 @@
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <string.h>
+
+void writeImportantConfig(const char* filename, const char* content) {
+    // Open file with O_CREAT flag, creating if it doesn't exist
+    // Permissions: owner read/write, group read, others read (0644)
+    int fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 
+                  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    
+    if (fd == -1) {
+        fprintf(stderr, "Error opening file: %s\\n", filename);
+        return;
+    }
+    
+    // Write content to file
+    ssize_t bytes_written = write(fd, content, strlen(content));
+    
+    if (bytes_written == -1) {
+        fprintf(stderr, "Error writing to file\\n");
+    }
+    
+    // Close file descriptor
+    close(fd);
+}
+
+int main() {
+    // Test case 1
+    writeImportantConfig("important_config", "important_config");
+    
+    // Test case 2
+    writeImportantConfig("test_config1.txt", "Configuration data 1");
+    
+    // Test case 3
+    writeImportantConfig("test_config2.txt", "Configuration data 2");
+    
+    // Test case 4
+    writeImportantConfig("test_config3.txt", "Secure configuration settings");
+    
+    // Test case 5
+    writeImportantConfig("test_config4.txt", "Application configuration");
+    
+    return 0;
+}

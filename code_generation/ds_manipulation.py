@@ -1,7 +1,7 @@
 import json
 
 # 1. Read the dataset from a JSON file.
-file_path = "../cwes_ds/dataset/enriched_cwe_dataset_v3.json"
+file_path = "C:/data/PhD/paper3/cwes_ds/dataset/enriched_cwe_dataset_v5.json"
 with open(file_path, "r", encoding="utf-8") as f:
     cwe_data = json.load(f)
 
@@ -18,10 +18,7 @@ for item in cwe_data:
     for tag in item["Additional_tags"]:
         # If tag is a dictionary, convert it into a string or extract a field.
         if isinstance(tag, dict):
-            # Option 1: Convert to string
             tag_value = str(tag)
-            # Option 2: Extract a specific key, if relevant:
-            # tag_value = tag.get("tagName", "unknown_tag")
         else:
             tag_value = tag
 
@@ -44,9 +41,7 @@ def get_records_by_tag(tag_value):
     return tags_map.get(tag_value, [])
 
 # Example usage:
-def get_related_cwe_list(tags_string):
-    # tags_string = '["Data safety and security","Web Development, API & Web Services"]'
-    # tags_string = '["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"]'
+def get_related_cwe_list(tags_string, target_languages: list[str] | None = None) -> str:
     # Convert the JSON-formatted string into a Python list
     # if not tags_string:
     cleaned = (
@@ -65,13 +60,7 @@ def get_related_cwe_list(tags_string):
     )
     import re
     print(cleaned)
-    # Remove any text between <think>...</think> (including multiline)
-    # cleaned = re.sub(r"<think>.*?</think>", "", cleaned, flags=re.DOTALL)
-    # lines = [line.strip() for line in cleaned.strip().splitlines() if line.strip()]
-    # last_line = lines[-1] if lines else ""
     tags_list = json.loads(cleaned)
-    # else:
-    #     tags_list=["Language Basics"]
     tags_list+=["Language Basics"]
     web_dev_records=[]
     # Iterate over each item in the list and print it
@@ -91,21 +80,106 @@ def get_related_cwe_list(tags_string):
 
     web_dev_records = unique_records
 
-    cwe_list=""
+    mitigration_list=""
     # Iterate over each record and print desired fields
     counter = 0  # Initialize the counter
 
+    # for record in web_dev_records:
+    #     counter += 1  # Increment for each record
+    #     mitigation:str = record["mitigation"]
+    #     mitigration_list += f"[\"Rules#{counter}: {mitigation}\"],\n"
+
     for record in web_dev_records:
         counter += 1  # Increment for each record
-        cwe_id = record["cwe_id"]
-        cwe_name = record["cwe_name"]
-        cwe_description:str = record["cwe_description"]
-        mitigation:str = record["mitigation"]
-        cwe_list += f"[\"Rules#{counter}: {mitigation}\"],\n"
-        # cwe_list += f"[\"CWE_ID\": \"{cwe_id}\", \"\": \"{mitigation}\"],\n"
-        # cwe_list += f"[\"CWE_ID\": \"{cwe_id}\", \"CWE_Name\": \"{cwe_name}\", \"CWE_Description\": \"{cwe_description.replace("\n", " ")}\"],\n"
 
-    return cwe_list
+        mitigations = record.get("mitigations", {})
+        general_rules = mitigations.get("general_rules", [])
+        lang_specific = mitigations.get("language_specific", {})
+        code_review = record.get("code_review_checklist", [])
+        finetune_examples = record.get("finetune_examples", [])
+
+        # 1) General Mitigation
+        if general_rules:
+            mitigration_list += "## General Mitigation\n"
+            for rule in general_rules:
+                mitigration_list += f"[\"Rules#{counter}: {rule.strip()}\"]\n"
+                counter += 1
+            mitigration_list += "\n"
+
+        # 2) Language-Specific Mitigation
+        # Determine which languages to include
+        if target_languages:
+            selected_langs = [
+                k for k in lang_specific.keys()
+                if k.lower() in [t.lower() for t in target_languages]
+            ]
+        else:
+            selected_langs = list(lang_specific.keys())
+
+
+        for lang in selected_langs:
+            lang_data = lang_specific.get(lang, {})
+            guidance = lang_data.get("guidance", [])
+            checklist = lang_data.get("checklist", [])
+
+            mitigration_list += f"## {lang.upper()} Specific Mitigation\n"
+            if guidance:
+                mitigration_list += "### Guidance\n"
+                for g in guidance:
+                    mitigration_list += f"- {g.strip()}\n"
+            if checklist:
+                mitigration_list += "\n### Checklist\n"
+                for c in checklist:
+                    mitigration_list += f"- {c.strip()}\n"
+            mitigration_list += "\n"
+
+        # 3) Code Review Checklist
+        if code_review:
+            mitigration_list += "## Code Review Checklist\n"
+            for item in code_review:
+                mitigration_list += f"- {item.strip()}\n"
+            mitigration_list += "\n"
+
+        # 4) Finetune Examples
+        if finetune_examples:
+            # Normalize target languages for comparison
+            if target_languages:
+                target_set = set(lang.lower() for lang in target_languages)
+            else:
+                target_set = set()  # empty means include all
+
+            # Filter examples
+            if target_set:
+                filtered_examples = [
+                    ex for ex in finetune_examples
+                    if (ex.get("language") or "").strip().lower() in target_set
+                ]
+            else:
+                filtered_examples = finetune_examples  # include all if no filter
+
+            # Only add section if examples exist after filtering
+            if filtered_examples:
+                mitigration_list += "## Finetune Examples\n"
+                for i, ex in enumerate(filtered_examples, start=1):
+                    ex_lang = (ex.get("language") or "generic").strip()
+                    mitigration_list += f"### Example {i} ({ex_lang})\n"
+
+                    instruction = (ex.get("instruction") or "").strip()
+                    input_code = (ex.get("input") or "").strip()
+                    output_code = (ex.get("output") or "").strip()
+
+                    if instruction:
+                        mitigration_list += f"Instruction: {instruction}\n"
+                    if input_code:
+                        mitigration_list += f"Input:\n```\n{input_code}\n```\n"
+                    if output_code:
+                        mitigration_list += f"Ideal Output:\n```\n{output_code}\n```\n"
+
+                mitigration_list += "\n"
+
+
+
+    return mitigration_list
 
 def signature(obj):
     """Create a stable, hashable signature for any JSON-like object."""
@@ -126,42 +200,12 @@ def _freeze(obj):
     # Last resort: use repr for anything else
     return obj if isinstance(obj, (str, int, float, bool, type(None))) else repr(obj)
 
-# # Example usage:
-# if __name__ == "__main__":
-#     tags_string = '["Data safety and security","Web Development, API & Web Services"]'
-#     # tags_string = '["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"]'
-#     # Convert the JSON-formatted string into a Python list
-#     tags_list = json.loads(tags_string)
-#
-#     web_dev_records=[]
-#     # Iterate over each item in the list and print it
-#     for tag in tags_list:
-#         print(tag)
-#         web_dev_records += get_records_by_category(tag)
-#         web_dev_records += get_records_by_tag(tag)
-#
-#     # Iterate over each record and print desired fields
-#     for record in web_dev_records:
-#         cwe_id = record["cwe_id"]
-#         cwe_name = record["cwe_name"]
-#         cwe_description = record["cwe_description"]
-#
-#         print(f"[\"CWE_ID\": \"{cwe_id}\", \"CWE_Name\": \"{cwe_name}\", \"CWE_Description\": \"{cwe_description}\"]")
-#         # print(f"CWE Name: {cwe_name}")
-#         # print(f"CWE Description: {cwe_description}")
-#         print("-" * 5)  # Just a separator for clarity
-#     # # Fetch by tag
-#
-#     print("-" * 50)  # Just a separator for clarity
+if __name__ == "__main__":
+    # Choose one or more languages to include
+    selected_languages = ["java","C"]
+    tag_list_response = "[\"Language Basics\",\"Data safety and security\",\"Web Development, API & Web Services\"]"
 
-    # data_security_records = get_records_by_tag("Data safety and security")
-    # for record in data_security_records:
-    #     cwe_id = record["cwe_id"]
-    #     cwe_name = record["cwe_name"]
-    #     cwe_description = record["cwe_description"]
-    #
-    #     print(f"[\"CWE_ID\": \"{cwe_id}\", \"CWE_Name\": \"{cwe_name}\", \"CWE_Description\": \"{cwe_description}\"]")
-    #     # print(f"CWE Name: {cwe_name}")
-    #     # print(f"CWE Description: {cwe_description}")
-    #     print("-" * 5)  # Just a separator for clarity
-    # # print(f"Records with 'Data safety and security' in Additional_tags:\n{data_security_records}\n")
+    # Generate mitigation text for the selected languages only
+    mitigation_text = get_related_cwe_list(tag_list_response, target_languages=selected_languages)
+
+    print(f"\n{mitigation_text}")

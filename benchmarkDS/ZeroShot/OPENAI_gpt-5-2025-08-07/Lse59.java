@@ -1,0 +1,2 @@
+// Not possible in Java: the Java language and JVM do not provide a way to explicitly allocate a variable-sized buffer on the stack.
+// Arrays and objects are heap-allocated. Therefore, this requirement cannot be implemented in Java.

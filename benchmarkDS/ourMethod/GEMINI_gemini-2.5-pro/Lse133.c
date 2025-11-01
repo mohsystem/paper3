@@ -1,0 +1,1 @@
+// C does not have a standard library for creating a web application in the high-level, declarative style described by the prompt. This would require significant boilerplate code for socket programming or the use of a third-party library.

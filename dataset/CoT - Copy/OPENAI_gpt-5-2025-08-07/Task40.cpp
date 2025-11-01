@@ -1,2 +1,0 @@
-// Due to the complexity of implementing a secure HTTP server with CSRF protection and test harness
-// entirely in a single standalone C++ source file without external libraries, this section is omitted.

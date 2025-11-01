@@ -1,1 +1,0 @@
-// JNDI is a Java-specific API; no C++ implementation is provided for this request.

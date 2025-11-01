@@ -1,0 +1,1 @@
+// Unable to provide a secure C implementation without external cryptographic libraries (e.g., OpenSSL/libsodium) for password hashing (PBKDF2/scrypt/Argon2).

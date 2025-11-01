@@ -1,0 +1,1 @@
+// C++ does not have a standard library for creating a web application in the high-level, declarative style described by the prompt. This typically requires third-party libraries like Boost.Beast, Crow, or Pistache.

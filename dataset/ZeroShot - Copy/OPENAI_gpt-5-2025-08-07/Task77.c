@@ -1,1 +1,0 @@
-/* Implementation omitted in C for this task. */

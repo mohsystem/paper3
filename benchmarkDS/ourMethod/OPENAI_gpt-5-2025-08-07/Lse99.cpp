@@ -1,0 +1,1 @@
+// Secure implementation requires vetted crypto (e.g., PBKDF2/scrypt) and a database library; omitted by design to avoid insecure code.

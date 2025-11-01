@@ -1,0 +1,2 @@
+// Not implemented: Standard C++ library does not provide built-in ZIP/TAR extraction.
+// Typically requires external libraries (e.g., libarchive, minizip, or libzip) which are not allowed here as a single-file solution.

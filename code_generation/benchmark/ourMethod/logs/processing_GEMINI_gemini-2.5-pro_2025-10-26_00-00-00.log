@@ -1,0 +1,1279 @@
+2025-10-26 03:30:16,943 INFO active_integration ------------------ ['GEMINI', 'gemini-2.5-pro']
+2025-10-26 03:30:16,948 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following:  The regular expression is compiled once when the module is loaded.The regular expression is used to match the target URL.If the target URL matches; it is used as the redirect target.If the target URL does not match a default URL is used.The regular expression is not used to construct the redirect URL.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-10-26 03:30:17,382 INFO AFC is enabled with max remote calls: 10.
+2025-10-26 03:30:17,384 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-10-26 03:30:17,450 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780B6150>
+2025-10-26 03:30:17,450 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000015474A09450> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-10-26 03:30:17,529 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000015477DA8830>
+2025-10-26 03:30:17,529 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-10-26 03:30:17,529 DEBUG send_request_headers.complete
+2025-10-26 03:30:17,529 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-10-26 03:30:17,530 DEBUG send_request_body.complete
+2025-10-26 03:30:17,530 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-10-26 03:30:26,559 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sun, 26 Oct 2025 01:30:27 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=8969'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-10-26 03:30:26,560 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-10-26 03:30:26,560 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-10-26 03:30:26,560 DEBUG receive_response_body.complete
+2025-10-26 03:30:26,560 DEBUG response_closed.started
+2025-10-26 03:30:26,560 DEBUG response_closed.complete
+2025-10-26 03:30:26,560 INFO ```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Language Basics"
+]
+```
+2025-10-26 03:30:26,560 DEBUG close.started
+2025-10-26 03:30:26,560 DEBUG close.complete
+2025-10-26 03:30:26,562 INFO Assigned tags -->>>>```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Language Basics"
+]
+```
+2025-10-26 03:30:26,566 INFO Lse28_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following C programming language: C. All functions must take inputs as parameters and return outputs.
+3) Use exactly this template and language tags:
+```C
+code here
+```
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse28.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following:  The regular expression is compiled once when the module is loaded.The regular expression is used to match the target URL.If the target URL matches; it is used as the redirect target.If the target URL does not match a default URL is used.The regular expression is not used to construct the redirect URL.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+["Rules#1: Ensure all input is validated and sanitized according to expected formats, types, and lengths before processing."],
+["Rules#2: Ensure that potentially dangerous functions are used with caution by validating inputs, sanitizing outputs, and using safer alternatives where possible. Review and adhere to secure coding guidelines specific to the language in use."],
+["Rules#3: Ensure that all buffer operations, such as reading from and writing to memory, strictly adhere to the buffer's boundaries. Use boundary checks, safe functions, and memory management practices to prevent overflows and underflows. Make sure the code dynamically grows the buffer when necessary but stops at a defined maximum size to prevent excessive memory usage, such as when use fread, memchr"],
+["Rules#4: When generating code, default to XXE-safe parsing. Do not expand entities. Do not load external DTDs. Do not fetch anything over the network while parsing XML.
+
+General rules to emit in any code:
+- Reject or strip DOCTYPE declarations. Never enable entity expansion.
+- Disable external entity resolution and network access in the XML parser.
+- Avoid API options that expand entities (for example, NOENT). Prefer secure defaults, and set them explicitly.
+- Set tight resource limits (max size, depth, attributes) to prevent Billion Laughs and quadratic blowups.
+- Treat XPath/XSLT inputs as untrusted. If XSLT is required, disable document() and network access.
+- Validate against a local, whitelisted schema only, with external fetches disabled.
+
+Language guidance (generate these snippets by default):
+- C / libxml2:
+  • Before parsing: xmlDisableExternalEntityLoader(); xmlSubstituteEntitiesDefault(0); xmlLoadExtDtdDefaultValue = 0; 
+  • Parse without entity substitution and with no network: doc = xmlReadMemory(buf, len, NULL, NULL, XML_PARSE_NONET | XML_PARSE_NOCDATA | XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+  • Do NOT pass XML_PARSE_NOENT. Do not rely on external entity loaders.
+- Java (DOM/SAX/SchemaFactory):
+  • DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
+    f.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    f.setFeature("http://xml.org/sax/features/external-general-entities", false);
+    f.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+    f.setXIncludeAware(false);
+    f.setExpandEntityReferences(false);
+  • For SAXParserFactory/SchemaFactory, set the same features and setProperty("http://javax.xml.XMLConstants/property/accessExternalDTD", ""); setProperty("http://javax.xml.XMLConstants/property/accessExternalSchema", "").
+- .NET:
+  • var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null }; using var r = XmlReader.Create(stream, settings);
+- Python:
+  • Prefer defusedxml (defusedxml.ElementTree.fromstring). If using lxml, use parser = etree.XMLParser(resolve_entities=false, no_network=true); and reject DOCTYPE.
+- Go:
+  • encoding/xml does not resolve external entities; still cap input size (io.LimitReader) and disable any custom external resolvers.
+
+Additional safeguards:
+- Impose input limits (size, element depth, attribute count). Fail closed on limit violations.
+- Never pass user-controlled XML directly to XSLT. If XSLT is needed, disable reading from network or filesystem and forbid the document() function.
+- Log rejections generically. Do not echo attacker-controlled XML back in errors.
+
+This policy requires the assistant to emit XML parsing code that disables external entities and network access, forbids DOCTYPE, avoids entity expansion flags, and enforces resource limits by default."],
+["Rules#5: When generating code, default to secure patterns and refuse weak constructs. Treat every input as untrusted and fail closed with clear, minimal error messages.
+
+Core secure code generation rules:
+- Input validation: check type, length, range, and encoding on all external data. Reject or sanitize early. Never trust filenames, URLs, or paths. Block traversal and normalize before use.
+- No dynamic code loading: do not use eval, exec, reflection that instantiates arbitrary types, or insecure deserialization.
+- Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, else PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hardcode secrets or keys.
+- TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a TLS 1.2+ minimum via CURLOPT_SSLVERSION. For Python set ssl.create_default_context with minimum_version TLSv1_2 or disable TLS 1.0 and 1.1 on older runtimes.
+- Files and TOCTOU: open first, then validate the opened handle, and operate on that handle only. For POSIX use openat with O_NOFOLLOW and fstat. For writes use a temp file, fflush, fsync, then an atomic rename. Set restrictive permissions at creation time.
+- Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math.
+- Sensitive data handling: clear secrets before free using a guaranteed zeroization API. Prefer memset_s where available, else use an equivalent explicit zero function (such as explicit_bzero or a volatile wipe) or SecureZeroMemory on Windows. Do not rely on plain memset for secret wiping.
+- Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where needed.
+- Errors: do not leak internal details. Return generic messages to callers, detailed messages to secure logs only.
+- Concurrency: avoid time of check to time of use windows, use atomic operations or validated handles. Use thread safe APIs and per resource locking as needed.
+- Build and toolchain: enable warnings as errors, stack protections, FORTIFY where applicable, and run static analysis and tests. Pin library versions and verify signatures.
+
+Language specifics to emit by default:
+- C: avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets and snprintf. Check all return values. Use RAII-like cleanup patterns with goto on failure labels. For zeroization use memset_s or an explicit zero that the compiler cannot remove.
+- C++: prefer std::string and std::vector, RAII and smart pointers, span for bounds safe views, and chrono for time. Avoid undefined behavior and std::rand for security. Use std::secure_allocator only where available, otherwise rely on explicit zeroization of buffers that hold secrets.
+- Python: use context managers, type hints, secrets for randomness, and the cryptography library for crypto. Avoid eval and pickle on untrusted data. For TLS set a minimum version and verify certificates.
+- Java: use StandardCharsets.UTF_8, try-with-resources, and safe deserialization patterns. For crypto use AES/GCM/NoPadding with GCMParameterSpec(128, iv). Use SecureRandom. Do not install all trusting trust managers.
+
+C language checklist for generated code:
+- All pointers initialized to NULL or valid memory
+- All malloc and calloc results checked for NULL
+- All array accesses bounds checked
+- All strings null terminated
+- Buffer sizes validated before copy and read operations
+- All allocated memory freed exactly once
+- Integer overflow checked before arithmetic and allocation
+- All function return values checked
+- Sensitive data cleared before free using memset_s or a portable explicit zero
+
+Network scope:
+- If the task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, and limit redirects. Do not perform any other network activity unless explicitly required by the task.
+
+Treat each line you generate as insecure until you review it against the above rules and fix it."],
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-10-26 03:30:26,980 INFO AFC is enabled with max remote calls: 10.
+2025-10-26 03:30:26,980 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-10-26 03:30:27,041 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780B6F30>
+2025-10-26 03:30:27,041 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000015477FC3DD0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-10-26 03:30:27,114 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780B6E70>
+2025-10-26 03:30:27,114 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-10-26 03:30:27,114 DEBUG send_request_headers.complete
+2025-10-26 03:30:27,114 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-10-26 03:30:27,114 DEBUG send_request_body.complete
+2025-10-26 03:30:27,114 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-10-26 03:31:01,063 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sun, 26 Oct 2025 01:31:01 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=33888'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-10-26 03:31:01,064 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-10-26 03:31:01,064 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-10-26 03:31:01,064 DEBUG receive_response_body.complete
+2025-10-26 03:31:01,064 DEBUG response_closed.started
+2025-10-26 03:31:01,064 DEBUG response_closed.complete
+2025-10-26 03:31:01,064 INFO ```C
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <regex.h>
+
+// Global static variable for the compiled regex, simulating module-level loading.
+static regex_t compiled_regex;
+static int is_regex_compiled = 0; // Flag to check if compilation was successful
+
+/**
+ * @brief Compiles the regular expression pattern.
+ * This function should be called once when the application or module starts.
+ * It exits the program on failure, as the redirector cannot function without a valid regex.
+ *
+ * @param pattern The regular expression string to compile.
+ */
+void init_redirector(const char* pattern) {
+    if (pattern == NULL) {
+        fprintf(stderr, "Error: Regex pattern cannot be NULL.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // REG_EXTENDED for modern regex syntax.
+    // REG_NOSUB is an optimization as we don't need capture groups.
+    int reti = regcomp(&compiled_regex, pattern, REG_EXTENDED | REG_NOSUB);
+    if (reti) {
+        char errbuf[100];
+        regerror(reti, &compiled_regex, errbuf, sizeof(errbuf));
+        fprintf(stderr, "Could not compile regex: %s\n", errbuf);
+        exit(EXIT_FAILURE);
+    }
+    is_regex_compiled = 1;
+}
+
+/**
+ * @brief Frees the memory used by the compiled regular expression.
+ * This function should be called once when the application or module shuts down.
+ */
+void cleanup_redirector() {
+    if (is_regex_compiled) {
+        regfree(&compiled_regex);
+        is_regex_compiled = 0;
+    }
+}
+
+/**
+ * @brief Determines the redirect URL based on a regex match.
+ * If the target URL matches the pre-compiled regex, the target URL is returned.
+ * Otherwise, the default URL is returned.
+ *
+ * @param target_url The URL to check against the regex.
+ * @param default_url The URL to use if the target_url does not match.
+ * @return The appropriate redirect URL (either target_url or default_url).
+ */
+const char* get_redirect_url(const char* target_url, const char* default_url) {
+    // Rule #1: Ensure all input is validated.
+    if (target_url == NULL || default_url == NULL) {
+        return default_url;
+    }
+
+    if (!is_regex_compiled) {
+        fprintf(stderr, "Error: Redirector not initialized. Falling back to default URL.\n");
+        return default_url; // Fail safe
+    }
+
+    // Rule #2: Use potentially dangerous functions with caution by validating inputs and checking returns.
+    int reti = regexec(&compiled_regex, target_url, 0, NULL, 0);
+
+    if (reti == 0) {
+        // Match found
+        return target_url;
+    } else if (reti == REG_NOMATCH) {
+        // No match found
+        return default_url;
+    } else {
+        // An error occurred during matching.
+        char errbuf[100];
+        regerror(reti, &compiled_regex, errbuf, sizeof(errbuf));
+        fprintf(stderr, "Regex match failed for URL '%s': %s. Falling back to default URL.\n", target_url, errbuf);
+        return default_url; // Fail safe to default URL
+    }
+}
+
+int main() {
+    // The regular expression is compiled once when the module is loaded.
+    // This pattern matches secure URLs for product pages with numeric IDs.
+    const char* pattern = "^https://example\\.com/products/[0-9]+$";
+    const char* default_url = "https://example.com/home";
+
+    init_redirector(pattern);
+
+    // Array of test cases.
+    const char* test_urls[] = {
+        // Test Case 1: A valid URL that should match.
+        "https://example.com/products/12345",
+        // Test Case 2: An invalid URL (non-numeric ID) that should not match.
+        "https://example.com/products/abc-def",
+        // Test Case 3: An invalid URL (insecure protocol) that should not match.
+        "http://example.com/products/67890",
+        // Test Case 4: An invalid URL (wrong domain) that should not match.
+        "https://anotherexample.com/products/54321",
+        // Test Case 5: An invalid URL (wrong path) that should not match.
+        "https://example.com/items/13579"
+    };
+    int num_tests = sizeof(test_urls) / sizeof(test_urls[0]);
+
+    printf("Regex Pattern: %s\n", pattern);
+    printf("Default URL:   %s\n\n", default_url);
+
+    for (int i = 0; i < num_tests; ++i) {
+        const char* target = test_urls[i];
+        const char* redirect = get_redirect_url(target, default_url);
+        printf("Test Case %d:\n", i + 1);
+        printf("  Target URL:    %s\n", target);
+        printf("  Redirect URL:  %s\n", redirect);
+        if (redirect == target) {
+            printf("  Result:        Matched, using target URL.\n");
+        } else {
+            printf("  Result:        No match, using default URL.\n");
+        }
+        printf("\n");
+    }
+
+    // The compiled regex is freed when the module unloads.
+    cleanup_redirector();
+
+    return 0;
+}
+```
+2025-10-26 03:31:01,066 DEBUG close.started
+2025-10-26 03:31:01,066 DEBUG close.complete
+2025-10-26 03:31:01,067 INFO Created file: Lse28.c
+2025-10-26 03:31:04,068 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following:  The code is a simple Web application that has a single route.The route takes a target parameter and redirects to it.Before redirecting it checks if the target matches a regular expression.If the target matches the regular expression it redirects to it.If the target does not match the regular expression it redirects to /.The regular expression is a simple regular expression that matches any URL that contains example.com.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-10-26 03:31:04,444 INFO AFC is enabled with max remote calls: 10.
+2025-10-26 03:31:04,446 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-10-26 03:31:04,506 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000015477DABE00>
+2025-10-26 03:31:04,506 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000015478055CD0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-10-26 03:31:04,581 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000015477F3E0C0>
+2025-10-26 03:31:04,581 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-10-26 03:31:04,581 DEBUG send_request_headers.complete
+2025-10-26 03:31:04,581 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-10-26 03:31:04,581 DEBUG send_request_body.complete
+2025-10-26 03:31:04,581 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-10-26 03:31:12,661 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sun, 26 Oct 2025 01:31:13 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=8022'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-10-26 03:31:12,661 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-10-26 03:31:12,661 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-10-26 03:31:12,661 DEBUG receive_response_body.complete
+2025-10-26 03:31:12,661 DEBUG response_closed.started
+2025-10-26 03:31:12,661 DEBUG response_closed.complete
+2025-10-26 03:31:12,661 INFO ```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Language Basics"
+]
+```
+2025-10-26 03:31:12,661 DEBUG close.started
+2025-10-26 03:31:12,663 DEBUG close.complete
+2025-10-26 03:31:12,663 INFO Assigned tags -->>>>```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Language Basics"
+]
+```
+2025-10-26 03:31:12,668 INFO Lse29_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following C programming language: C. All functions must take inputs as parameters and return outputs.
+3) Use exactly this template and language tags:
+```C
+code here
+```
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse29.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following:  The code is a simple Web application that has a single route.The route takes a target parameter and redirects to it.Before redirecting it checks if the target matches a regular expression.If the target matches the regular expression it redirects to it.If the target does not match the regular expression it redirects to /.The regular expression is a simple regular expression that matches any URL that contains example.com.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+["Rules#1: Ensure all input is validated and sanitized according to expected formats, types, and lengths before processing."],
+["Rules#2: Ensure that potentially dangerous functions are used with caution by validating inputs, sanitizing outputs, and using safer alternatives where possible. Review and adhere to secure coding guidelines specific to the language in use."],
+["Rules#3: Ensure that all buffer operations, such as reading from and writing to memory, strictly adhere to the buffer's boundaries. Use boundary checks, safe functions, and memory management practices to prevent overflows and underflows. Make sure the code dynamically grows the buffer when necessary but stops at a defined maximum size to prevent excessive memory usage, such as when use fread, memchr"],
+["Rules#4: When generating code, default to XXE-safe parsing. Do not expand entities. Do not load external DTDs. Do not fetch anything over the network while parsing XML.
+
+General rules to emit in any code:
+- Reject or strip DOCTYPE declarations. Never enable entity expansion.
+- Disable external entity resolution and network access in the XML parser.
+- Avoid API options that expand entities (for example, NOENT). Prefer secure defaults, and set them explicitly.
+- Set tight resource limits (max size, depth, attributes) to prevent Billion Laughs and quadratic blowups.
+- Treat XPath/XSLT inputs as untrusted. If XSLT is required, disable document() and network access.
+- Validate against a local, whitelisted schema only, with external fetches disabled.
+
+Language guidance (generate these snippets by default):
+- C / libxml2:
+  • Before parsing: xmlDisableExternalEntityLoader(); xmlSubstituteEntitiesDefault(0); xmlLoadExtDtdDefaultValue = 0; 
+  • Parse without entity substitution and with no network: doc = xmlReadMemory(buf, len, NULL, NULL, XML_PARSE_NONET | XML_PARSE_NOCDATA | XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+  • Do NOT pass XML_PARSE_NOENT. Do not rely on external entity loaders.
+- Java (DOM/SAX/SchemaFactory):
+  • DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
+    f.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    f.setFeature("http://xml.org/sax/features/external-general-entities", false);
+    f.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+    f.setXIncludeAware(false);
+    f.setExpandEntityReferences(false);
+  • For SAXParserFactory/SchemaFactory, set the same features and setProperty("http://javax.xml.XMLConstants/property/accessExternalDTD", ""); setProperty("http://javax.xml.XMLConstants/property/accessExternalSchema", "").
+- .NET:
+  • var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null }; using var r = XmlReader.Create(stream, settings);
+- Python:
+  • Prefer defusedxml (defusedxml.ElementTree.fromstring). If using lxml, use parser = etree.XMLParser(resolve_entities=false, no_network=true); and reject DOCTYPE.
+- Go:
+  • encoding/xml does not resolve external entities; still cap input size (io.LimitReader) and disable any custom external resolvers.
+
+Additional safeguards:
+- Impose input limits (size, element depth, attribute count). Fail closed on limit violations.
+- Never pass user-controlled XML directly to XSLT. If XSLT is needed, disable reading from network or filesystem and forbid the document() function.
+- Log rejections generically. Do not echo attacker-controlled XML back in errors.
+
+This policy requires the assistant to emit XML parsing code that disables external entities and network access, forbids DOCTYPE, avoids entity expansion flags, and enforces resource limits by default."],
+["Rules#5: When generating code, default to secure patterns and refuse weak constructs. Treat every input as untrusted and fail closed with clear, minimal error messages.
+
+Core secure code generation rules:
+- Input validation: check type, length, range, and encoding on all external data. Reject or sanitize early. Never trust filenames, URLs, or paths. Block traversal and normalize before use.
+- No dynamic code loading: do not use eval, exec, reflection that instantiates arbitrary types, or insecure deserialization.
+- Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, else PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hardcode secrets or keys.
+- TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a TLS 1.2+ minimum via CURLOPT_SSLVERSION. For Python set ssl.create_default_context with minimum_version TLSv1_2 or disable TLS 1.0 and 1.1 on older runtimes.
+- Files and TOCTOU: open first, then validate the opened handle, and operate on that handle only. For POSIX use openat with O_NOFOLLOW and fstat. For writes use a temp file, fflush, fsync, then an atomic rename. Set restrictive permissions at creation time.
+- Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math.
+- Sensitive data handling: clear secrets before free using a guaranteed zeroization API. Prefer memset_s where available, else use an equivalent explicit zero function (such as explicit_bzero or a volatile wipe) or SecureZeroMemory on Windows. Do not rely on plain memset for secret wiping.
+- Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where needed.
+- Errors: do not leak internal details. Return generic messages to callers, detailed messages to secure logs only.
+- Concurrency: avoid time of check to time of use windows, use atomic operations or validated handles. Use thread safe APIs and per resource locking as needed.
+- Build and toolchain: enable warnings as errors, stack protections, FORTIFY where applicable, and run static analysis and tests. Pin library versions and verify signatures.
+
+Language specifics to emit by default:
+- C: avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets and snprintf. Check all return values. Use RAII-like cleanup patterns with goto on failure labels. For zeroization use memset_s or an explicit zero that the compiler cannot remove.
+- C++: prefer std::string and std::vector, RAII and smart pointers, span for bounds safe views, and chrono for time. Avoid undefined behavior and std::rand for security. Use std::secure_allocator only where available, otherwise rely on explicit zeroization of buffers that hold secrets.
+- Python: use context managers, type hints, secrets for randomness, and the cryptography library for crypto. Avoid eval and pickle on untrusted data. For TLS set a minimum version and verify certificates.
+- Java: use StandardCharsets.UTF_8, try-with-resources, and safe deserialization patterns. For crypto use AES/GCM/NoPadding with GCMParameterSpec(128, iv). Use SecureRandom. Do not install all trusting trust managers.
+
+C language checklist for generated code:
+- All pointers initialized to NULL or valid memory
+- All malloc and calloc results checked for NULL
+- All array accesses bounds checked
+- All strings null terminated
+- Buffer sizes validated before copy and read operations
+- All allocated memory freed exactly once
+- Integer overflow checked before arithmetic and allocation
+- All function return values checked
+- Sensitive data cleared before free using memset_s or a portable explicit zero
+
+Network scope:
+- If the task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, and limit redirects. Do not perform any other network activity unless explicitly required by the task.
+
+Treat each line you generate as insecure until you review it against the above rules and fix it."],
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-10-26 03:31:13,050 INFO AFC is enabled with max remote calls: 10.
+2025-10-26 03:31:13,052 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-10-26 03:31:13,127 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780B6AB0>
+2025-10-26 03:31:13,127 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000015477FECD50> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-10-26 03:31:13,204 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780B6D20>
+2025-10-26 03:31:13,204 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-10-26 03:31:13,204 DEBUG send_request_headers.complete
+2025-10-26 03:31:13,204 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-10-26 03:31:13,204 DEBUG send_request_body.complete
+2025-10-26 03:31:13,204 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-10-26 03:32:21,431 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sun, 26 Oct 2025 01:32:22 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=68165'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-10-26 03:32:21,431 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-10-26 03:32:21,431 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-10-26 03:32:21,431 DEBUG receive_response_body.complete
+2025-10-26 03:32:21,431 DEBUG response_closed.started
+2025-10-26 03:32:21,431 DEBUG response_closed.complete
+2025-10-26 03:32:21,431 INFO ```C
+/**
+ * @file simple_redirect_server.c
+ * @brief A simple C web server using libmicrohttpd that redirects based on a URL parameter.
+ *
+ * This server listens on a specified port for GET requests. It expects a 'target'
+ * query parameter. If the 'target' URL contains 'example.com' as its domain,
+ * it redirects the client to that URL. Otherwise, it redirects to '/'.
+ *
+ * This code prioritizes security by using a strict regular expression to validate
+ * the 'target' URL, preventing open redirect vulnerabilities.
+ *
+ * To compile:
+ *   gcc -o server simple_redirect_server.c -lmicrohttpd
+ *
+ * To run:
+ *   ./server
+ *
+ * Example Usage (from another terminal):
+ *   # This should redirect to https://www.example.com
+ *   curl -v "http://localhost:8888/?target=https://www.example.com"
+ *
+ *   # This should redirect to /
+ *   curl -v "http://localhost:8888/?target=http://www.google.com"
+ *
+ *   # This is an attempt to exploit an open redirect, which should be blocked and redirect to /
+ *   curl -v "http://localhost:8888/?target=http://evil.com?q=example.com"
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <regex.h>
+#include <microhttpd.h>
+
+#define PORT 8888
+#define MAX_URL_LENGTH 2048
+// A secure regex to ensure the domain is example.com or a subdomain thereof.
+// This prevents open redirect vulnerabilities where "example.com" might appear
+// in the path or query string of a malicious URL.
+// Breakdown:
+// ^https?://          - Starts with http:// or https://
+// ([a-zA-Z0-9\\-]+\\.)* - Zero or more subdomains (e.g., www., sub.)
+// example\\.com       - The literal domain name
+// ([:/].*)?$          - Optionally followed by a port or path, to the end of the string
+#define URL_REGEX "^https?://([a-zA-Z0-9\\-]+\\.)*example\\.com([:/].*)?$"
+
+/**
+ * @brief Validates a URL string against a predefined regular expression.
+ *
+ * @param target The URL string to validate.
+ * @return 1 if the URL is valid and matches the regex, 0 otherwise.
+ */
+static int is_valid_target(const char *target) {
+    if (target == NULL) {
+        return 0;
+    }
+
+    // Rule #1: Ensure all input is validated. Check length before processing.
+    if (strlen(target) > MAX_URL_LENGTH) {
+        fprintf(stderr, "Error: Target URL exceeds maximum length of %d\n", MAX_URL_LENGTH);
+        return 0;
+    }
+
+    regex_t regex;
+    int reti;
+    int result = 0;
+
+    // Compile the regular expression
+    reti = regcomp(&regex, URL_REGEX, REG_EXTENDED | REG_NOSUB);
+    if (reti) {
+        fprintf(stderr, "Error: Could not compile regex\n");
+        return 0; // Fail closed if regex compilation fails
+    }
+
+    // Execute the regex against the target string
+    reti = regexec(&regex, target, 0, NULL, 0);
+    if (reti == 0) {
+        // Match found
+        result = 1;
+    } else if (reti != REG_NOMATCH) {
+        // An error occurred during regex execution
+        char msgbuf[100];
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        result = 0;
+    }
+    // If reti == REG_NOMATCH, result remains 0 (no match).
+
+    // Free the compiled regular expression to prevent memory leaks
+    regfree(&regex);
+
+    return result;
+}
+
+/**
+ * @brief The main request handler for libmicrohttpd.
+ *
+ * This function is called for each incoming HTTP request. It parses the 'target'
+ * parameter, validates it, and issues a 302 redirect accordingly.
+ */
+static enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connection,
+                                           const char *url, const char *method,
+                                           const char *version, const char *upload_data,
+                                           size_t *upload_data_size, void **con_cls) {
+    (void)cls;            // Unused
+    (void)url;            // Unused
+    (void)version;        // Unused
+    (void)upload_data;    // Unused
+    (void)upload_data_size; // Unused
+    (void)con_cls;        // Unused
+
+    // We only handle GET requests
+    if (0 != strcmp(method, "GET")) {
+        return MHD_NO; // Let libmicrohttpd handle the error response
+    }
+
+    const char *target_url = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "target");
+    const char *redirect_location = "/"; // Default redirect location (fail-safe)
+
+    if (is_valid_target(target_url)) {
+        redirect_location = target_url;
+    }
+
+    // Create a response object
+    struct MHD_Response *response = MHD_create_response_from_buffer(0, NULL, MHD_RESPMEM_PERSISTENT);
+    if (response == NULL) {
+        fprintf(stderr, "Error: Failed to create MHD response\n");
+        return MHD_NO;
+    }
+
+    // Add the 'Location' header to perform the redirect.
+    // MHD_add_response_header checks for NULL header/value internally.
+    enum MHD_Result ret = MHD_add_response_header(response, "Location", redirect_location);
+    if (ret != MHD_YES) {
+        MHD_destroy_response(response);
+        fprintf(stderr, "Error: Failed to add Location header to response\n");
+        return MHD_NO;
+    }
+
+    // Queue the response with an HTTP 302 "Found" status code.
+    ret = MHD_queue_response(connection, MHD_HTTP_FOUND, response);
+    MHD_destroy_response(response); // Clean up the response object
+
+    return ret;
+}
+
+/**
+ * @brief Runs a series of test cases against the URL validation logic.
+ */
+static void run_test_cases() {
+    printf("--- Running Validation Test Cases ---\n");
+
+    const char *test_urls[] = {
+        "https://www.example.com/some/path", // Test Case 1: Valid URL
+        "http://sub.example.com",           // Test Case 2: Valid subdomain URL
+        "http://www.google.com",            // Test Case 3: Invalid domain
+        "http://www.evil.com/?q=example.com",// Test Case 4: Invalid URL with example.com in query
+        NULL,                               // Test Case 5: NULL input
+        "http://example.com.evil.com",      // Test Case 6: Invalid domain with example.com as subdomain
+        "ftp://example.com/file",           // Test Case 7: Invalid protocol
+        "http://example.com",               // Test Case 8: Valid base domain
+        "https://sub-domain.with-dashes.example.com/path" // Test Case 9: Valid complex subdomain
+    };
+    int expected_results[] = {1, 1, 0, 0, 0, 0, 0, 1, 1};
+    int num_tests = sizeof(test_urls) / sizeof(test_urls[0]);
+    int passed = 0;
+
+    for (int i = 0; i < num_tests; ++i) {
+        int result = is_valid_target(test_urls[i]);
+        const char *status = (result == expected_results[i]) ? "PASSED" : "FAILED";
+        if (result == expected_results[i]) {
+            passed++;
+        }
+        printf("Test %d: '%s' -> %s (Expected: %s)\n",
+               i + 1, test_urls[i] ? test_urls[i] : "NULL",
+               result ? "Valid" : "Invalid",
+               expected_results[i] ? "Valid" : "Invalid");
+    }
+    printf("--- Test Summary: %d/%d passed ---\n\n", passed, num_tests);
+}
+
+
+int main(void) {
+    // Run unit tests for the validation logic before starting the server
+    run_test_cases();
+
+    struct MHD_Daemon *daemon;
+
+    daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, PORT, NULL, NULL,
+                              &answer_to_connection, NULL, MHD_OPTION_END);
+
+    if (NULL == daemon) {
+        fprintf(stderr, "Error: Failed to start daemon on port %d\n", PORT);
+        return 1;
+    }
+
+    printf("Server running on http://localhost:%d\n", PORT);
+    printf("Press Enter to stop the server...\n");
+    (void)getchar();
+
+    MHD_stop_daemon(daemon);
+    printf("Server stopped.\n");
+
+    return 0;
+}
+```
+2025-10-26 03:32:21,433 DEBUG close.started
+2025-10-26 03:32:21,433 DEBUG close.complete
+2025-10-26 03:32:21,434 INFO Created file: Lse29.c
+2025-10-26 03:32:24,436 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following:  The regular expression matches a string that starts with one or more alphanumeric characters or hyphens followed by a period.The target variable is set to the value of the target query parameter.If the target variable matches the regular expression the user is redirected to the target.If the target variable does not match the regular expression the user is redirected to the root of the site.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-10-26 03:32:24,848 INFO AFC is enabled with max remote calls: 10.
+2025-10-26 03:32:24,849 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-10-26 03:32:24,912 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780D8230>
+2025-10-26 03:32:24,912 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000015477FC3DD0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-10-26 03:32:24,987 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780D8140>
+2025-10-26 03:32:24,987 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-10-26 03:32:24,987 DEBUG send_request_headers.complete
+2025-10-26 03:32:24,987 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-10-26 03:32:24,987 DEBUG send_request_body.complete
+2025-10-26 03:32:24,987 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-10-26 03:32:34,394 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sun, 26 Oct 2025 01:32:35 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=9349'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-10-26 03:32:34,395 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-10-26 03:32:34,395 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-10-26 03:32:34,395 DEBUG receive_response_body.complete
+2025-10-26 03:32:34,395 DEBUG response_closed.started
+2025-10-26 03:32:34,395 DEBUG response_closed.complete
+2025-10-26 03:32:34,395 INFO ```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Language Basics"
+]
+```
+2025-10-26 03:32:34,395 DEBUG close.started
+2025-10-26 03:32:34,395 DEBUG close.complete
+2025-10-26 03:32:34,397 INFO Assigned tags -->>>>```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Language Basics"
+]
+```
+2025-10-26 03:32:34,402 INFO Lse30_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following C programming language: C. All functions must take inputs as parameters and return outputs.
+3) Use exactly this template and language tags:
+```C
+code here
+```
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse30.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following:  The regular expression matches a string that starts with one or more alphanumeric characters or hyphens followed by a period.The target variable is set to the value of the target query parameter.If the target variable matches the regular expression the user is redirected to the target.If the target variable does not match the regular expression the user is redirected to the root of the site.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+["Rules#1: Ensure all input is validated and sanitized according to expected formats, types, and lengths before processing."],
+["Rules#2: Ensure that potentially dangerous functions are used with caution by validating inputs, sanitizing outputs, and using safer alternatives where possible. Review and adhere to secure coding guidelines specific to the language in use."],
+["Rules#3: Ensure that all buffer operations, such as reading from and writing to memory, strictly adhere to the buffer's boundaries. Use boundary checks, safe functions, and memory management practices to prevent overflows and underflows. Make sure the code dynamically grows the buffer when necessary but stops at a defined maximum size to prevent excessive memory usage, such as when use fread, memchr"],
+["Rules#4: When generating code, default to XXE-safe parsing. Do not expand entities. Do not load external DTDs. Do not fetch anything over the network while parsing XML.
+
+General rules to emit in any code:
+- Reject or strip DOCTYPE declarations. Never enable entity expansion.
+- Disable external entity resolution and network access in the XML parser.
+- Avoid API options that expand entities (for example, NOENT). Prefer secure defaults, and set them explicitly.
+- Set tight resource limits (max size, depth, attributes) to prevent Billion Laughs and quadratic blowups.
+- Treat XPath/XSLT inputs as untrusted. If XSLT is required, disable document() and network access.
+- Validate against a local, whitelisted schema only, with external fetches disabled.
+
+Language guidance (generate these snippets by default):
+- C / libxml2:
+  • Before parsing: xmlDisableExternalEntityLoader(); xmlSubstituteEntitiesDefault(0); xmlLoadExtDtdDefaultValue = 0; 
+  • Parse without entity substitution and with no network: doc = xmlReadMemory(buf, len, NULL, NULL, XML_PARSE_NONET | XML_PARSE_NOCDATA | XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+  • Do NOT pass XML_PARSE_NOENT. Do not rely on external entity loaders.
+- Java (DOM/SAX/SchemaFactory):
+  • DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
+    f.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    f.setFeature("http://xml.org/sax/features/external-general-entities", false);
+    f.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+    f.setXIncludeAware(false);
+    f.setExpandEntityReferences(false);
+  • For SAXParserFactory/SchemaFactory, set the same features and setProperty("http://javax.xml.XMLConstants/property/accessExternalDTD", ""); setProperty("http://javax.xml.XMLConstants/property/accessExternalSchema", "").
+- .NET:
+  • var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null }; using var r = XmlReader.Create(stream, settings);
+- Python:
+  • Prefer defusedxml (defusedxml.ElementTree.fromstring). If using lxml, use parser = etree.XMLParser(resolve_entities=false, no_network=true); and reject DOCTYPE.
+- Go:
+  • encoding/xml does not resolve external entities; still cap input size (io.LimitReader) and disable any custom external resolvers.
+
+Additional safeguards:
+- Impose input limits (size, element depth, attribute count). Fail closed on limit violations.
+- Never pass user-controlled XML directly to XSLT. If XSLT is needed, disable reading from network or filesystem and forbid the document() function.
+- Log rejections generically. Do not echo attacker-controlled XML back in errors.
+
+This policy requires the assistant to emit XML parsing code that disables external entities and network access, forbids DOCTYPE, avoids entity expansion flags, and enforces resource limits by default."],
+["Rules#5: When generating code, default to secure patterns and refuse weak constructs. Treat every input as untrusted and fail closed with clear, minimal error messages.
+
+Core secure code generation rules:
+- Input validation: check type, length, range, and encoding on all external data. Reject or sanitize early. Never trust filenames, URLs, or paths. Block traversal and normalize before use.
+- No dynamic code loading: do not use eval, exec, reflection that instantiates arbitrary types, or insecure deserialization.
+- Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, else PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hardcode secrets or keys.
+- TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a TLS 1.2+ minimum via CURLOPT_SSLVERSION. For Python set ssl.create_default_context with minimum_version TLSv1_2 or disable TLS 1.0 and 1.1 on older runtimes.
+- Files and TOCTOU: open first, then validate the opened handle, and operate on that handle only. For POSIX use openat with O_NOFOLLOW and fstat. For writes use a temp file, fflush, fsync, then an atomic rename. Set restrictive permissions at creation time.
+- Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math.
+- Sensitive data handling: clear secrets before free using a guaranteed zeroization API. Prefer memset_s where available, else use an equivalent explicit zero function (such as explicit_bzero or a volatile wipe) or SecureZeroMemory on Windows. Do not rely on plain memset for secret wiping.
+- Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where needed.
+- Errors: do not leak internal details. Return generic messages to callers, detailed messages to secure logs only.
+- Concurrency: avoid time of check to time of use windows, use atomic operations or validated handles. Use thread safe APIs and per resource locking as needed.
+- Build and toolchain: enable warnings as errors, stack protections, FORTIFY where applicable, and run static analysis and tests. Pin library versions and verify signatures.
+
+Language specifics to emit by default:
+- C: avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets and snprintf. Check all return values. Use RAII-like cleanup patterns with goto on failure labels. For zeroization use memset_s or an explicit zero that the compiler cannot remove.
+- C++: prefer std::string and std::vector, RAII and smart pointers, span for bounds safe views, and chrono for time. Avoid undefined behavior and std::rand for security. Use std::secure_allocator only where available, otherwise rely on explicit zeroization of buffers that hold secrets.
+- Python: use context managers, type hints, secrets for randomness, and the cryptography library for crypto. Avoid eval and pickle on untrusted data. For TLS set a minimum version and verify certificates.
+- Java: use StandardCharsets.UTF_8, try-with-resources, and safe deserialization patterns. For crypto use AES/GCM/NoPadding with GCMParameterSpec(128, iv). Use SecureRandom. Do not install all trusting trust managers.
+
+C language checklist for generated code:
+- All pointers initialized to NULL or valid memory
+- All malloc and calloc results checked for NULL
+- All array accesses bounds checked
+- All strings null terminated
+- Buffer sizes validated before copy and read operations
+- All allocated memory freed exactly once
+- Integer overflow checked before arithmetic and allocation
+- All function return values checked
+- Sensitive data cleared before free using memset_s or a portable explicit zero
+
+Network scope:
+- If the task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, and limit redirects. Do not perform any other network activity unless explicitly required by the task.
+
+Treat each line you generate as insecure until you review it against the above rules and fix it."],
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-10-26 03:32:34,795 INFO AFC is enabled with max remote calls: 10.
+2025-10-26 03:32:34,795 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-10-26 03:32:34,857 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780D9280>
+2025-10-26 03:32:34,857 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000015474A09450> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-10-26 03:32:34,931 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780D9190>
+2025-10-26 03:32:34,933 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-10-26 03:32:34,933 DEBUG send_request_headers.complete
+2025-10-26 03:32:34,933 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-10-26 03:32:34,933 DEBUG send_request_body.complete
+2025-10-26 03:32:34,933 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-10-26 03:33:17,706 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sun, 26 Oct 2025 01:33:18 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=42716'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-10-26 03:33:17,706 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-10-26 03:33:17,707 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-10-26 03:33:17,707 DEBUG receive_response_body.complete
+2025-10-26 03:33:17,707 DEBUG response_closed.started
+2025-10-26 03:33:17,707 DEBUG response_closed.complete
+2025-10-26 03:33:17,707 INFO ```C
+#include <stdio.h>
+#include <string.h>
+#include <regex.h>
+#include <stdlib.h>
+
+// A reasonable maximum length for a URL parameter to prevent abuse.
+#define MAX_TARGET_LEN 2048
+
+/**
+ * @brief Processes a redirect request based on a target string.
+ *
+ * This function checks if the target string matches the regular expression
+ * "^[a-zA-Z0-9-]+\.". If it matches, it prints a message indicating a
+ * redirect to the target. Otherwise, it prints a message indicating a
+ * redirect to the root ("/"). It includes validation for NULL input and
+ * input length.
+ *
+ * @param target The target string from the query parameter.
+ */
+void process_redirect_request(const char* target) {
+    // Rule #1: Ensure all input is validated.
+    // Check for NULL input first.
+    if (target == NULL) {
+        printf("Invalid target (NULL). Redirecting to: /\n");
+        return;
+    }
+
+    // Rule #1 & #3: Validate input length to prevent excessive memory usage or long processing.
+    if (strlen(target) > MAX_TARGET_LEN) {
+        printf("Invalid target (too long). Redirecting to: /\n");
+        return;
+    }
+
+    regex_t regex;
+    int reti;
+    // The pattern matches a string that starts with one or more alphanumeric
+    // characters or hyphens, followed by a literal period.
+    // The backslash for the period must be escaped in the C string.
+    const char* pattern = "^[a-zA-Z0-9-]+\\.";
+
+    // Compile the regular expression.
+    // REG_EXTENDED allows for modern regex syntax.
+    // REG_NOSUB is a performance optimization as we only need to know if it matches,
+    // not what the matched substrings are.
+    reti = regcomp(&regex, pattern, REG_EXTENDED | REG_NOSUB);
+    if (reti) {
+        // This indicates a programming error (bad regex pattern).
+        fprintf(stderr, "Could not compile regex\n");
+        // Fail safely by redirecting to a known-good location.
+        printf("Internal error. Redirecting to: /\n");
+        return;
+    }
+
+    // Execute the regular expression against the target string.
+    reti = regexec(&regex, target, 0, NULL, 0);
+
+    // Process the result.
+    if (reti == 0) {
+        // A match was found.
+        printf("Target matches. Redirecting to: %s\n", target);
+    } else if (reti == REG_NOMATCH) {
+        // No match was found.
+        printf("Target does not match pattern. Redirecting to: /\n");
+    } else {
+        // An error occurred during regex execution.
+        char msgbuf[128];
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        // Fail safely.
+        printf("Internal error. Redirecting to: /\n");
+    }
+
+    // Free the memory allocated for the compiled regular expression.
+    regfree(&regex);
+}
+
+int main() {
+    printf("--- Redirect Logic Test Cases ---\n\n");
+
+    // Test Case 1: A valid target that should be redirected to.
+    printf("Test Case 1: \"valid-domain.com/path\"\n");
+    process_redirect_request("valid-domain.com/path");
+    printf("----------------------------------------\n");
+
+    // Test Case 2: An invalid target that starts with a forbidden character.
+    printf("Test Case 2: \".invalid-start.com\"\n");
+    process_redirect_request(".invalid-start.com");
+    printf("----------------------------------------\n");
+
+    // Test Case 3: An invalid target that is missing the required period.
+    printf("Test Case 3: \"domain-without-period\"\n");
+    process_redirect_request("domain-without-period");
+    printf("----------------------------------------\n");
+
+    // Test Case 4: An invalid empty string target.
+    printf("Test Case 4: \"\" (empty string)\n");
+    process_redirect_request("");
+    printf("----------------------------------------\n");
+
+    // Test Case 5: A NULL target, representing a missing parameter.
+    printf("Test Case 5: NULL\n");
+    process_redirect_request(NULL);
+    printf("----------------------------------------\n");
+
+    return 0;
+}
+```
+2025-10-26 03:33:17,707 DEBUG close.started
+2025-10-26 03:33:17,707 DEBUG close.complete
+2025-10-26 03:33:17,709 INFO Created file: Lse30.c
+2025-10-26 03:33:20,711 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following:  The redirect_url function takes a url as an argument.The urlparse function from an imported module is used to parse the url.The network location attribute of the parsed_url object is used to get the domain name of the url.If the domain name is example.com the url is redirected.If the domain name is not example.com a 404 error is returned.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-10-26 03:33:21,140 INFO AFC is enabled with max remote calls: 10.
+2025-10-26 03:33:21,140 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-10-26 03:33:21,321 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780DA300>
+2025-10-26 03:33:21,321 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000015478057ED0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-10-26 03:33:21,394 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780DA210>
+2025-10-26 03:33:21,394 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-10-26 03:33:21,394 DEBUG send_request_headers.complete
+2025-10-26 03:33:21,394 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-10-26 03:33:21,394 DEBUG send_request_body.complete
+2025-10-26 03:33:21,394 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-10-26 03:33:30,098 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sun, 26 Oct 2025 01:33:30 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=8648'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-10-26 03:33:30,098 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-10-26 03:33:30,098 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-10-26 03:33:30,098 DEBUG receive_response_body.complete
+2025-10-26 03:33:30,098 DEBUG response_closed.started
+2025-10-26 03:33:30,099 DEBUG response_closed.complete
+2025-10-26 03:33:30,099 INFO ```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Error Handling",
+  "Language Basics"
+]
+```
+2025-10-26 03:33:30,099 DEBUG close.started
+2025-10-26 03:33:30,099 DEBUG close.complete
+2025-10-26 03:33:30,099 INFO Assigned tags -->>>>```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Error Handling",
+  "Language Basics"
+]
+```
+2025-10-26 03:33:30,104 INFO Lse31_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following C programming language: C. All functions must take inputs as parameters and return outputs.
+3) Use exactly this template and language tags:
+```C
+code here
+```
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse31.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following:  The redirect_url function takes a url as an argument.The urlparse function from an imported module is used to parse the url.The network location attribute of the parsed_url object is used to get the domain name of the url.If the domain name is example.com the url is redirected.If the domain name is not example.com a 404 error is returned.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+["Rules#1: Ensure all input is validated and sanitized according to expected formats, types, and lengths before processing."],
+["Rules#2: Ensure that potentially dangerous functions are used with caution by validating inputs, sanitizing outputs, and using safer alternatives where possible. Review and adhere to secure coding guidelines specific to the language in use."],
+["Rules#3: Ensure that all buffer operations, such as reading from and writing to memory, strictly adhere to the buffer's boundaries. Use boundary checks, safe functions, and memory management practices to prevent overflows and underflows. Make sure the code dynamically grows the buffer when necessary but stops at a defined maximum size to prevent excessive memory usage, such as when use fread, memchr"],
+["Rules#4: When generating code, default to XXE-safe parsing. Do not expand entities. Do not load external DTDs. Do not fetch anything over the network while parsing XML.
+
+General rules to emit in any code:
+- Reject or strip DOCTYPE declarations. Never enable entity expansion.
+- Disable external entity resolution and network access in the XML parser.
+- Avoid API options that expand entities (for example, NOENT). Prefer secure defaults, and set them explicitly.
+- Set tight resource limits (max size, depth, attributes) to prevent Billion Laughs and quadratic blowups.
+- Treat XPath/XSLT inputs as untrusted. If XSLT is required, disable document() and network access.
+- Validate against a local, whitelisted schema only, with external fetches disabled.
+
+Language guidance (generate these snippets by default):
+- C / libxml2:
+  • Before parsing: xmlDisableExternalEntityLoader(); xmlSubstituteEntitiesDefault(0); xmlLoadExtDtdDefaultValue = 0; 
+  • Parse without entity substitution and with no network: doc = xmlReadMemory(buf, len, NULL, NULL, XML_PARSE_NONET | XML_PARSE_NOCDATA | XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+  • Do NOT pass XML_PARSE_NOENT. Do not rely on external entity loaders.
+- Java (DOM/SAX/SchemaFactory):
+  • DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
+    f.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    f.setFeature("http://xml.org/sax/features/external-general-entities", false);
+    f.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+    f.setXIncludeAware(false);
+    f.setExpandEntityReferences(false);
+  • For SAXParserFactory/SchemaFactory, set the same features and setProperty("http://javax.xml.XMLConstants/property/accessExternalDTD", ""); setProperty("http://javax.xml.XMLConstants/property/accessExternalSchema", "").
+- .NET:
+  • var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null }; using var r = XmlReader.Create(stream, settings);
+- Python:
+  • Prefer defusedxml (defusedxml.ElementTree.fromstring). If using lxml, use parser = etree.XMLParser(resolve_entities=false, no_network=true); and reject DOCTYPE.
+- Go:
+  • encoding/xml does not resolve external entities; still cap input size (io.LimitReader) and disable any custom external resolvers.
+
+Additional safeguards:
+- Impose input limits (size, element depth, attribute count). Fail closed on limit violations.
+- Never pass user-controlled XML directly to XSLT. If XSLT is needed, disable reading from network or filesystem and forbid the document() function.
+- Log rejections generically. Do not echo attacker-controlled XML back in errors.
+
+This policy requires the assistant to emit XML parsing code that disables external entities and network access, forbids DOCTYPE, avoids entity expansion flags, and enforces resource limits by default."],
+["Rules#5: Ensure that all exceptions are caught and handled appropriately. Use try-catch/try-with-resources blocks to manage exceptions and provide meaningful error messages or recovery mechanisms."],
+["Rules#6: When generating code, default to secure patterns and refuse weak constructs. Treat every input as untrusted and fail closed with clear, minimal error messages.
+
+Core secure code generation rules:
+- Input validation: check type, length, range, and encoding on all external data. Reject or sanitize early. Never trust filenames, URLs, or paths. Block traversal and normalize before use.
+- No dynamic code loading: do not use eval, exec, reflection that instantiates arbitrary types, or insecure deserialization.
+- Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, else PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hardcode secrets or keys.
+- TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a TLS 1.2+ minimum via CURLOPT_SSLVERSION. For Python set ssl.create_default_context with minimum_version TLSv1_2 or disable TLS 1.0 and 1.1 on older runtimes.
+- Files and TOCTOU: open first, then validate the opened handle, and operate on that handle only. For POSIX use openat with O_NOFOLLOW and fstat. For writes use a temp file, fflush, fsync, then an atomic rename. Set restrictive permissions at creation time.
+- Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math.
+- Sensitive data handling: clear secrets before free using a guaranteed zeroization API. Prefer memset_s where available, else use an equivalent explicit zero function (such as explicit_bzero or a volatile wipe) or SecureZeroMemory on Windows. Do not rely on plain memset for secret wiping.
+- Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where needed.
+- Errors: do not leak internal details. Return generic messages to callers, detailed messages to secure logs only.
+- Concurrency: avoid time of check to time of use windows, use atomic operations or validated handles. Use thread safe APIs and per resource locking as needed.
+- Build and toolchain: enable warnings as errors, stack protections, FORTIFY where applicable, and run static analysis and tests. Pin library versions and verify signatures.
+
+Language specifics to emit by default:
+- C: avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets and snprintf. Check all return values. Use RAII-like cleanup patterns with goto on failure labels. For zeroization use memset_s or an explicit zero that the compiler cannot remove.
+- C++: prefer std::string and std::vector, RAII and smart pointers, span for bounds safe views, and chrono for time. Avoid undefined behavior and std::rand for security. Use std::secure_allocator only where available, otherwise rely on explicit zeroization of buffers that hold secrets.
+- Python: use context managers, type hints, secrets for randomness, and the cryptography library for crypto. Avoid eval and pickle on untrusted data. For TLS set a minimum version and verify certificates.
+- Java: use StandardCharsets.UTF_8, try-with-resources, and safe deserialization patterns. For crypto use AES/GCM/NoPadding with GCMParameterSpec(128, iv). Use SecureRandom. Do not install all trusting trust managers.
+
+C language checklist for generated code:
+- All pointers initialized to NULL or valid memory
+- All malloc and calloc results checked for NULL
+- All array accesses bounds checked
+- All strings null terminated
+- Buffer sizes validated before copy and read operations
+- All allocated memory freed exactly once
+- Integer overflow checked before arithmetic and allocation
+- All function return values checked
+- Sensitive data cleared before free using memset_s or a portable explicit zero
+
+Network scope:
+- If the task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, and limit redirects. Do not perform any other network activity unless explicitly required by the task.
+
+Treat each line you generate as insecure until you review it against the above rules and fix it."],
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-10-26 03:33:30,605 INFO AFC is enabled with max remote calls: 10.
+2025-10-26 03:33:30,607 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-10-26 03:33:30,671 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780DB230>
+2025-10-26 03:33:30,671 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000015478055AD0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-10-26 03:33:30,761 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000154780DB140>
+2025-10-26 03:33:30,761 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-10-26 03:33:30,761 DEBUG send_request_headers.complete
+2025-10-26 03:33:30,761 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-10-26 03:33:30,761 DEBUG send_request_body.complete
+2025-10-26 03:33:30,761 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-10-26 03:34:39,589 DEBUG receive_response_headers.failed exception=KeyboardInterrupt()
+2025-10-26 03:34:39,590 DEBUG response_closed.started
+2025-10-26 03:34:39,590 DEBUG response_closed.complete

@@ -1,0 +1,1 @@
+// Unable to provide a portable single-file C database example without external client libraries (e.g., ODBC/MySQL/PostgreSQL).
