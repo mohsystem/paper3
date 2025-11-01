@@ -70,6 +70,7 @@
             "Use safe deserialization patterns.",
             "For crypto use AES/GCM/NoPadding with GCMParameterSpec(128, iv).",
             "Use SecureRandom.",
+            "Handle any exception that could be thrown.",
             "Do not install trust managers that disable validation."
           ]
         }
