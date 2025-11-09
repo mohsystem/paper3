@@ -1,135 +1,239 @@
+/**
+ * This C code demonstrates a secure way to read a file from a designated directory,
+ * simulating a backend function for a route like `/img?file=...`.
+ *
+ * It emphasizes security by preventing path traversal, time-of-check-to-time-of-use
+ * (TOCTOU) race conditions, and other common file-related vulnerabilities.
+ *
+ * This code is designed for POSIX-compliant systems (like Linux, macOS)
+ * due to its use of functions like openat(), fstat(), and POSIX file flags.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
 
+// POSIX-specific headers for secure file operations
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/stat.h>
-#include <libgen.h>
-#include <errno.h>
-#include <sys/types.h>
 
-const char* BASE_IMAGE_DIR = "test_images_c";
-const long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+#define BASE_IMAGE_PATH "./images"
+#define MAX_FILENAME_LEN 255
+#define MAX_FILE_SIZE (10 * 1024 * 1024) // 10 MB limit
 
-char* img(const char* file, long* out_size) {
-    if (out_size == NULL) return NULL;
-    *out_size = 0;
-    if (file == NULL || *file == '\0') {
-        fprintf(stderr, "Error: Filename is null or empty.\n");
-        return NULL;
+// A struct to hold the file content and its size.
+typedef struct {
+    char *data;
+    size_t size;
+} FileContent;
+
+/**
+ * @brief Validates a filename to ensure it is safe to use.
+ *
+ * This function enforces several rules:
+ * - The filename must not be NULL or empty.
+ * - The length must be within a reasonable limit.
+ * - It must not contain path traversal sequences ('..') or directory separators ('/', '\').
+ * - It should not start with a '.' to avoid accessing hidden files.
+ * - It should only contain characters from a predefined allow-list.
+ *
+ * @param filename The filename string to validate.
+ * @return true if the filename is valid, false otherwise.
+ */
+bool is_valid_filename(const char *filename) {
+    if (filename == NULL || filename[0] == '\0') {
+        return false;
     }
 
-    // Rule #1 & #5: Sanitize input by taking only the basename.
-    char* file_copy = strdup(file);
-    if (!file_copy) { perror("strdup"); return NULL; }
-    char* sanitized_filename_ptr = basename(file_copy);
-    char* sanitized_filename = strdup(sanitized_filename_ptr);
-    free(file_copy);
-    if (!sanitized_filename) { perror("strdup"); return NULL; }
-
-    if (strcmp(sanitized_filename, file) != 0 || strstr(sanitized_filename, "..") != NULL) {
-        fprintf(stderr, "Error: Potential path traversal in filename '%s'.\n", file);
-        free(sanitized_filename);
-        return NULL;
+    size_t len = strnlen(filename, MAX_FILENAME_LEN + 1);
+    if (len == 0 || len > MAX_FILENAME_LEN) {
+        return false;
     }
     
-    // Rule #6: Open first, then validate (TOCTOU avoidance)
-    int dir_fd = -1, fd = -1;
-    char* buffer = NULL;
+    // Rule #3: Normalize and canonicalize paths... before validation.
+    // Here, we disallow path characters entirely, which is a stronger prevention.
+    if (strchr(filename, '/') != NULL || strchr(filename, '\\') != NULL || strstr(filename, "..") != NULL) {
+        return false;
+    }
 
-    dir_fd = open(BASE_IMAGE_DIR, O_RDONLY | O_DIRECTORY);
-    if (dir_fd < 0) { perror("Error opening base directory"); goto cleanup_sanitized_name; }
+    // Rule #2: Use allow lists over block lists.
+    for (size_t i = 0; i < len; ++i) {
+        char c = filename[i];
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-')) {
+            return false;
+        }
+    }
     
-    fd = openat(dir_fd, sanitized_filename, O_RDONLY | O_NOFOLLOW);
-    close(dir_fd);
-    
-    if (fd < 0) { fprintf(stderr, "Error: Could not open file '%s'.\n", sanitized_filename); goto cleanup_sanitized_name; }
-    
+    if (filename[0] == '.') {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief Simulates serving an image file based on a filename parameter.
+ *
+ * This function securely reads a file from a predefined base directory. It serves as an
+ * example of how to handle file access from untrusted user input.
+ *
+ * Security measures implemented:
+ * - Rule #1, #5: All input is treated as untrusted and validated by is_valid_filename().
+ * - Rule #39, #41: Path traversal is prevented by validating the filename and using `openat()`
+ *   to anchor file access to a specific base directory.
+ * - Rule #44, #45, #47: TOCTOU race conditions are avoided by opening the file first (`openat`)
+ *   and then checking its properties (`fstat`) on the resulting file descriptor.
+ * - Rule #48: Symlink following is disabled with the `O_NOFOLLOW` flag.
+ * - Rule #18, #22, #25: File size is checked against a maximum limit, and reads are bounded.
+ *
+ * @param filename The name of the file to read.
+ * @return A FileContent struct. On success, `data` points to a heap-allocated
+ *         buffer with the file contents, and `size` is the file size. The caller
+ *         is responsible for freeing `data`. On failure, `data` is NULL and `size` is 0.
+ */
+FileContent img(const char *filename) {
+    FileContent result = { .data = NULL, .size = 0 };
+    int dir_fd = -1;
+    int file_fd = -1;
+    char *buffer = NULL;
+
+    if (!is_valid_filename(filename)) {
+        fprintf(stderr, "Error: Invalid filename provided.\n");
+        return result;
+    }
+
+    dir_fd = open(BASE_IMAGE_PATH, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (dir_fd == -1) {
+        perror("Error opening base directory");
+        return result;
+    }
+
+    file_fd = openat(dir_fd, filename, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (file_fd == -1) {
+        // Suppress "No such file or directory" for non-existent files, which is normal.
+        if (errno != ENOENT) {
+            perror("Error opening file");
+        }
+        goto cleanup;
+    }
+
     struct stat st;
-    if (fstat(fd, &st) != 0) { perror("Error getting file status"); goto cleanup_fd; }
-
-    if (!S_ISREG(st.st_mode)) { fprintf(stderr, "Error: '%s' is not a regular file.\n", sanitized_filename); goto cleanup_fd; }
-
-    // Rule #3: Check file size.
-    if (st.st_size > MAX_FILE_SIZE) { fprintf(stderr, "Error: File size %ld exceeds limit.\n", (long)st.st_size); goto cleanup_fd; }
-    
-    if (st.st_size > 0) {
-        buffer = (char*)malloc(st.st_size);
-        if (!buffer) { perror("malloc"); goto cleanup_fd; }
-        ssize_t bytes_read = read(fd, buffer, st.st_size);
-        if (bytes_read < 0) { perror("read"); free(buffer); buffer = NULL; goto cleanup_fd; }
-        if (bytes_read != st.st_size) { fprintf(stderr, "Error: Incomplete read.\n"); free(buffer); buffer = NULL; goto cleanup_fd; }
-        *out_size = bytes_read;
-    } else {
-        *out_size = 0;
-        buffer = malloc(1); 
-        if (buffer) buffer[0] = '\0';
+    if (fstat(file_fd, &st) == -1) {
+        perror("Error getting file stats");
+        goto cleanup;
     }
 
-cleanup_fd:
-    close(fd);
-cleanup_sanitized_name:
-    free(sanitized_filename);
-    return buffer;
+    if (!S_ISREG(st.st_mode)) {
+        fprintf(stderr, "Error: Path does not correspond to a regular file.\n");
+        goto cleanup;
+    }
+
+    if (st.st_size > MAX_FILE_SIZE) {
+        fprintf(stderr, "Error: File size exceeds the maximum limit of %d MB.\n", MAX_FILE_SIZE / (1024 * 1024));
+        goto cleanup;
+    }
+
+    if (st.st_size == 0) {
+        result.size = 0;
+        result.data = malloc(1); // Allocate 1 byte to return a valid, free-able pointer
+        if (result.data) {
+             result.data[0] = '\0';
+        }
+        goto cleanup;
+    }
+    
+    // Rule #19: Check for potential overflow before allocation. st.st_size is off_t,
+    // which might be larger than size_t, but MAX_FILE_SIZE provides a practical upper bound.
+    buffer = malloc(st.st_size);
+    if (buffer == NULL) {
+        perror("Error allocating memory for file content");
+        goto cleanup;
+    }
+
+    ssize_t bytes_read = read(file_fd, buffer, st.st_size);
+    if (bytes_read < 0) {
+        perror("Error reading file");
+        free(buffer);
+        goto cleanup;
+    }
+
+    if ((size_t)bytes_read != (size_t)st.st_size) {
+        fprintf(stderr, "Error: Incomplete read of the file.\n");
+        free(buffer);
+        goto cleanup;
+    }
+
+    result.data = buffer;
+    result.size = st.st_size;
+
+cleanup:
+    if (file_fd != -1) close(file_fd);
+    if (dir_fd != -1) close(dir_fd);
+    return result;
 }
 
+/**
+ * @brief Sets up a test environment by creating a directory and some test files.
+ */
 void setup_test_environment() {
-    mkdir(BASE_IMAGE_DIR, 0755);
-    char path[256];
-    snprintf(path, sizeof(path), "%s/test.txt", BASE_IMAGE_DIR);
-    FILE* f1 = fopen(path, "w");
-    if(f1) { fputs("valid content", f1); fclose(f1); }
-    snprintf(path, sizeof(path), "%s/subdir", BASE_IMAGE_DIR);
-    mkdir(path, 0755);
-    snprintf(path, sizeof(path), "%s/subdir/nested.txt", BASE_IMAGE_DIR);
-    FILE* f2 = fopen(path, "w");
-    if(f2) { fputs("nested content", f2); fclose(f2); }
-}
+    mkdir(BASE_IMAGE_PATH, 0755);
 
-void cleanup_test_environment() {
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "rm -rf %s", BASE_IMAGE_DIR);
-    if (system(cmd) != 0) {
-        fprintf(stderr, "Warning: Failed to cleanup test directory.\n");
+    FILE *f = fopen(BASE_IMAGE_PATH "/test.png", "w");
+    if (f) {
+        fputs("PNG_DATA_HERE", f);
+        fclose(f);
     }
-}
-
-void run_test_case(int num, const char* desc, const char* input, bool success_expected) {
-    printf("\n%d. Testing %s '%s'\n", num, desc, input);
-    long size = 0;
-    char* content = img(input, &size);
     
-    if (success_expected) {
-        if (content != NULL) printf("Success. Content: %.*s\n", (int)size, content);
-        else printf("Failed.\n");
-    } else {
-        if (content == NULL) printf("Success. Request blocked as expected.\n");
-        else printf("Failed.\n");
+    f = fopen("secret.txt", "w");
+    if (f) {
+        fputs("This is a secret.", f);
+        fclose(f);
     }
-    free(content);
+}
+
+/**
+ * @brief Runs a single test case and prints the outcome.
+ *
+ * @param test_name A descriptive name for the test.
+ * @param filename The filename to pass to the img() function.
+ */
+void run_test_case(const char *test_name, const char *filename) {
+    printf("--- Running test case: %s ---\n", test_name);
+    printf("Requesting file: \"%s\"\n", filename ? filename : "NULL");
+
+    FileContent content = img(filename);
+
+    if (content.data != NULL) {
+        printf("Success! Read %zu bytes.\n", content.size);
+        if (content.size > 0) {
+            printf("Content preview: '%.*s...'\n", (int)(content.size > 10 ? 10 : content.size), content.data);
+        }
+        free(content.data);
+    } else {
+        printf("Failed as expected.\n");
+    }
+    printf("\n");
 }
 
 int main() {
     setup_test_environment();
-    printf("--- C Test Cases ---\n");
+
+    // Test case 1: A valid file request.
+    run_test_case("Valid file", "test.png");
+
+    // Test case 2: A file that does not exist.
+    run_test_case("Non-existent file", "notfound.gif");
+
+    // Test case 3: A path traversal attempt to access a file outside the base directory.
+    run_test_case("Path traversal", "../secret.txt");
+
+    // Test case 4: A filename containing a disallowed directory separator.
+    run_test_case("Disallowed characters", "images/test.png");
     
-    run_test_case(1, "valid file", "test.txt", true);
-    run_test_case(2, "non-existent file", "notfound.txt", false);
-    run_test_case(3, "path traversal", "../test.txt", false);
-    
-    char abs_path_buf[1024] = {0};
-    char resolved_path[1024] = {0};
-    snprintf(abs_path_buf, sizeof(abs_path_buf) - 1, "%s/%s", BASE_IMAGE_DIR, "test.txt");
-    if (realpath(abs_path_buf, resolved_path)) {
-        run_test_case(4, "absolute path", resolved_path, false);
-    } else {
-        perror("realpath for test case 4");
-    }
-    
-    run_test_case(5, "nested path", "subdir/nested.txt", false);
-    
-    cleanup_test_environment();
+    // Test case 5: An empty filename string.
+    run_test_case("Empty filename", "");
+
     return 0;
 }

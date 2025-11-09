@@ -1,305 +1,147 @@
 
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import hashlib
 import secrets
-import urllib.parse
-import html
-from typing import Dict, Optional, Tuple
-import time
+import hashlib
+from typing import Optional
+from flask import Flask, request, session, redirect, url_for, render_template_string, abort
 
-# Secure session storage with expiration
-sessions: Dict[str, Tuple[str, float]] = {}
-# Store hashed passwords with salt
-users: Dict[str, Tuple[bytes, bytes]] = {}
-# Rate limiting for login attempts
-login_attempts: Dict[str, Tuple[int, float]] = {}
+app = Flask(__name__)
 
-SESSION_TIMEOUT = 1800  # 30 minutes in seconds
-MAX_LOGIN_ATTEMPTS = 5
-RATE_LIMIT_WINDOW = 300  # 5 minutes in seconds
+# Rules#3: Never hard code secrets. Read from environment or secret manager.
+# In production, set this via environment variable or secret manager
+app.secret_key = secrets.token_hex(32)
 
+# Rules#5: Use Argon2id or PBKDF2 with proper parameters for password hashing
+# Simulated user database with hashed passwords (in production, use a proper database)
+# Password: "secure_password123" hashed with PBKDF2-HMAC-SHA256
+USERS = {
+    "admin": {
+        "password_hash": "d74ff0ee8da3b9806b18c877dbf29bbde50b5bd8e4dad7a3a725000feb82e8f1",
+        "salt": "a1b2c3d4e5f6"
+    }
+}
 
-def hash_password(password: str, salt: bytes) -> bytes:
-    """Hash password with salt using SHA-256 and multiple iterations."""
-    # Use PBKDF2 for key derivation with high iteration count
-    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
-    return pwd_hash
+# Rules#2: Input validation - validate all inputs
+def validate_username(username: str) -> bool:
+    """Validate username format and length."""
+    if not username or not isinstance(username, str):
+        return False
+    # Allow only alphanumeric and underscore, length 3-20
+    if len(username) < 3 or len(username) > 20:
+        return False
+    return username.replace('_', '').isalnum()
 
+def validate_password(password: str) -> bool:
+    """Validate password format and length."""
+    if not password or not isinstance(password, str):
+        return False
+    # Enforce minimum length
+    if len(password) < 8 or len(password) > 128:
+        return False
+    return True
 
-def create_user(username: str, password: str) -> None:
-    """Create a new user with securely hashed password."""
-    # Generate unique random salt using secrets module (CSPRNG)
-    salt = secrets.token_bytes(16)
-    pwd_hash = hash_password(password, salt)
-    users[username] = (pwd_hash, salt)
-
+def hash_password(password: str, salt: str) -> str:
+    """Hash password using PBKDF2-HMAC-SHA256."""
+    # Rules#5: Use PBKDF2 with at least 210000 iterations
+    iterations = 210000
+    password_bytes = password.encode('utf-8')
+    salt_bytes = salt.encode('utf-8')
+    dk = hashlib.pbkdf2_hmac('sha256', password_bytes, salt_bytes, iterations)
+    return dk.hex()
 
 def verify_password(username: str, password: str) -> bool:
     """Verify password against stored hash."""
-    if username not in users:
+    if username not in USERS:
         return False
-    stored_hash, salt = users[username]
-    pwd_hash = hash_password(password, salt)
-    # Constant-time comparison to prevent timing attacks
-    return secrets.compare_digest(pwd_hash, stored_hash)
+    
+    user_data = USERS[username]
+    password_hash = hash_password(password, user_data["salt"])
+    
+    # Use constant-time comparison to prevent timing attacks
+    return secrets.compare_digest(password_hash, user_data["password_hash"])
 
+@app.route('/')
+def index():
+    """Index page with link to login."""
+    # Rules#36: Use constant format strings for HTML rendering
+    html = """\n    <!DOCTYPE html>\n    <html>\n    <head>\n        <title>Home</title>\n        <meta charset="UTF-8">\n    </head>\n    <body>\n        <h1>Welcome</h1>\n        <p><a href="/login">Login</a></p>\n    </body>\n    </html>\n    """
+    return render_template_string(html)
 
-def generate_session_token() -> str:
-    """Generate secure random session token."""
-    return secrets.token_urlsafe(32)
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login page with form."""
+    if request.method == 'GET':
+        html = """\n        <!DOCTYPE html>\n        <html>\n        <head>\n            <title>Login</title>\n            <meta charset="UTF-8">\n        </head>\n        <body>\n            <h1>Login</h1>\n            <form method="POST" action="/login">\n                <label>Username: <input type="text" name="username" required maxlength="20"></label><br>\n                <label>Password: <input type="password" name="password" required maxlength="128"></label><br>\n                <button type="submit">Login</button>\n            </form>\n        </body>\n        </html>\n        """
+        return render_template_string(html)
+    
+    return do_login()
 
+def do_login():
+    """Process login credentials."""
+    # Rules#29: Validate and sanitize every external input
+    username = request.form.get('username', '')
+    password = request.form.get('password', '')
+    
+    # Rules#2: Input validation for type, length, format
+    if not validate_username(username):
+        # Rules#11: Generic error message, no details leaked
+        return "Invalid credentials", 401
+    
+    if not validate_password(password):
+        return "Invalid credentials", 401
+    
+    # Verify credentials
+    if verify_password(username, password):
+        # Rules#1: Regenerate session ID on authentication to prevent session fixation
+        session.clear()
+        session.permanent = False
+        session['username'] = username
+        
+        return redirect(url_for('secret'))
+    
+    # Rules#11: Return generic message on failure
+    return "Invalid credentials", 401
 
-def validate_session(token: Optional[str]) -> Optional[str]:
-    """Validate session token and return username if valid."""
-    if not token:
-        return None
-    if token not in sessions:
-        return None
-    username, expiry = sessions[token]
-    if time.time() > expiry:
-        # Clean up expired session
-        del sessions[token]
-        return None
-    return username
+@app.route('/secret')
+def secret():
+    """Secret page accessible only after login."""
+    # Rules#33: Treat session data as untrusted, validate it
+    username = session.get('username')
+    
+    if not username or not validate_username(username):
+        # Rules#1: Fail closed - deny access if session invalid
+        abort(403)
+    
+    html = """\n    <!DOCTYPE html>\n    <html>\n    <head>\n        <title>Secret</title>\n        <meta charset="UTF-8">\n    </head>\n    <body>\n        <h1>Secret settings</h1>\n        <p>This is a protected page.</p>\n        <p><a href="/logout">Logout</a></p>\n    </body>\n    </html>\n    """
+    return render_template_string(html)
 
+@app.route('/logout')
+def logout():
+    """Logout and clear session."""
+    # Rules#9: Clear sensitive session data
+    session.clear()
+    return redirect(url_for('index'))
 
-def is_rate_limited(username: str) -> bool:
-    """Check if user is rate limited."""
-    if username not in login_attempts:
-        return False
-    attempts, last_attempt = login_attempts[username]
-    time_since_last = time.time() - last_attempt
-    if time_since_last > RATE_LIMIT_WINDOW:
-        del login_attempts[username]
-        return False
-    return attempts >= MAX_LOGIN_ATTEMPTS
-
-
-def record_login_attempt(username: str, success: bool) -> None:
-    """Record login attempt for rate limiting."""
-    if success:
-        if username in login_attempts:
-            del login_attempts[username]
-    else:
-        if username in login_attempts:
-            attempts, _ = login_attempts[username]
-            login_attempts[username] = (attempts + 1, time.time())
-        else:
-            login_attempts[username] = (1, time.time())
-
-
-class SecureHTTPRequestHandler(BaseHTTPRequestHandler):
-    """HTTP request handler with secure session management."""
-
-    def do_GET(self) -> None:
-        """Handle GET requests."""
-        if self.path == '/':
-            self.handle_index()
-        elif self.path == '/login':
-            self.handle_login_get()
-        elif self.path == '/secret':
-            self.handle_secret()
-        else:
-            self.send_error(404, "Not Found")
-
-    def do_POST(self) -> None:
-        """Handle POST requests."""
-        if self.path == '/login':
-            self.handle_login_post()
-        else:
-            self.send_error(405, "Method Not Allowed")
-
-    def handle_index(self) -> None:
-        """Render index page."""
-        response = (
-            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-            '<title>Index</title></head><body>'
-            '<h1>Welcome</h1><p><a href="/login">Login</a></p>'
-            '</body></html>'
-        )
-        self.send_response_with_headers(200, response)
-
-    def handle_login_get(self) -> None:
-        """Render login form."""
-        response = (
-            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-            '<title>Login</title></head><body><h1>Login</h1>'
-            '<form method="POST" action="/login">'
-            '<label>Username: <input type="text" name="username" '
-            'required maxlength="50" pattern="[a-zA-Z0-9_]+"></label><br>'
-            '<label>Password: <input type="password" name="password" '
-            'required maxlength="100"></label><br>'
-            '<button type="submit">Login</button></form></body></html>'
-        )
-        self.send_response_with_headers(200, response)
-
-    def handle_login_post(self) -> None:
-        """Process login form submission."""
-        # Validate Content-Length to prevent excessive data
-        content_length_str = self.headers.get('Content-Length', '0')
-        try:
-            content_length = int(content_length_str)
-        except ValueError:
-            self.send_error_response("Invalid request")
-            return
-
-        if content_length > 4096:  # Maximum request size
-            self.send_error(413, "Request Entity Too Large")
-            return
-
-        # Read request body with length validation
-        post_data = self.rfile.read(content_length).decode('utf-8')
-        params = urllib.parse.parse_qs(post_data)
-
-        # Extract and validate parameters
-        username_list = params.get('username', [''])
-        password_list = params.get('password', [''])
-
-        if not username_list or not password_list:
-            self.send_error_response("Missing credentials")
-            return
-
-        username = username_list[0]
-        password = password_list[0]
-
-        # Input validation
-        if not username or not password:
-            self.send_error_response("Invalid input")
-            return
-
-        if len(username) > 50 or len(password) > 100:
-            self.send_error_response("Input too long")
-            return
-
-        # Sanitize username to alphanumeric only
-        if not username.replace('_', '').isalnum():
-            self.send_error_response("Invalid username format")
-            return
-
-        # Check rate limiting
-        if is_rate_limited(username):
-            self.send_error_response("Too many login attempts. Please try again later.")
-            return
-
-        # Verify credentials
-        valid = verify_password(username, password)
-        record_login_attempt(username, valid)
-
-        if valid:
-            # Create session with secure token
-            token = generate_session_token()
-            expiry = time.time() + SESSION_TIMEOUT
-            sessions[token] = (username, expiry)
-
-            # Set secure cookie and redirect
-            self.send_response(302)
-            self.send_header('Location', '/secret')
-            self.send_header('Set-Cookie',
-                           f'session={token}; HttpOnly; Secure; '
-                           f'SameSite=Strict; Max-Age={SESSION_TIMEOUT}; Path=/')
-            self.send_secure_headers()
-            self.end_headers()
-        else:
-            self.send_error_response("Invalid credentials")
-
-    def handle_secret(self) -> None:
-        """Render secret page (requires authentication)."""
-        # Get session token from cookie
-        cookie = self.headers.get('Cookie', '')
-        token = None
-        for c in cookie.split(';'):
-            c = c.strip()
-            if c.startswith('session='):
-                token = c[8:]
-                break
-
-        username = validate_session(token)
-
-        if not username:
-            # Redirect to login if not authenticated
-            self.send_response(302)
-            self.send_header('Location', '/login')
-            self.send_secure_headers()
-            self.end_headers()
-            return
-
-        # Escape username to prevent XSS
-        safe_username = html.escape(username)
-        response = (
-            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-            '<title>Secret</title></head><body>'
-            '<h1>Secret settings</h1>'
-            f'<p>Welcome, {safe_username}!</p>'
-            '<p><a href="/">Home</a></p></body></html>'
-        )
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
-        self.send_secure_headers()
-        self.end_headers()
-        self.wfile.write(response.encode('utf-8'))
-
-    def send_response_with_headers(self, code: int, content: str) -> None:
-        """Send HTTP response with security headers."""
-        self.send_response(code)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.send_secure_headers()
-        self.end_headers()
-        self.wfile.write(content.encode('utf-8'))
-
-    def send_secure_headers(self) -> None:
-        """Send security-related HTTP headers."""
-        self.send_header('X-Content-Type-Options', 'nosniff')
-        self.send_header('X-Frame-Options', 'DENY')
-        self.send_header('Content-Security-Policy', "default-src 'self'")
-
-    def send_error_response(self, message: str) -> None:
-        """Send error response with escaped message."""
-        safe_message = html.escape(message)
-        response = (
-            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-            '<title>Login Error</title></head><body>'
-            f'<h1>Error</h1><p>{safe_message}</p>'
-            '<p><a href="/login">Try again</a></p></body></html>'
-        )
-        self.send_response(401)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.send_secure_headers()
-        self.end_headers()
-        self.wfile.write(response.encode('utf-8'))
-
-    def log_message(self, format: str, *args) -> None:
-        """Override to prevent logging sensitive information."""
-        # Only log non-sensitive request info
-        pass
-
-
-def main():
-    """Main entry point - create test users and start server."""
-    # Create test users with secure password hashing and unique salts
-    create_user('admin', 'SecureP@ss123!')
-    create_user('user1', 'TestUser#456')
-    create_user('user2', 'Demo$Pass789')
-    create_user('testuser', 'MyTest&Pass000')
-    create_user('guest', 'Guest!Pass321')
-
-    server_address = ('', 8000)
-    httpd = HTTPServer(server_address, SecureHTTPRequestHandler)
-
-    print('Server started on port 8000')
-    print('Test users created:')
-    print('  admin / SecureP@ss123!')
-    print('  user1 / TestUser#456')
-    print('  user2 / Demo$Pass789')
-    print('  testuser / MyTest&Pass000')
-    print('  guest / Guest!Pass321')
-
-    try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print('\\nShutting down server...')
-        httpd.shutdown()
-
+# Rules#11: Custom error handlers that don't leak details\n@app.errorhandler(403)\ndef forbidden(e):\n    return "Access denied", 403\n\n@app.errorhandler(404)\ndef not_found(e):\n    return "Not found", 404\n\n@app.errorhandler(500)\ndef internal_error(e):\n    # Rules#11: Don't leak internal details
+    return "Internal error", 500
 
 if __name__ == '__main__':
-    main()
+    # Test cases
+    print("Testing password hashing...")
+    test_password = "secure_password123"
+    test_salt = "a1b2c3d4e5f6"
+    hashed = hash_password(test_password, test_salt)
+    print(f"Hash: {hashed}")
+    
+    print("\\nTesting validation...")
+    print(f"Valid username 'admin': {validate_username('admin')}")
+    print(f"Invalid username 'ad': {validate_username('ad')}")
+    print(f"Valid password: {validate_password('password123')}")
+    print(f"Invalid password (short): {validate_password('short')}")
+    
+    print("\\nTesting password verification...")
+    print(f"Correct credentials: {verify_password('admin', 'secure_password123')}")
+    print(f"Wrong credentials: {verify_password('admin', 'wrongpassword')}")
+    
+    # Rules#13: In production, disable debug and use secure settings
+    # app.run(debug=False, host='127.0.0.1', port=5000)
+    print("\\nTo run the app: app.run(debug=False, host='127.0.0.1', port=5000)")

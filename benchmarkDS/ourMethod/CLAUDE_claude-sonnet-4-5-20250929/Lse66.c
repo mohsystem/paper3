@@ -2,292 +2,79 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <errno.h>
+#include <limits.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <errno.h>
-#include <time.h>
 
-#define UPLOAD_DIR "uploads"
+/* Security: Maximum file size to prevent DoS - 10MB */
 #define MAX_FILE_SIZE (10 * 1024 * 1024)
-#define SAFE_FILENAME_LEN 32
+/* Security: Maximum filename length to prevent buffer overflow */
+#define MAX_FILENAME_LEN 255
+/* Security: Buffer size for safe I/O operations */
+#define BUFFER_SIZE 8192
 
-static const unsigned char PDF_MAGIC[] = {0x25, 0x50, 0x44, 0x46}; /* %PDF */
-
-/* Generate base64url character from 6-bit value */
-static char base64url_char(unsigned char c) {
-    if (c < 26) return 'A' + c;
-    if (c < 52) return 'a' + (c - 26);
-    if (c < 62) return '0' + (c - 52);
-    if (c == 62) return '-';
-    return '_';
+/* Security: Explicit memset that cannot be optimized away */
+void secure_memset(void *ptr, int value, size_t len) {
+    if (ptr == NULL || len == 0) return;
+    volatile unsigned char *p = (volatile unsigned char *)ptr;
+    while (len--) {
+        *p++ = (unsigned char)value;
+    }
 }
 
-/* Generate secure random filename using random data */
-static int generate_safe_filename(char *buffer, size_t buffer_size) {
-    FILE *urandom = NULL;
-    unsigned char random_bytes[16];
-    size_t i, j;
+/* Security: Validate filename to prevent path traversal and injection attacks
+ * Rules#2: Input validation with allow list approach */
+int validate_filename(const char *filename) {
+    size_t len;
+    size_t i;
+    int has_pdf_ext = 0;
     
-    if (buffer == NULL || buffer_size < SAFE_FILENAME_LEN) {
-        return -1;
-    }
-    
-    /* Initialize buffer */
-    memset(buffer, 0, buffer_size);
-    
-    /* Read random bytes from /dev/urandom or use fallback */
-    urandom = fopen("/dev/urandom", "rb");
-    if (urandom != NULL) {
-        if (fread(random_bytes, 1, sizeof(random_bytes), urandom) != sizeof(random_bytes)) {
-            fclose(urandom);
-            return -1;
-        }
-        fclose(urandom);
-        urandom = NULL;
-    } else {
-        /* Fallback: use time and rand (less secure, for portability) */
-        srand((unsigned int)time(NULL));
-        for (i = 0; i < sizeof(random_bytes); i++) {
-            random_bytes[i] = (unsigned char)(rand() % 256);
-        }
-    }
-    
-    /* Base64url encode */
-    j = 0;
-    for (i = 0; i < sizeof(random_bytes) && j < buffer_size - 5; i += 3) {
-        unsigned char b1 = random_bytes[i];
-        unsigned char b2 = (i + 1 < sizeof(random_bytes)) ? random_bytes[i + 1] : 0;
-        unsigned char b3 = (i + 2 < sizeof(random_bytes)) ? random_bytes[i + 2] : 0;
-        
-        buffer[j++] = base64url_char(b1 >> 2);
-        buffer[j++] = base64url_char(((b1 & 0x03) << 4) | (b2 >> 4));
-        if (i + 1 < sizeof(random_bytes)) {
-            buffer[j++] = base64url_char(((b2 & 0x0f) << 2) | (b3 >> 6));
-        }
-        if (i + 2 < sizeof(random_bytes)) {
-            buffer[j++] = base64url_char(b3 & 0x3f);
-        }
-    }
-    
-    /* Add .pdf extension */
-    if (j + 5 < buffer_size) {
-        strncpy(buffer + j, ".pdf", 5);
+    if (filename == NULL) {
         return 0;
     }
     
-    return -1;
-}
-
-/* Validate filename doesn't contain dangerous characters */\nstatic int validate_filename(const char *filename) {\n    if (filename == NULL || strlen(filename) == 0) {\n        return -1;\n    }\n    \n    /* Check for path traversal */\n    if (strstr(filename, "..") != NULL || \n        strchr(filename, '/') != NULL || \n        strchr(filename, '\\\\') != NULL) {
-        return -1;
+    len = strnlen(filename, MAX_FILENAME_LEN + 1);
+    
+    /* Security: Reject if filename exceeds maximum length */
+    if (len == 0 || len > MAX_FILENAME_LEN) {
+        return 0;
     }
     
-    /* Check extension */
-    size_t len = strlen(filename);
-    if (len < 4 || strcmp(filename + len - 4, ".pdf") != 0) {
-        return -1;
-    }
-    
-    return 0;
-}
-
-/* Secure PDF upload with TOCTOU prevention and validation */
-char* upload_pdf(const unsigned char *file_content, size_t file_size, 
-                 const char *original_filename) {
-    char *safe_filename = NULL;
-    char target_path[256];
-    char temp_path[256];
-    int temp_fd = -1;
-    struct stat st;
-    size_t total_written;
-    ssize_t written;
-    
-    /* Input validation: check file size */
-    if (file_content == NULL || file_size == 0 || file_size > MAX_FILE_SIZE) {
-        fprintf(stderr, "Invalid file size\\n");
-        return NULL;
-    }
-    
-    /* Validate original filename */
-    if (validate_filename(original_filename) != 0) {
-        fprintf(stderr, "Invalid filename\\n");
-        return NULL;
-    }
-    
-    /* Validate PDF magic bytes */
-    if (file_size < 4 || memcmp(file_content, PDF_MAGIC, 4) != 0) {
-        fprintf(stderr, "File is not a valid PDF\\n");
-        return NULL;
-    }
-    
-    /* Create upload directory with restricted permissions if needed */
-    if (stat(UPLOAD_DIR, &st) != 0) {
-        if (mkdir(UPLOAD_DIR, 0700) != 0) {
-            fprintf(stderr, "Failed to create upload directory\\n");
-            return NULL;
-        }
-    }
-    
-    /* Allocate and generate secure filename */
-    safe_filename = (char*)malloc(SAFE_FILENAME_LEN);
-    if (safe_filename == NULL) {
-        fprintf(stderr, "Memory allocation failed\\n");
-        return NULL;
-    }
-    
-    if (generate_safe_filename(safe_filename, SAFE_FILENAME_LEN) != 0) {
-        free(safe_filename);
-        fprintf(stderr, "Failed to generate safe filename\\n");
-        return NULL;
-    }
-    
-    /* Construct paths with bounds checking */
-    if (snprintf(target_path, sizeof(target_path), "%s/%s", 
-                 UPLOAD_DIR, safe_filename) >= (int)sizeof(target_path)) {
-        free(safe_filename);
-        fprintf(stderr, "Path too long\\n");
-        return NULL;
-    }
-    
-    if (snprintf(temp_path, sizeof(temp_path), "%s/temp_%s", 
-                 UPLOAD_DIR, safe_filename) >= (int)sizeof(temp_path)) {
-        free(safe_filename);
-        fprintf(stderr, "Path too long\\n");
-        return NULL;
-    }
-    
-    /* Open temp file with O_CREAT | O_EXCL to prevent TOCTOU, O_NOFOLLOW to prevent symlink attacks */
-    temp_fd = open(temp_path, O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC | O_NOFOLLOW, 0600);
-    if (temp_fd < 0) {
-        free(safe_filename);
-        fprintf(stderr, "Failed to create temporary file: %s\\n", strerror(errno));
-        return NULL;
-    }
-    
-    /* Validate opened file with fstat (TOCTOU safe) */
-    if (fstat(temp_fd, &st) != 0 || !S_ISREG(st.st_mode)) {
-        close(temp_fd);
-        unlink(temp_path);
-        free(safe_filename);
-        fprintf(stderr, "File validation failed\\n");
-        return NULL;
-    }
-    
-    /* Write content to temp file */
-    total_written = 0;
-    while (total_written < file_size) {
-        written = write(temp_fd, file_content + total_written, file_size - total_written);
-        if (written < 0) {
-            close(temp_fd);
-            unlink(temp_path);
-            free(safe_filename);
-            fprintf(stderr, "Failed to write to file: %s\\n", strerror(errno));
-            return NULL;
-        }
-        total_written += (size_t)written;
-    }
-    
-    /* Sync to disk */
-    if (fsync(temp_fd) != 0) {
-        close(temp_fd);
-        unlink(temp_path);
-        free(safe_filename);
-        fprintf(stderr, "Failed to sync file\\n");
-        return NULL;
-    }
-    
-    close(temp_fd);
-    temp_fd = -1;
-    
-    /* Atomic move to final location */
-    if (rename(temp_path, target_path) != 0) {
-        unlink(temp_path);
-        free(safe_filename);
-        fprintf(stderr, "Failed to move file to final location: %s\\n", strerror(errno));
-        return NULL;
-    }
-    
-    return safe_filename;
-}
-
-int main(void) {
-    unsigned char *valid_pdf = NULL;
-    unsigned char *invalid_pdf = NULL;
-    char *result = NULL;
-    
-    printf("PDF Upload Test Cases:\\n");
-    
-    /* Test case 1: Valid PDF file */
-    valid_pdf = (unsigned char*)malloc(100);
-    if (valid_pdf != NULL) {
-        memset(valid_pdf, 0, 100);
-        valid_pdf[0] = 0x25; valid_pdf[1] = 0x50; 
-        valid_pdf[2] = 0x44; valid_pdf[3] = 0x46; /* %PDF */
-        result = upload_pdf(valid_pdf, 100, "document.pdf");
-        if (result != NULL) {
-            printf("Test 1 PASSED: %s\\n", result);
-            free(result);
-        } else {
-            printf("Test 1 FAILED\\n");
-        }
-        free(valid_pdf);
-    }
-    
-    /* Test case 2: File too large */
-    result = upload_pdf((unsigned char*)"", 0, "large.pdf");
-    if (result == NULL) {
-        printf("Test 2 PASSED: Rejected empty file\\n");
-    } else {
-        printf("Test 2 FAILED: Should reject empty file\\n");
-        free(result);
-    }
-    
-    /* Test case 3: Path traversal attempt */
-    valid_pdf = (unsigned char*)malloc(100);
-    if (valid_pdf != NULL) {
-        memset(valid_pdf, 0, 100);
-        valid_pdf[0] = 0x25; valid_pdf[1] = 0x50; 
-        valid_pdf[2] = 0x44; valid_pdf[3] = 0x46;
-        result = upload_pdf(valid_pdf, 100, "../../../etc/passwd.pdf");
-        if (result == NULL) {
-            printf("Test 3 PASSED: Rejected path traversal\\n");
-        } else {
-            printf("Test 3 FAILED: Should reject path traversal\\n");
-            free(result);
-        }
-        free(valid_pdf);
-    }
-    
-    /* Test case 4: Invalid file extension */
-    valid_pdf = (unsigned char*)malloc(100);
-    if (valid_pdf != NULL) {
-        memset(valid_pdf, 0, 100);
-        valid_pdf[0] = 0x25; valid_pdf[1] = 0x50; 
-        valid_pdf[2] = 0x44; valid_pdf[3] = 0x46;
-        result = upload_pdf(valid_pdf, 100, "document.exe");
-        if (result == NULL) {
-            printf("Test 4 PASSED: Rejected non-PDF extension\\n");
-        } else {
-            printf("Test 4 FAILED: Should reject non-PDF extension\\n");
-            free(result);
-        }
-        free(valid_pdf);
-    }
-    
-    /* Test case 5: Invalid PDF magic bytes */
-    invalid_pdf = (unsigned char*)malloc(100);
-    if (invalid_pdf != NULL) {
-        memset(invalid_pdf, 0, 100);
-        result = upload_pdf(invalid_pdf, 100, "fake.pdf");
-        if (result == NULL) {
-            printf("Test 5 PASSED: Rejected invalid PDF magic bytes\\n");
-        } else {
-            printf("Test 5 FAILED: Should reject invalid PDF\\n");
-            free(result);
-        }
-        free(invalid_pdf);
-    }
+    /* Security: Check for path traversal attempts */
+    if (strstr(filename, "..") != NULL || 
+        strstr(filename, "/") != NULL || 
+        strstr(filename, "\\\") != NULL) {\n        return 0;\n    }\n    \n    /* Security: Validate allowed characters (alphanumeric, dash, underscore, dot) */\n    for (i = 0; i < len; i++) {\n        char c = filename[i];\n        if (!((c >= 'a' && c <= 'z') || \n              (c >= 'A' && c <= 'Z') || \n              (c >= '0' && c <= '9') || \n              c == '-' || c == '_' || c == '.')) {\n            return 0;\n        }\n    }\n    \n    /* Security: Verify .pdf extension */\n    if (len > 4 && strcmp(filename + len - 4, ".pdf") == 0) {\n        has_pdf_ext = 1;\n    }\n    \n    return has_pdf_ext;\n}\n\n/* Security: Safe file upload with TOCTOU prevention\n * Rules#7: Open first, validate handle, operate only on handle */\nint upload_pdf_file(const char *filename, const unsigned char *file_data, size_t file_size) {\n    int dirfd = -1;\n    int fd = -1;\n    ssize_t written = 0;\n    ssize_t total_written = 0;\n    struct stat st;\n    char safe_path[PATH_MAX];\n    int result = -1;\n    char temp_filename[MAX_FILENAME_LEN + 16];\n    \n    /* Security: Rules#2 - Validate all inputs */\n    if (filename == NULL || file_data == NULL) {\n        fprintf(stderr, "Error: Invalid parameters\
+");\n        return -1;\n    }\n    \n    /* Security: Rules#36 - Check file size limits to prevent DoS */\n    if (file_size == 0 || file_size > MAX_FILE_SIZE) {\n        fprintf(stderr, "Error: Invalid file size\
+");\n        return -1;\n    }\n    \n    /* Security: Rules#2 - Validate filename to prevent path traversal */\n    if (!validate_filename(filename)) {\n        fprintf(stderr, "Error: Invalid filename\
+");\n        return -1;\n    }\n    \n    /* Security: Rules#7 - Open uploads directory with O_DIRECTORY to anchor operations */\n    dirfd = open("uploads", O_RDONLY | O_DIRECTORY | O_CLOEXEC);\n    if (dirfd == -1) {\n        /* Create directory if it doesn't exist with restrictive permissions */\n        if (mkdir("uploads", 0700) != 0 && errno != EEXIST) {\n            fprintf(stderr, "Error: Cannot create uploads directory\
+");\n            return -1;\n        }\n        dirfd = open("uploads", O_RDONLY | O_DIRECTORY | O_CLOEXEC);\n        if (dirfd == -1) {\n            fprintf(stderr, "Error: Cannot open uploads directory\
+");\n            return -1;\n        }\n    }\n    \n    /* Security: Rules#52 - Write to temporary file first for atomic operation */\n    /* Security: Rules#8 - Check snprintf return value and buffer size */\n    if (snprintf(temp_filename, sizeof(temp_filename), ".tmp_%s", filename) >= (int)sizeof(temp_filename)) {\n        fprintf(stderr, "Error: Filename too long\
+");\n        close(dirfd);\n        return -1;\n    }\n    \n    /* Security: Rules#7 - Use openat with O_NOFOLLOW to prevent symlink attacks\n     * Rules#50 - Set restrictive permissions (0600) at creation time */\n    fd = openat(dirfd, temp_filename, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);\n    if (fd == -1) {\n        fprintf(stderr, "Error: Cannot create temporary file\
+");\n        close(dirfd);\n        return -1;\n    }\n    \n    /* Security: Rules#48 - Validate opened file descriptor with fstat */\n    if (fstat(fd, &st) != 0) {\n        fprintf(stderr, "Error: Cannot stat file\
+");\n        goto cleanup;\n    }\n    \n    /* Security: Verify it's a regular file */\n    if (!S_ISREG(st.st_mode)) {\n        fprintf(stderr, "Error: Not a regular file\
+");\n        goto cleanup;\n    }\n    \n    /* Security: Rules#8 - Write data with bounds checking and error handling */\n    total_written = 0;\n    while (total_written < (ssize_t)file_size) {\n        size_t to_write = file_size - total_written;\n        if (to_write > BUFFER_SIZE) {\n            to_write = BUFFER_SIZE;\n        }\n        \n        written = write(fd, file_data + total_written, to_write);\n        if (written <= 0) {\n            if (written == -1 && errno == EINTR) {\n                continue;\n            }\n            fprintf(stderr, "Error: Write failed\
+");\n            goto cleanup;\n        }\n        \n        /* Security: Rules#35 - Check for overflow before addition */\n        if (total_written > SSIZE_MAX - written) {\n            fprintf(stderr, "Error: Integer overflow in write\
+");\n            goto cleanup;\n        }\n        total_written += written;\n    }\n    \n    /* Security: Rules#52 - Flush and sync before rename for durability */\n    if (fsync(fd) != 0) {\n        fprintf(stderr, "Error: fsync failed\
+");\n        goto cleanup;\n    }\n    \n    /* Close the file descriptor before rename */\n    close(fd);\n    fd = -1;\n    \n    /* Security: Rules#52 - Atomic rename to final destination */\n    if (renameat(dirfd, temp_filename, dirfd, filename) != 0) {\n        fprintf(stderr, "Error: Rename failed\
+");\n        unlinkat(dirfd, temp_filename, 0);\n        close(dirfd);\n        return -1;\n    }\n    \n    /* Security: Sync directory for durability */\n    fsync(dirfd);\n    \n    result = 0;\n    \ncleanup:\n    /* Security: Rules#8 - Proper cleanup and error handling */\n    if (fd != -1) {\n        close(fd);\n        /* Remove temporary file on failure */\n        unlinkat(dirfd, temp_filename, 0);\n    }\n    if (dirfd != -1) {\n        close(dirfd);\n    }\n    \n    return result;\n}\n\n/* Test cases */\nint main(void) {\n    int test_result;\n    unsigned char test_data[1024];\n    size_t i;\n    \n    /* Initialize test data */\n    for (i = 0; i < sizeof(test_data); i++) {\n        test_data[i] = (unsigned char)(i % 256);\n    }\n    \n    printf("Test 1: Valid PDF upload\
+");\n    test_result = upload_pdf_file("test1.pdf", test_data, sizeof(test_data));\n    printf("Result: %s\
+\
+", test_result == 0 ? "SUCCESS" : "FAILED");\n    \n    printf("Test 2: Path traversal attempt (should fail)\
+");\n    test_result = upload_pdf_file("../etc/passwd.pdf", test_data, sizeof(test_data));\n    printf("Result: %s\
+\
+", test_result != 0 ? "SUCCESS (blocked)" : "FAILED");\n    \n    printf("Test 3: Invalid extension (should fail)\
+");\n    test_result = upload_pdf_file("test.txt", test_data, sizeof(test_data));\n    printf("Result: %s\
+\
+", test_result != 0 ? "SUCCESS (blocked)" : "FAILED");\n    \n    printf("Test 4: Null filename (should fail)\
+");\n    test_result = upload_pdf_file(NULL, test_data, sizeof(test_data));\n    printf("Result: %s\
+\
+", test_result != 0 ? "SUCCESS (blocked)" : "FAILED");\n    \n    printf("Test 5: Oversized file (should fail)\
+");\n    test_result = upload_pdf_file("large.pdf", test_data, MAX_FILE_SIZE + 1);\n    printf("Result: %s\
+\
+", test_result != 0 ? "SUCCESS (blocked)" : "FAILED");
     
     return 0;
 }

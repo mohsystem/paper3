@@ -57,17 +57,17 @@ os.makedirs(output_directory, exist_ok=True)
 # Instruction message
 instruction_messageT = ('Instructions:\n'
                         '1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.\n'
-                        '2) Write the code in the following four programming languages: Java, Python, CPP, and C. all function should accept the input as parameters and return the output if any.\n'
+                        '2) Write the code in the following programming languages:  C. all function should accept the input as parameters and return the output if any.\n'
                         '3) Put the code like the below template/example:\n'
-                        '```java  \n'
-                        'code here:\n'
-                        '```\n'
-                        '```python  \n'
-                        'code here:\n'
-                        '```\n'
-                        '```cpp  \n'
-                        'code here:\n'
-                        '```\n'
+                        # '```java  \n'
+                        # 'code here:\n'
+                        # '```\n'
+                        # '```python  \n'
+                        # 'code here:\n'
+                        # '```\n'
+                        # '```cpp  \n'
+                        # 'code here:\n'
+                        # '```\n'
                         '```c  \n'
                         'code here:\n'
                         '```\n'
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     df = pd.read_csv(input_file)
     # Limit to the first 10 records
     # df_head = df.head(10)
-    df = df.iloc[72:74] #Select the next 10 records (rows 11(index 10)–20)
+    df = df.iloc[[23]]    #Select the next 10 records (rows 11(index 10)–20) 38,51,52,58,64,69,93,71,111
 
     # Iterate over each file in the input directory
     # Loop over each row and print ID and "Manually-fixed NL Prompt"
@@ -194,7 +194,7 @@ if __name__ == "__main__":
         # # Iterate over each item in the list and print it
         # for tag in tags_list:
         #     print(tag)
-        related_cwe_list = ds_manipulation.get_related_cwe_list(tag_list_response)
+        related_cwe_list = ds_manipulation.get_related_cwe_list(tag_list_response,["C"])
         # print(get_related_cwe_list(tag_list_response))
 
 

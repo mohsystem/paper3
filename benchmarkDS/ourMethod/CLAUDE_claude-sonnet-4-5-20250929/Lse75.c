@@ -3,76 +3,121 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Define person structure */
 typedef struct {
     int status;
+    char name[64];
+    int age;
 } person;
 
-/* Allocates a new person with status initialized to 0
- * Returns NULL on allocation failure
- * Caller is responsible for freeing the returned pointer
+/* Secure memory allocation function for person structure
+ * Returns: pointer to allocated person on success, NULL on failure
+ * Security measures:
+ * - Check allocation result for NULL (Rules#8)
+ * - Initialize all memory to zero to avoid uninitialized data exposure (Rules#8)
+ * - Set status explicitly after validation (Rules#8)
  */
 person* allocate_person(void) {
-    /* Allocate memory for person struct - checking for NULL is critical */
-    person* p = (person*)malloc(sizeof(person));
+    /* Allocate memory for person structure
+     * Use calloc instead of malloc to zero-initialize all fields (Rules#8)
+     * This prevents information leakage from uninitialized memory
+     */
+    person *p = (person*)calloc(1, sizeof(person));
     
-    /* Check if allocation succeeded */
+    /* Check allocation result (Rules#8: check all allocation results) */
     if (p == NULL) {
+        /* Allocation failed - return NULL to caller (Rules#11: generic error) */
+        fprintf(stderr, "Memory allocation failed\\n");
         return NULL;
     }
     
-    /* Initialize status to 0 - explicit initialization prevents uninitialized memory */
+    /* Set status to 0 explicitly (already zeroed by calloc, but explicit for clarity) */
     p->status = 0;
+    
+    /* All other fields are already zero-initialized by calloc:
+     * - name array is zeroed (null terminated)
+     * - age is 0
+     */
     
     return p;
 }
 
-/* Safely deallocate person and clear sensitive data if any */
-void free_person(person* p) {
-    if (p != NULL) {
-        /* Clear memory before freeing to prevent information leakage */
-        memset(p, 0, sizeof(person));
-        free(p);
+/* Secure deallocation function
+ * Security measures:
+ * - Clear sensitive data before free (Rules#9)
+ * - Prevent double-free by setting pointer to NULL (Rules#8)
+ */
+void free_person(person **p) {
+    if (p == NULL || *p == NULL) {
+        return;
     }
+    
+    /* Clear sensitive data before freeing (Rules#9)
+     * Use memset to zero the structure before deallocation
+     * Note: In production, use memset_s if available for guaranteed zeroization
+     */
+    memset(*p, 0, sizeof(person));
+    
+    /* Free the memory */
+    free(*p);
+    
+    /* Set pointer to NULL to prevent double-free (Rules#8) */
+    *p = NULL;
 }
 
+/* Test cases demonstrating secure usage */
 int main(void) {
-    /* Test case 1: Normal allocation */
-    person* p1 = allocate_person();
+    printf("=== Test Case 1: Basic allocation and verification ===\\n");
+    person *p1 = allocate_person();
     if (p1 != NULL) {
-        printf("Test 1 - Person allocated, status: %d\\n", p1->status);
-        free_person(p1);
+        printf("Person allocated successfully\\n");
+        printf("Status: %d (expected: 0)\\n", p1->status);
+        printf("Age: %d (expected: 0)\\n", p1->age);
+        printf("Name[0]: %d (expected: 0)\\n", p1->name[0]);
+        free_person(&p1);
+        printf("Person freed successfully\\n\\n");
     } else {
-        printf("Test 1 - Allocation failed\\n");
+        printf("Allocation failed\\n\\n");
     }
     
-    /* Test case 2: Verify status is 0 */
-    person* p2 = allocate_person();
-    if (p2 != NULL) {
-        printf("Test 2 - Status is zero: %d\\n", (p2->status == 0));
-        free_person(p2);
+    printf("=== Test Case 2: Multiple allocations ===\\n");
+    person *p2 = allocate_person();
+    person *p3 = allocate_person();
+    if (p2 != NULL && p3 != NULL) {
+        printf("Multiple persons allocated successfully\\n");
+        printf("p2 status: %d, p3 status: %d\\n", p2->status, p3->status);
+        free_person(&p2);
+        free_person(&p3);
+        printf("All persons freed successfully\\n\\n");
+    } else {
+        if (p2 != NULL) free_person(&p2);
+        if (p3 != NULL) free_person(&p3);
+        printf("One or more allocations failed\\n\\n");
     }
     
-    /* Test case 3: Multiple allocations */
-    person* p3 = allocate_person();
-    if (p3 != NULL) {
-        printf("Test 3 - Multiple allocations work, status: %d\\n", p3->status);
-        free_person(p3);
-    }
-    
-    /* Test case 4: Verify independence of objects */
-    person* p4 = allocate_person();
-    person* p5 = allocate_person();
-    if (p4 != NULL && p5 != NULL) {
+    printf("=== Test Case 3: Modify and verify status ===\\n");
+    person *p4 = allocate_person();
+    if (p4 != NULL) {
+        printf("Initial status: %d\\n", p4->status);
         p4->status = 1;
-        printf("Test 4 - Objects are independent: %d\\n", (p5->status == 0));
-        free_person(p4);
-        free_person(p5);
+        printf("Modified status: %d\\n", p4->status);
+        free_person(&p4);
+        printf("Person freed successfully\\n\\n");
     }
     
-    /* Test case 5: Null check handling */
-    person* p6 = allocate_person();
-    printf("Test 5 - Null check passed: %d\\n", (p6 != NULL));
-    free_person(p6);
+    printf("=== Test Case 4: Double-free protection ===\\n");
+    person *p5 = allocate_person();
+    if (p5 != NULL) {
+        free_person(&p5);
+        printf("First free successful, p5 is now NULL\\n");
+        free_person(&p5);  /* Safe - function checks for NULL */
+        printf("Second free call handled safely\\n\\n");
+    }
+    
+    printf("=== Test Case 5: NULL pointer handling ===\\n");
+    person *p6 = NULL;
+    free_person(&p6);  /* Should handle gracefully */
+    printf("NULL pointer handled safely\\n");
     
     return 0;
 }

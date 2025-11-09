@@ -9076,3 +9076,1397 @@ int main() {
 2025-11-01 02:54:46,800 INFO Created file: Lse64.cpp
 2025-11-01 02:54:46,800 INFO Created file: Lse64.c
 2025-11-01 02:54:49,801 INFO All files processed.
+2025-11-01 05:35:15,239 INFO active_integration ------------------ ['GEMINI', 'gemini-2.5-pro']
+2025-11-01 05:35:15,243 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following: 
+ The code is a simple web application that has a single route. The route is /info and it is a GET request. The function info() is called when the route is accessed. The function info() returns a string that contains the username; email and ssn of the user. The username email and ssn are stored in the session variable.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-11-01 05:35:15,667 INFO AFC is enabled with max remote calls: 10.
+2025-11-01 05:35:15,667 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-01 05:35:15,785 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002ABC865E120>
+2025-11-01 05:35:15,785 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x000002ABC54293D0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-01 05:35:15,849 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002ABC8B1E990>
+2025-11-01 05:35:15,849 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-01 05:35:15,851 DEBUG send_request_headers.complete
+2025-11-01 05:35:15,851 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-01 05:35:15,851 DEBUG send_request_body.complete
+2025-11-01 05:35:15,851 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-01 05:35:25,414 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sat, 01 Nov 2025 03:35:25 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=9517'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-01 05:35:25,414 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-01 05:35:25,414 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-01 05:35:25,414 DEBUG receive_response_body.complete
+2025-11-01 05:35:25,416 DEBUG response_closed.started
+2025-11-01 05:35:25,416 DEBUG response_closed.complete
+2025-11-01 05:35:25,416 INFO ```json
+[
+  "Data safety and security",
+  "Web Development, API & Web Services",
+  "Authentication & Authorization",
+  "Cryptography",
+  "Language Basics"
+]
+```
+2025-11-01 05:35:25,416 DEBUG close.started
+2025-11-01 05:35:25,416 DEBUG close.complete
+2025-11-01 05:35:25,416 INFO Assigned tags -->>>>```json
+[
+  "Data safety and security",
+  "Web Development, API & Web Services",
+  "Authentication & Authorization",
+  "Cryptography",
+  "Language Basics"
+]
+```
+2025-11-01 05:35:25,421 INFO Lse42_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following four programming languages: Python. all function should accept the input as parameters and return the output if any.
+3) Put the code like the below template/example:
+```python  
+code here:
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse42.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following: 
+ The code is a simple web application that has a single route. The route is /info and it is a GET request. The function info() is called when the route is accessed. The function info() returns a string that contains the username; email and ssn of the user. The username email and ssn are stored in the session variable.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+## General Mitigation
+["Rules#13: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]
+["Rules#14: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]
+["Rules#15: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]
+["Rules#16: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]
+["Rules#17: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]
+["Rules#18: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]
+["Rules#19: Files and TOCTOU: open first, validate the opened handle, and operate only on that handle. For POSIX prefer openat with O_NOFOLLOW and fstat. For writes use a temporary file, fflush, fsync, then perform an atomic rename. Set restrictive permissions at creation time."]
+["Rules#20: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]
+["Rules#21: Sensitive data handling: clear secrets before free using a guaranteed zeroization API. Prefer memset_s where available, else use an equivalent explicit zero such as explicit_bzero, a volatile wipe, or SecureZeroMemory on Windows. Do not rely on plain memset for secret wiping."]
+["Rules#22: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]
+["Rules#23: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]
+["Rules#24: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]
+["Rules#25: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]
+["Rules#26: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]
+["Rules#27: Treat each line you generate as insecure until you review it against these rules and fix it."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Use context managers and type hints.
+- Use the secrets module for randomness.
+- Use the cryptography library for crypto.
+- Avoid eval and pickle on untrusted data.
+- Use ssl.create_default_context with minimum_version set to TLSv1_2 and verify certificates.
+
+## Code Review Checklist
+- Inputs validated for type, length, range, and encoding
+- No hard coded secrets or keys
+- No eval, exec, unsafe reflection, or insecure deserialization
+- Crypto uses AEAD and modern KDFs with proper parameters
+- TLS verification and minimum version enforced in all clients
+- No TOCTOU patterns; safe file operations and atomic writes
+- All logging redacts sensitive data and uses constant format strings
+- Errors do not leak internal details to callers
+- Memory safety and integer overflow checks present where relevant
+- Concurrency hazards addressed with safe primitives
+- Build hardening flags on; static analysis and tests in place
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Replace insecure randomness and TLS defaults.
+Input:
+```
+token = random.random(); requests.get(url, verify=false)
+```
+Ideal Output:
+```
+Use secrets.token_urlsafe for tokens. Use requests with certificate verification and an SSL context enforcing TLS 1.2 or higher.
+```
+
+## General Mitigation
+["Rules#29: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]
+["Rules#30: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]
+["Rules#31: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]
+["Rules#32: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]
+["Rules#33: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]
+["Rules#34: Document the rationale for use, constraints, and tests that cover misuse cases."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Avoid eval and exec on any untrusted input.
+- Do not use pickle, yaml.load (unsafe), or marshal on data from untrusted sources.
+- Use subprocess without shell and pass arguments as a list. Avoid shell=True with user input.
+- Limit regex complexity to prevent denial-of-service via catastrophic backtracking.
+
+## Code Review Checklist
+- Safer alternative considered and documented; dangerous function use justified
+- Parameters validated for size, type, encoding, and allowed character set
+- No user input used as a format string, command, or code
+- Timeouts, resource limits, and safe flags configured
+- Errors handled without leaking sensitive details; return codes checked
+- Automated tests cover misuse and edge cases
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Avoid shell=True with user input.
+Input:
+```
+subprocess.run(f"tar -xvf {name}", shell=True)
+```
+Ideal Output:
+```
+Call subprocess.run(["tar", "-xvf", name], check=True) and validate that name matches an allow list. Do not use shell=True.
+```
+
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-11-01 05:35:25,896 INFO AFC is enabled with max remote calls: 10.
+2025-11-01 05:35:25,897 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-01 05:35:25,956 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002ABC8B1F950>
+2025-11-01 05:35:25,956 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x000002ABC8AB3C50> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-01 05:35:26,099 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002ABC8B1F860>
+2025-11-01 05:35:26,099 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-01 05:35:26,099 DEBUG send_request_headers.complete
+2025-11-01 05:35:26,099 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-01 05:35:26,100 DEBUG send_request_body.complete
+2025-11-01 05:35:26,100 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-01 05:36:11,996 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sat, 01 Nov 2025 03:36:12 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=45845'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-01 05:36:11,996 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-01 05:36:11,997 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-01 05:36:11,997 DEBUG receive_response_body.complete
+2025-11-01 05:36:11,997 DEBUG response_closed.started
+2025-11-01 05:36:11,997 DEBUG response_closed.complete
+2025-11-01 05:36:11,997 INFO ```python
+import os
+import secrets
+from flask import Flask, session, escape, request
+
+# It is recommended to install pyopenssl for the adhoc ssl context
+# pip install Flask pyopenssl
+
+app = Flask(__name__)
+
+# Rules#15: Never hard code passwords or secrets.
+# Read the secret key from an environment variable.
+# For development, a new random key is generated on each run.
+# In production, this MUST be a stable, securely stored value.
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(16))
+
+# Enforce secure session cookie attributes
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+)
+
+@app.route("/")
+def index():
+    """Provides navigation for testing."""
+    return """
+    <h1>Flask Session Example</h1>
+    <a href="/login_test">1. Set Session Data (Login)</a><br>
+    <a href="/info">2. Get User Info</a><br>
+    <a href="/logout">3. Clear Session Data (Logout)</a>
+    """
+
+@app.route("/login_test")
+def login_test():
+    """A test route to populate session data."""
+    # In a real application, this data would come from a database after authentication.
+    session['username'] = 'testuser'
+    session['email'] = 'test@example.com'
+    session['ssn'] = '999-99-9999' # Sensitive data
+    return "Session data set. <a href='/info'>Click to view info</a>"
+
+@app.route("/info")
+def info():
+    """
+    Displays user information from the session.
+    """
+    # Rules#14: Input validation. Check if required keys exist in the session.
+    required_keys = ['username', 'email', 'ssn']
+    if not all(key in session for key in required_keys):
+        # Rules#23: Do not leak internal details. Return a generic error.
+        return "User information not found in session. Please log in.", 401
+
+    username = session.get('username')
+    email = session.get('email')
+    ssn = session.get('ssn') # Rules#22: Be cautious with logging this data.
+
+    # Prevent XSS by escaping all data retrieved from the session.
+    safe_username = escape(username)
+    safe_email = escape(email)
+    # SSN is sensitive; display it cautiously. Here we escape it for safety.
+    safe_ssn = escape(ssn)
+
+    # Rules#21: Sensitive data handling. Do not log this response.
+    return f"Username: {safe_username}, Email: {safe_email}, SSN: {safe_ssn}"
+
+@app.route("/logout")
+def logout():
+    """Clears the session."""
+    session.clear()
+    return "Session cleared. <a href='/'>Go to home</a>"
+
+
+def main():
+    """
+    Main function to run the Flask application.
+    Includes test case descriptions.
+    """
+    # Note: To run this, you need to install Flask and pyopenssl:
+    # pip install Flask pyopenssl
+    
+    # Rules#18: Enforce TLS. Using 'adhoc' creates a temporary self-signed certificate
+    # for development. In production, use a proper certificate from a CA.
+    # The 'adhoc' context requires the 'pyopenssl' package.
+    print("Starting Flask web server...")
+    print("Navigate to https://127.0.0.1:5000 in your browser.")
+    print("\n--- Test Cases ---")
+    print("1. Access /info before login: Go to https://127.0.0.1:5000/info")
+    print("   Expected: 'User information not found...' message with a 401 status.")
+    print("2. Set session data: Go to https://127.0.0.1:5000/login_test")
+    print("   Expected: 'Session data set.' message.")
+    print("3. Access /info after login: Go to https://127.0.0.1:5000/info")
+    print("   Expected: 'Username: testuser, Email: test@example.com, SSN: 999-99-9999'")
+    print("4. Log out: Go to https://127.0.0.1:5000/logout")
+    print("   Expected: 'Session cleared.' message.")
+    print("5. Access /info after logout: Go to https://127.0.0.1:5000/info")
+    print("   Expected: 'User information not found...' message with a 401 status.")
+    
+    # Running with debug=False is a secure default for production.
+    # We use ssl_context to run over HTTPS, which is required for secure cookies.
+    app.run(ssl_context="adhoc", debug=False)
+
+if __name__ == '__main__':
+    main()
+
+```
+2025-11-01 05:36:12,002 DEBUG close.started
+2025-11-01 05:36:12,002 DEBUG close.complete
+2025-11-01 05:36:12,003 INFO Created file: Lse42.py
+2025-11-01 05:36:15,005 INFO All files processed.
+2025-11-01 05:36:54,819 INFO active_integration ------------------ ['GEMINI', 'gemini-2.5-pro']
+2025-11-01 05:36:54,824 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following: 
+ Define a function called post() that will be called when the user submits a message.It gets the username and message from the request.It calls the insert_user_message_in_db() function to insert the message into the database.It redirects the user back to the main page.Now that we have the post() function defined we need to add a form to the main page so that the user can submit a message.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-11-01 05:36:55,244 INFO AFC is enabled with max remote calls: 10.
+2025-11-01 05:36:55,246 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-01 05:36:55,307 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000194BDE3F320>
+2025-11-01 05:36:55,307 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x00000194BA7793D0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-01 05:36:55,376 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000194BDE5EB10>
+2025-11-01 05:36:55,376 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-01 05:36:55,376 DEBUG send_request_headers.complete
+2025-11-01 05:36:55,376 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-01 05:36:55,376 DEBUG send_request_body.complete
+2025-11-01 05:36:55,376 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-01 05:37:03,217 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sat, 01 Nov 2025 03:37:03 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=7789'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-01 05:37:03,219 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-01 05:37:03,219 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-01 05:37:03,219 DEBUG receive_response_body.complete
+2025-11-01 05:37:03,219 DEBUG response_closed.started
+2025-11-01 05:37:03,219 DEBUG response_closed.complete
+2025-11-01 05:37:03,220 INFO ```json
+[
+    "Web Development, API & Web Services",
+    "Database",
+    "Input Validation & Sanitization",
+    "Language Basics"
+]
+```
+2025-11-01 05:37:03,220 DEBUG close.started
+2025-11-01 05:37:03,220 DEBUG close.complete
+2025-11-01 05:37:03,220 INFO Assigned tags -->>>>```json
+[
+    "Web Development, API & Web Services",
+    "Database",
+    "Input Validation & Sanitization",
+    "Language Basics"
+]
+```
+2025-11-01 05:37:03,222 INFO Lse150_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following four programming languages: Python. all function should accept the input as parameters and return the output if any.
+3) Put the code like the below template/example:
+```python  
+code here:
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse150.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following: 
+ Define a function called post() that will be called when the user submits a message.It gets the username and message from the request.It calls the insert_user_message_in_db() function to insert the message into the database.It redirects the user back to the main page.Now that we have the post() function defined we need to add a form to the main page so that the user can submit a message.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+## General Mitigation
+["Rules#1: Validate and sanitize every external input before use. Enforce expected type, format, encoding, length, and range."]
+["Rules#2: Use allow lists over block lists. Reject on validation failure and return minimal, generic error messages."]
+["Rules#3: Normalize and canonicalize paths, URLs, and identifiers before validation to prevent bypasses."]
+["Rules#4: Separate validation from business logic; run validation as early as possible at trust boundaries."]
+["Rules#5: Treat all input as untrusted, including environment variables, headers, cookies, query parameters, and file names."]
+["Rules#6: For structured data (JSON, XML, YAML), use strict schemas. Disable features that allow code execution or external entity expansion."]
+["Rules#7: Never hard code secrets. Read them from external configuration or a secret manager."]
+["Rules#8: Use constant format strings for logging. Do not log raw user input without redaction."]
+["Rules#9: For database access, use parameterized queries or safe ORM APIs. Never concatenate untrusted input into queries."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Use pydantic, marshmallow, or dataclasses with explicit type and range validation for inbound data.
+- Never use eval or exec on user input. Avoid pickle, yaml.load (unsafe), and ast.literal_eval on untrusted data.
+- For web inputs, rely on framework validators and parsing utilities. Enforce content type and size limits.
+- Use parameterized queries with database drivers. Do not assemble SQL with string concatenation.
+
+## Code Review Checklist
+- All inputs validated for type, format, encoding, length, and range
+- Strict schemas used for structured data; unsafe features disabled
+- No string concatenation used to build queries or commands
+- Normalization done before validation for paths and URLs
+- Validation errors return generic messages; detailed info goes only to secure logs
+- Logging uses constant format strings; sensitive data redacted
+- Dangerous parsers and dynamic execution features are not used on untrusted input
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Validate and bind JSON request data safely.
+Input:
+```
+data = request.get_json(); user = create_user(data)
+```
+Ideal Output:
+```
+Use a schema (for example pydantic) to parse and validate fields, enforce length and pattern constraints, and reject unknown fields before calling create_user.
+```
+
+## General Mitigation
+["Rules#11: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]
+["Rules#12: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]
+["Rules#13: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]
+["Rules#14: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]
+["Rules#15: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]
+["Rules#16: Document the rationale for use, constraints, and tests that cover misuse cases."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Avoid eval and exec on any untrusted input.
+- Do not use pickle, yaml.load (unsafe), or marshal on data from untrusted sources.
+- Use subprocess without shell and pass arguments as a list. Avoid shell=True with user input.
+- Limit regex complexity to prevent denial-of-service via catastrophic backtracking.
+
+## Code Review Checklist
+- Safer alternative considered and documented; dangerous function use justified
+- Parameters validated for size, type, encoding, and allowed character set
+- No user input used as a format string, command, or code
+- Timeouts, resource limits, and safe flags configured
+- Errors handled without leaking sensitive details; return codes checked
+- Automated tests cover misuse and edge cases
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Avoid shell=True with user input.
+Input:
+```
+subprocess.run(f"tar -xvf {name}", shell=True)
+```
+Ideal Output:
+```
+Call subprocess.run(["tar", "-xvf", name], check=True) and validate that name matches an allow list. Do not use shell=True.
+```
+
+## General Mitigation
+["Rules#18: Perform explicit bounds checks before every read or write. Use size-aware APIs and track lengths separately from buffers."]
+["Rules#19: Validate all size calculations for integer overflow before allocation and before memcpy or similar operations."]
+["Rules#20: Initialize pointers and buffers. Ensure strings are null terminated where required by the API."]
+["Rules#21: Prefer safe library functions or wrappers that take buffer size and return explicit status codes."]
+["Rules#22: Grow buffers dynamically only up to a defined maximum. Refuse inputs that exceed limits to avoid excessive memory use."]
+["Rules#23: Use memory-safe abstractions where available. Avoid manual pointer arithmetic unless necessary and well reviewed."]
+["Rules#24: On failure, do not use partially initialized buffers. Clear sensitive data before free using a guaranteed zeroization API."]
+["Rules#25: When reading from streams (for example fread or memchr workflows), bound the read by the remaining buffer size and verify the returned count before use."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Native Python enforces bounds on lists and bytearray, but vulnerabilities arise at library boundaries.
+- When using struct, array, memoryview, or NumPy, validate lengths and shapes before operations.
+- For I/O, limit reads, check returned sizes, and avoid slicing beyond the received data.
+
+## Code Review Checklist
+- All reads and writes guarded by explicit bounds checks
+- All size arithmetic protected against integer overflow
+- Length tracked separately from buffer capacity and validated
+- Safe, size-aware APIs used; dangerous functions avoided
+- Buffer growth capped by a defined maximum; oversize inputs rejected
+- All return values checked; partial reads handled correctly
+- Sensitive data wiped before free; no double frees
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Safely read from a stream into a buffer.
+Input:
+```
+data = f.read(); header = data[:8]
+```
+Ideal Output:
+```
+Read at most the needed amount with a cap, for example data = f.read(8); ensure len(data) == 8 before parsing.
+```
+
+## General Mitigation
+["Rules#28: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]
+["Rules#29: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]
+["Rules#30: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]
+["Rules#31: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]
+["Rules#32: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]
+["Rules#33: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]
+["Rules#34: Files and TOCTOU: open first, validate the opened handle, and operate only on that handle. For POSIX prefer openat with O_NOFOLLOW and fstat. For writes use a temporary file, fflush, fsync, then perform an atomic rename. Set restrictive permissions at creation time."]
+["Rules#35: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]
+["Rules#36: Sensitive data handling: clear secrets before free using a guaranteed zeroization API. Prefer memset_s where available, else use an equivalent explicit zero such as explicit_bzero, a volatile wipe, or SecureZeroMemory on Windows. Do not rely on plain memset for secret wiping."]
+["Rules#37: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]
+["Rules#38: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]
+["Rules#39: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]
+["Rules#40: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]
+["Rules#41: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]
+["Rules#42: Treat each line you generate as insecure until you review it against these rules and fix it."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Use context managers and type hints.
+- Use the secrets module for randomness.
+- Use the cryptography library for crypto.
+- Avoid eval and pickle on untrusted data.
+- Use ssl.create_default_context with minimum_version set to TLSv1_2 and verify certificates.
+
+## Code Review Checklist
+- Inputs validated for type, length, range, and encoding
+- No hard coded secrets or keys
+- No eval, exec, unsafe reflection, or insecure deserialization
+- Crypto uses AEAD and modern KDFs with proper parameters
+- TLS verification and minimum version enforced in all clients
+- No TOCTOU patterns; safe file operations and atomic writes
+- All logging redacts sensitive data and uses constant format strings
+- Errors do not leak internal details to callers
+- Memory safety and integer overflow checks present where relevant
+- Concurrency hazards addressed with safe primitives
+- Build hardening flags on; static analysis and tests in place
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Replace insecure randomness and TLS defaults.
+Input:
+```
+token = random.random(); requests.get(url, verify=false)
+```
+Ideal Output:
+```
+Use secrets.token_urlsafe for tokens. Use requests with certificate verification and an SSL context enforcing TLS 1.2 or higher.
+```
+
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-11-01 05:37:03,634 INFO AFC is enabled with max remote calls: 10.
+2025-11-01 05:37:03,634 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-01 05:37:03,687 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000194BDE5FAA0>
+2025-11-01 05:37:03,689 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x00000194BDDF3C50> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-01 05:37:03,762 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000194BDE5F9B0>
+2025-11-01 05:37:03,762 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-01 05:37:03,762 DEBUG send_request_headers.complete
+2025-11-01 05:37:03,762 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-01 05:37:03,762 DEBUG send_request_body.complete
+2025-11-01 05:37:03,762 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-01 05:37:38,833 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sat, 01 Nov 2025 03:37:39 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=35003'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-01 05:37:38,833 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-01 05:37:38,833 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-01 05:37:38,834 DEBUG receive_response_body.complete
+2025-11-01 05:37:38,834 DEBUG response_closed.started
+2025-11-01 05:37:38,834 DEBUG response_closed.complete
+2025-11-01 05:37:38,834 INFO ```python
+import os
+import re
+from flask import Flask, request, redirect, url_for, render_template_string, flash
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, SubmitField
+from wtforms.validators import DataRequired, Length, Regexp
+
+# --- Application Setup ---
+
+# Rule #30: Never hard code secrets. Read them from external configuration.
+# In a real application, this should be a truly random and secret string.
+# For this example, we use a default but check for an environment variable first.
+SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', 'a-secure-default-secret-key-for-dev')
+if SECRET_KEY == 'a-secure-default-secret-key-for-dev' and os.environ.get('FLASK_ENV') != 'development':
+    print("WARNING: Using a default SECRET_KEY in a non-development environment!")
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['TESTING'] = False
+
+
+# --- Mock Database ---
+
+# This list will act as our in-memory database for messages.
+MESSAGES_DB = []
+
+def insert_user_message_in_db(username, message):
+    """
+    Simulates inserting a message into a database.
+    Rule #9: For database access, use parameterized queries or safe ORM APIs.
+    For example, with sqlite3:
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO messages (username, message) VALUES (?, ?)", (username, message))
+    conn.commit()
+    conn.close()
+    """
+    print(f"DATABASE: Inserting message from '{username}'.")
+    MESSAGES_DB.append({'username': username, 'message': message})
+    return True
+
+def get_all_messages():
+    """Simulates retrieving all messages from the database."""
+    return MESSAGES_DB
+
+
+# --- Forms and Validation ---
+
+# Rule #1, #2, #4, #5: Validate every external input before use.
+# Use allow lists and specific validators for type, length, and format.
+class MessageForm(FlaskForm):
+    """Defines the form for submitting a message with validation rules."""
+    username = StringField(
+        'Username',
+        validators=[
+            DataRequired(message="Username is required."),
+            Length(min=3, max=25, message="Username must be between 3 and 25 characters."),
+            # Rule #2: Use allow lists. Only allow alphanumeric chars and underscores.
+            Regexp(r'^[a-zA-Z0-9_]+$', message="Username can only contain letters, numbers, and underscores.")
+        ]
+    )
+    message = TextAreaField(
+        'Message',
+        validators=[
+            DataRequired(message="Message cannot be empty."),
+            Length(min=1, max=500, message="Message must be between 1 and 500 characters.")
+        ]
+    )
+    submit = SubmitField('Post Message')
+
+
+# --- HTML Template ---
+
+# For a single-file example, the template is included as a string.
+# In a real app, this would be in a separate 'templates/index.html' file.
+# Note: Jinja2 (Flask's template engine) auto-escapes variables like
+# {{ message.username }} by default, preventing XSS (CWE-79).
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Message Board</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        .form-field { margin-bottom: 1em; }
+        .error { color: red; font-size: 0.9em; }
+        .flash { background-color: #d4edda; color: #155724; padding: 1em; margin-bottom: 1em; border: 1px solid #c3e6cb; border-radius: 4px; }
+        .message { border: 1px solid #ccc; padding: 1em; margin-bottom: 1em; border-radius: 4px; }
+        .message strong { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Post a Message</h1>
+    
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">
+          {% for msg in messages %}
+            <p>{{ msg }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('index') }}">
+        {{ form.hidden_tag() }} <!-- Renders CSRF token and other hidden fields -->
+        
+        <div class="form-field">
+            {{ form.username.label }}<br>
+            {{ form.username(size=30) }}
+            {% for error in form.username.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        
+        <div class="form-field">
+            {{ form.message.label }}<br>
+            {{ form.message(rows=5, cols=40) }}
+            {% for error in form.message.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+    
+    <hr>
+    <h2>Messages</h2>
+    {% for message in messages %}
+        <div class="message">
+            <strong>{{ message.username }}:</strong>
+            <p>{{ message.message }}</p>
+        </div>
+    {% else %}
+        <p>No messages yet.</p>
+    {% endfor %}
+</body>
+</html>
+"""
+
+# --- Routes and Views ---
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    """
+    Handles both displaying the main page with the form (GET)
+    and processing the form submission (POST).
+    """
+    form = MessageForm()
+    
+    # The post() function logic is integrated here, as is common in Flask.
+    # It's called when the user submits a message via POST.
+    if form.validate_on_submit():
+        # form.validate_on_submit() checks if it's a POST request and if the data is valid,
+        # including the CSRF token. This is the primary security gate.
+        
+        # Gets the validated and sanitized username and message from the form request.
+        username = form.username.data
+        message = form.message.data
+        
+        # Calls the function to insert the message into the database.
+        insert_user_message_in_db(username, message)
+        
+        flash('Your message has been posted successfully!', 'success')
+        
+        # Redirects the user back to the main page (Post/Redirect/Get pattern).
+        # This prevents form resubmission if the user refreshes the page.
+        return redirect(url_for('index'))
+        
+    # For a GET request or if form validation fails, render the page.
+    # Any validation errors will be automatically available in the form object.
+    all_messages = get_all_messages()
+    return render_template_string(HTML_TEMPLATE, form=form, messages=all_messages)
+
+# --- Main and Test Cases ---
+
+def main():
+    """Includes 5 test cases using Flask's test client."""
+    
+    global MESSAGES_DB
+    app.config['TESTING'] = True
+    app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for simpler testing
+    
+    with app.test_client() as client:
+        print("\n--- Running Test Cases ---")
+        
+        # Test Case 1: GET request to the main page
+        print("\n1. Testing GET request to the main page...")
+        response = client.get('/')
+        assert response.status_code == 200
+        assert b"Post a Message" in response.data
+        print("   ...PASSED")
+
+        # Test Case 2: Valid message submission (POST)
+        print("\n2. Testing valid message submission...")
+        MESSAGES_DB = [] # Reset DB for clean test
+        response = client.post('/', data={
+            'username': 'testuser',
+            'message': 'This is a test message.'
+        }, follow_redirects=True)
+        assert response.status_code == 200
+        assert b"Your message has been posted successfully!" in response.data
+        assert b"testuser" in response.data
+        assert len(MESSAGES_DB) == 1
+        assert MESSAGES_DB[0]['username'] == 'testuser'
+        print("   ...PASSED")
+
+        # Test Case 3: Submission with missing username
+        print("\n3. Testing submission with missing username...")
+        response = client.post('/', data={
+            'username': '',
+            'message': 'A message with no user.'
+        }, follow_redirects=True)
+        assert response.status_code == 200
+        assert b"Username is required." in response.data
+        assert len(MESSAGES_DB) == 1 # DB should not have changed
+        print("   ...PASSED")
+        
+        # Test Case 4: Submission with a message that is too long
+        print("\n4. Testing submission with an overly long message...")
+        long_message = 'A' * 501
+        response = client.post('/', data={
+            'username': 'longposter',
+            'message': long_message
+        }, follow_redirects=True)
+        assert response.status_code == 200
+        assert b"Message must be between 1 and 500 characters." in response.data
+        assert len(MESSAGES_DB) == 1 # DB should not have changed
+        print("   ...PASSED")
+
+        # Test Case 5: Submission with invalid characters in username
+        print("\n5. Testing submission with invalid username format...")
+        response = client.post('/', data={
+            'username': 'invalid-user!',
+            'message': 'This message should be rejected.'
+        }, follow_redirects=True)
+        assert response.status_code == 200
+        assert b"Username can only contain letters, numbers, and underscores." in response.data
+        assert len(MESSAGES_DB) == 1 # DB should not have changed
+        print("   ...PASSED")
+
+        print("\n--- All tests passed! ---")
+
+
+if __name__ == '__main__':
+    # Check if a command-line argument 'test' is provided
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+        main()
+    else:
+        print("Starting Flask server...")
+        print("To run tests, execute: python your_script_name.py test")
+        # In a real production environment, use a proper WSGI server like Gunicorn or uWSGI
+        app.run(debug=True, port=5001)
+
+```
+2025-11-01 05:37:38,837 DEBUG close.started
+2025-11-01 05:37:38,837 DEBUG close.complete
+2025-11-01 05:37:38,841 INFO Created file: Lse150.py
+2025-11-01 05:37:41,841 INFO All files processed.
+2025-11-01 05:37:56,568 INFO active_integration ------------------ ['GEMINI', 'gemini-2.5-pro']
+2025-11-01 05:37:56,573 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following: 
+ The login page is a simple form with a username and password field. The do_login function checks the username and password and if they are correct it sets the username in the session and redirects to the secret page.The index page is a simple page that has a link to the login page.The secret page is a simple page that says; "Secret settings"
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-11-01 05:37:56,975 INFO AFC is enabled with max remote calls: 10.
+2025-11-01 05:37:56,977 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-01 05:37:57,033 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002C266DBE120>
+2025-11-01 05:37:57,033 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x000002C2638C93D0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-01 05:37:57,102 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002C266E03E00>
+2025-11-01 05:37:57,102 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-01 05:37:57,103 DEBUG send_request_headers.complete
+2025-11-01 05:37:57,103 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-01 05:37:57,103 DEBUG send_request_body.complete
+2025-11-01 05:37:57,103 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-01 05:38:09,190 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sat, 01 Nov 2025 03:38:09 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=12034'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-01 05:38:09,190 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-01 05:38:09,190 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-01 05:38:09,190 DEBUG receive_response_body.complete
+2025-11-01 05:38:09,190 DEBUG response_closed.started
+2025-11-01 05:38:09,190 DEBUG response_closed.complete
+2025-11-01 05:38:09,191 INFO ```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Authentication & Authorization",
+  "Language Basics"
+]
+```
+2025-11-01 05:38:09,191 DEBUG close.started
+2025-11-01 05:38:09,191 DEBUG close.complete
+2025-11-01 05:38:09,191 INFO Assigned tags -->>>>```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "Authentication & Authorization",
+  "Language Basics"
+]
+```
+2025-11-01 05:38:09,198 INFO Lse52_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following four programming languages: Python. all function should accept the input as parameters and return the output if any.
+3) Put the code like the below template/example:
+```python  
+code here:
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse52.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following: 
+ The login page is a simple form with a username and password field. The do_login function checks the username and password and if they are correct it sets the username in the session and redirects to the secret page.The index page is a simple page that has a link to the login page.The secret page is a simple page that says; "Secret settings"
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+## General Mitigation
+["Rules#1: Validate and sanitize every external input before use. Enforce expected type, format, encoding, length, and range."]
+["Rules#2: Use allow lists over block lists. Reject on validation failure and return minimal, generic error messages."]
+["Rules#3: Normalize and canonicalize paths, URLs, and identifiers before validation to prevent bypasses."]
+["Rules#4: Separate validation from business logic; run validation as early as possible at trust boundaries."]
+["Rules#5: Treat all input as untrusted, including environment variables, headers, cookies, query parameters, and file names."]
+["Rules#6: For structured data (JSON, XML, YAML), use strict schemas. Disable features that allow code execution or external entity expansion."]
+["Rules#7: Never hard code secrets. Read them from external configuration or a secret manager."]
+["Rules#8: Use constant format strings for logging. Do not log raw user input without redaction."]
+["Rules#9: For database access, use parameterized queries or safe ORM APIs. Never concatenate untrusted input into queries."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Use pydantic, marshmallow, or dataclasses with explicit type and range validation for inbound data.
+- Never use eval or exec on user input. Avoid pickle, yaml.load (unsafe), and ast.literal_eval on untrusted data.
+- For web inputs, rely on framework validators and parsing utilities. Enforce content type and size limits.
+- Use parameterized queries with database drivers. Do not assemble SQL with string concatenation.
+
+## Code Review Checklist
+- All inputs validated for type, format, encoding, length, and range
+- Strict schemas used for structured data; unsafe features disabled
+- No string concatenation used to build queries or commands
+- Normalization done before validation for paths and URLs
+- Validation errors return generic messages; detailed info goes only to secure logs
+- Logging uses constant format strings; sensitive data redacted
+- Dangerous parsers and dynamic execution features are not used on untrusted input
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Validate and bind JSON request data safely.
+Input:
+```
+data = request.get_json(); user = create_user(data)
+```
+Ideal Output:
+```
+Use a schema (for example pydantic) to parse and validate fields, enforce length and pattern constraints, and reject unknown fields before calling create_user.
+```
+
+## General Mitigation
+["Rules#11: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]
+["Rules#12: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]
+["Rules#13: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]
+["Rules#14: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]
+["Rules#15: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]
+["Rules#16: Document the rationale for use, constraints, and tests that cover misuse cases."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Avoid eval and exec on any untrusted input.
+- Do not use pickle, yaml.load (unsafe), or marshal on data from untrusted sources.
+- Use subprocess without shell and pass arguments as a list. Avoid shell=True with user input.
+- Limit regex complexity to prevent denial-of-service via catastrophic backtracking.
+
+## Code Review Checklist
+- Safer alternative considered and documented; dangerous function use justified
+- Parameters validated for size, type, encoding, and allowed character set
+- No user input used as a format string, command, or code
+- Timeouts, resource limits, and safe flags configured
+- Errors handled without leaking sensitive details; return codes checked
+- Automated tests cover misuse and edge cases
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Avoid shell=True with user input.
+Input:
+```
+subprocess.run(f"tar -xvf {name}", shell=True)
+```
+Ideal Output:
+```
+Call subprocess.run(["tar", "-xvf", name], check=True) and validate that name matches an allow list. Do not use shell=True.
+```
+
+## General Mitigation
+["Rules#18: Perform explicit bounds checks before every read or write. Use size-aware APIs and track lengths separately from buffers."]
+["Rules#19: Validate all size calculations for integer overflow before allocation and before memcpy or similar operations."]
+["Rules#20: Initialize pointers and buffers. Ensure strings are null terminated where required by the API."]
+["Rules#21: Prefer safe library functions or wrappers that take buffer size and return explicit status codes."]
+["Rules#22: Grow buffers dynamically only up to a defined maximum. Refuse inputs that exceed limits to avoid excessive memory use."]
+["Rules#23: Use memory-safe abstractions where available. Avoid manual pointer arithmetic unless necessary and well reviewed."]
+["Rules#24: On failure, do not use partially initialized buffers. Clear sensitive data before free using a guaranteed zeroization API."]
+["Rules#25: When reading from streams (for example fread or memchr workflows), bound the read by the remaining buffer size and verify the returned count before use."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Native Python enforces bounds on lists and bytearray, but vulnerabilities arise at library boundaries.
+- When using struct, array, memoryview, or NumPy, validate lengths and shapes before operations.
+- For I/O, limit reads, check returned sizes, and avoid slicing beyond the received data.
+
+## Code Review Checklist
+- All reads and writes guarded by explicit bounds checks
+- All size arithmetic protected against integer overflow
+- Length tracked separately from buffer capacity and validated
+- Safe, size-aware APIs used; dangerous functions avoided
+- Buffer growth capped by a defined maximum; oversize inputs rejected
+- All return values checked; partial reads handled correctly
+- Sensitive data wiped before free; no double frees
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Safely read from a stream into a buffer.
+Input:
+```
+data = f.read(); header = data[:8]
+```
+Ideal Output:
+```
+Read at most the needed amount with a cap, for example data = f.read(8); ensure len(data) == 8 before parsing.
+```
+
+## General Mitigation
+["Rules#33: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]
+["Rules#34: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]
+["Rules#35: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]
+["Rules#36: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]
+["Rules#37: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]
+["Rules#38: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]
+["Rules#39: Files and TOCTOU: open first, validate the opened handle, and operate only on that handle. For POSIX prefer openat with O_NOFOLLOW and fstat. For writes use a temporary file, fflush, fsync, then perform an atomic rename. Set restrictive permissions at creation time."]
+["Rules#40: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]
+["Rules#41: Sensitive data handling: clear secrets before free using a guaranteed zeroization API. Prefer memset_s where available, else use an equivalent explicit zero such as explicit_bzero, a volatile wipe, or SecureZeroMemory on Windows. Do not rely on plain memset for secret wiping."]
+["Rules#42: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]
+["Rules#43: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]
+["Rules#44: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]
+["Rules#45: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]
+["Rules#46: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]
+["Rules#47: Treat each line you generate as insecure until you review it against these rules and fix it."]
+
+## PYTHON Specific Mitigation
+### Guidance
+- Use context managers and type hints.
+- Use the secrets module for randomness.
+- Use the cryptography library for crypto.
+- Avoid eval and pickle on untrusted data.
+- Use ssl.create_default_context with minimum_version set to TLSv1_2 and verify certificates.
+
+## Code Review Checklist
+- Inputs validated for type, length, range, and encoding
+- No hard coded secrets or keys
+- No eval, exec, unsafe reflection, or insecure deserialization
+- Crypto uses AEAD and modern KDFs with proper parameters
+- TLS verification and minimum version enforced in all clients
+- No TOCTOU patterns; safe file operations and atomic writes
+- All logging redacts sensitive data and uses constant format strings
+- Errors do not leak internal details to callers
+- Memory safety and integer overflow checks present where relevant
+- Concurrency hazards addressed with safe primitives
+- Build hardening flags on; static analysis and tests in place
+
+## Finetune Examples
+### Example 1 (python)
+Instruction: Replace insecure randomness and TLS defaults.
+Input:
+```
+token = random.random(); requests.get(url, verify=false)
+```
+Ideal Output:
+```
+Use secrets.token_urlsafe for tokens. Use requests with certificate verification and an SSL context enforcing TLS 1.2 or higher.
+```
+
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-11-01 05:38:09,559 INFO AFC is enabled with max remote calls: 10.
+2025-11-01 05:38:09,559 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-01 05:38:09,608 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002C266FB76B0>
+2025-11-01 05:38:09,608 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x000002C266F43C50> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-01 05:38:09,669 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002C266FB75C0>
+2025-11-01 05:38:09,671 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-01 05:38:09,671 DEBUG send_request_headers.complete
+2025-11-01 05:38:09,671 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-01 05:38:09,671 DEBUG send_request_body.complete
+2025-11-01 05:38:09,671 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-01 05:38:55,820 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Sat, 01 Nov 2025 03:38:56 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=46101'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-01 05:38:55,820 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-01 05:38:55,820 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-01 05:38:55,820 DEBUG receive_response_body.complete
+2025-11-01 05:38:55,820 DEBUG response_closed.started
+2025-11-01 05:38:55,820 DEBUG response_closed.complete
+2025-11-01 05:38:55,821 INFO ```python
+import os
+import secrets
+from flask import Flask, request, redirect, url_for, session, flash, render_template_string
+
+# 1. Problem understanding: Create a Flask web app with index, login, and a protected secret page.
+#    - /: Welcome page with a link to login.
+#    - /login: Form for username/password. On POST, validates credentials.
+#    - /secret: Protected page, only for logged-in users.
+#    - /logout: Clears the session.
+# 2. Security requirements & mitigation:
+#    - Rules#7, #35: No hardcoded secrets. Load credentials and secret key from environment variables.
+#    - Rules#1, #5, #34: Validate input. Check for presence and reasonable length of username/password.
+#    - Rule#2: Use allow-list for login (credentials must match).
+#    - Rule#43: Return generic error messages on login failure to prevent user enumeration.
+#    - Use `secrets.compare_digest` to prevent timing attacks on password comparison.
+#    - Use Flask's session management, which relies on a strong secret key for signed cookies.
+#    - Jinja2 auto-escaping (default in Flask) prevents XSS from session data rendered in templates.
+#    - Redirects are to hardcoded internal URLs, which is safe and prevents open redirect vulnerabilities.
+
+# Initialize Flask App
+app = Flask(__name__)
+
+# --- Configuration and Secret Management ---
+# Rule #7, #35: Never hardcode secrets. Read them from external configuration (environment variables).
+# The application will fail to start if these are not set, which is a secure default (fail-closed).
+try:
+    app.secret_key = os.environ['APP_SECRET_KEY']
+    VALID_USERNAME = os.environ['APP_USER']
+    VALID_PASSWORD = os.environ['APP_PASSWORD']
+except KeyError as e:
+    raise RuntimeError(f"Required environment variable {e} not set. "
+                       "Please set APP_SECRET_KEY, APP_USER, and APP_PASSWORD.") from e
+
+# --- Templates ---
+# For simplicity, templates are defined as strings. In a real application,
+# these would be in separate .html files.
+
+INDEX_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Index</title>
+</head>
+<body>
+    <h1>Welcome to the Application</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class=flashes>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% if 'username' in session %}
+        <p>You are logged in as <strong>{{ session.username | e }}</strong>.</p>
+        <a href="{{ url_for('secret_page') }}">Go to Secret Page</a><br>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    {% else %}
+        <p>You are not logged in.</p>
+        <a href="{{ url_for('login') }}">Login</a>
+    {% endif %}
+</body>
+</html>
+"""
+
+LOGIN_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class=flashes>
+        {% for category, message in messages %}
+          <li class="{{ category }}" style="color: red;">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('do_login') }}">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username" required maxlength="100" autocomplete="username"><br>
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required maxlength="100" autocomplete="current-password"><br><br>
+        <input type="submit" value="Login">
+    </form>
+</body>
+</html>
+"""
+
+SECRET_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secret Page</title>
+</head>
+<body>
+    <h1>Secret settings</h1>
+    <p>Welcome, <strong>{{ session.username | e }}</strong>! This is a protected page.</p>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+</html>
+"""
+
+# --- Routes ---
+
+@app.route('/')
+def index():
+    """Displays the index page."""
+    return render_template_string(INDEX_TEMPLATE)
+
+@app.route('/login', methods=['GET'])
+def login():
+    """Displays the login form."""
+    return render_template_string(LOGIN_TEMPLATE)
+
+@app.route('/do_login', methods=['POST'])
+def do_login():
+    """Processes the login attempt."""
+    # Rule #1, #5, #34: Treat all input as untrusted and validate it.
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    # Validate for presence and reasonable length.
+    if not username or not password or len(username) > 100 or len(password) > 100:
+        flash('Invalid input.', 'error')
+        return redirect(url_for('login'))
+
+    # Rule #2: Use allow lists. Check against known credentials.
+    # Use `secrets.compare_digest` for constant-time comparison to mitigate timing attacks.
+    is_user_valid = secrets.compare_digest(username, VALID_USERNAME)
+    is_pass_valid = secrets.compare_digest(password, VALID_PASSWORD)
+
+    if is_user_valid and is_pass_valid:
+        # If credentials are correct, set the username in the session.
+        session['username'] = username
+        return redirect(url_for('secret_page'))
+    else:
+        # Rule #43: Return generic, non-revealing error messages.
+        flash('Invalid username or password.', 'error')
+        return redirect(url_for('login'))
+
+@app.route('/secret')
+def secret_page():
+    """Displays the secret page, accessible only to logged-in users."""
+    if 'username' not in session:
+        flash('You must be logged in to view this page.', 'error')
+        return redirect(url_for('login'))
+    return render_template_string(SECRET_TEMPLATE)
+
+@app.route('/logout')
+def logout():
+    """Logs the user out by clearing the session."""
+    session.pop('username', None)
+    flash('You have been logged out.')
+    return redirect(url_for('index'))
+
+def main():
+    """
+    Main function to run the Flask application and provide test cases.
+    For this web application, test cases are manual steps for the user to perform.
+    """
+    print("="*60)
+    print("Starting Flask Web Server")
+    print("="*60)
+    print("IMPORTANT: Before running, set the following environment variables in your shell:")
+    # Use secrets.token_hex to generate a cryptographically strong key
+    print(f"  export APP_SECRET_KEY='{secrets.token_hex(16)}'")
+    print("  export APP_USER='admin'")
+    print("  export APP_PASSWORD='password123'")
+    print("="*60)
+    print("Manual Test Cases to Perform:")
+    print("1. Access Index Page: Open a web browser to http://127.0.0.1:5000/")
+    print("   - Expected: Welcome page with a 'Login' link.")
+    print("2. Access Secret Page (Unauthenticated): Go to http://127.0.0.1:5000/secret")
+    print("   - Expected: Redirect to the login page with a message 'You must be logged in...'.")
+    print("3. Failed Login Attempt: On the login page, enter incorrect credentials and submit.")
+    print("   - Expected: The page reloads with an 'Invalid username or password' error.")
+    print("4. Successful Login: On the login page, enter the correct credentials and submit.")
+    print("   - Expected: Redirect to the '/secret' page with a welcome message.")
+    print("5. Logout: On the secret page, click the 'Logout' link.")
+    print("   - Expected: Redirect to the index page with a 'You have been logged out' message.")
+    print("   - Verification: Attempting to access /secret again should fail.")
+    print("="*60)
+
+    # Note: debug=True is for development only and should NEVER be used in production.
+    # It enables an interactive debugger which can be a major security risk.
+    # In a production environment, use a proper WSGI server like Gunicorn or uWSGI.
+    app.run(host='127.0.0.1', port=5000, debug=False)
+
+if __name__ == '__main__':
+    # The main() function will raise a RuntimeError if environment variables are missing.
+    main()
+```
+2025-11-01 05:38:55,823 DEBUG close.started
+2025-11-01 05:38:55,823 DEBUG close.complete
+2025-11-01 05:38:55,825 INFO Created file: Lse52.py
+2025-11-01 05:38:58,826 INFO All files processed.

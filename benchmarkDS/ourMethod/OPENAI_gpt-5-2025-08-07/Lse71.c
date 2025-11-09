@@ -1,424 +1,758 @@
-#include <arpa/inet.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <stdbool.h>
-#include <stdint.h>
+/*
+Simple and secure HTTP upload handler in C.
+
+- Parses a minimal HTTP POST /upload with multipart/form-data
+- Validates headers, boundary, filename, and size
+- Stores uploaded file safely into a local uploads directory using openat with O_NOFOLLOW and atomic linkat
+- Implements 5 self-contained test cases that simulate HTTP requests
+- Not a network server; focuses on secure parsing and file writing primitives
+*/
+
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
+#include <time.h>
+#ifdef __linux__
+#include <sys/random.h>
+#endif
 
-#define SERVER_PORT 9091
-#define MAX_SIZE (10 * 1024 * 1024)
+#ifndef O_NOFOLLOW
+#define O_NOFOLLOW 0
+#endif
 
-static bool is_dir(mode_t m) { return S_ISDIR(m); }
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
 
-static bool ensure_upload_dir(int *dirfd) {
-    if (mkdir("uploads", 0700) != 0 && errno != EEXIST) {
-        return false;
-    }
-    int d = open("uploads", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-    if (d < 0) return false;
-    struct stat st;
-    if (fstat(d, &st) != 0 || !is_dir(st.st_mode)) {
-        close(d);
-        return false;
-    }
-    *dirfd = d;
-    return true;
-}
+#ifndef AT_FDCWD
+#define AT_FDCWD -100
+#endif
 
-static bool sanitize_name(const char *name) {
-    if (name == NULL) return false;
-    size_t n = strlen(name);
-    if (n < 1 || n > 100) return false;
-    if (name[0] == '.') return false;
-    if (strstr(name, "..") != NULL) return false;
-    for (size_t i = 0; i < n; i++) {
-        char c = name[i];
-        if (!((c >= 'a' && c <= 'z') ||
-              (c >= 'A' && c <= 'Z') ||
-              (c >= '0' && c <= '9') ||
-              c == '.' || c == '_' || c == '-')) {
-            return false;
-        }
-    }
-    return true;
-}
+#define MAX_REQUEST_SIZE       (6u * 1024u * 1024u)  /* 6 MB total HTTP request limit */
+#define MAX_UPLOAD_SIZE        (5u * 1024u * 1024u)  /* 5 MB file payload limit */
+#define MAX_HEADER_SECTION     (16u * 1024u)         /* 16 KB header limit */
+#define MAX_BOUNDARY_LEN       70u                   /* per RFC, but we restrict further */
+#define MAX_FILENAME_LEN       64u                   /* allowed file name length */
+#define RESP_BUF_CAP           (8u * 1024u)          /* response buffer capacity */
+#define MAX_PART_HEADERS       (8u * 1024u)          /* 8 KB part header limit */
+#define DEFAULT_UPLOAD_DIR     "uploads"
 
-static void hex32(uint32_t v, char out[9]) {
-    static const char *hexd = "0123456789abcdef";
-    for (int i = 7; i >= 0; --i) {
-        out[i] = hexd[v & 0xF];
-        v >>= 4;
-    }
-    out[8] = '\0';
-}
+typedef struct {
+    const uint8_t *data;
+    size_t len;
+} slice_t;
 
-static char *gen_stored_name(const char *baseName) {
-    const char *dot = strrchr(baseName, '.');
-    char base[128]; base[0] = '\0';
-    char ext[16]; ext[0] = '\0';
-    if (dot && dot != baseName && dot[1] != '\0') {
-        const char *e = dot + 1;
-        size_t el = strlen(e);
-        bool ok = (el >= 1 && el <= 10);
-        for (size_t i = 0; i < el; i++) {
-            if (!((e[i] >= 'a' && e[i] <= 'z') ||
-                  (e[i] >= 'A' && e[i] <= 'Z') ||
-                  (e[i] >= '0' && e[i] <= '9'))) { ok = false; break; }
-        }
-        if (ok) {
-            size_t bl = (size_t)(dot - baseName);
-            if (bl > sizeof(base)-1) bl = sizeof(base)-1;
-            memcpy(base, baseName, bl);
-            base[bl] = '\0';
-            snprintf(ext, sizeof(ext), ".%s", e);
-        } else {
-            strncpy(base, baseName, sizeof(base)-1);
-            base[sizeof(base)-1] = '\0';
-        }
-    } else {
-        strncpy(base, baseName, sizeof(base)-1);
-        base[sizeof(base)-1] = '\0';
-    }
-    struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts);
-    long long ms = (long long)ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
-    uint32_t r = (uint32_t)rand();
-    char hx[9]; hex32(r, hx);
-    char *out = (char*)malloc(256);
-    if (!out) return NULL;
-    snprintf(out, 256, "%s-%lld-%s%s", base, ms, hx, ext);
-    return out;
-}
+typedef struct {
+    char filename[MAX_FILENAME_LEN + 1];
+    const uint8_t *file_data;
+    size_t file_len;
+} upload_part_t;
 
-static bool send_all(int fd, const char *buf, size_t len) {
-    while (len > 0) {
-        ssize_t w = write(fd, buf, len);
-        if (w <= 0) return false;
-        buf += w; len -= (size_t)w;
-    }
-    return true;
-}
-
-static int read_line(int fd, char *buf, size_t max) {
+/* Utility safe strnlen */
+static size_t s_strnlen(const char *s, size_t maxlen) {
     size_t i = 0;
-    char c;
-    while (i + 1 < max) {
-        ssize_t r = read(fd, &c, 1);
-        if (r <= 0) return -1;
-        buf[i++] = c;
-        if (i >= 2 && buf[i-2] == '\r' && buf[i-1] == '\n') {
-            buf[i] = '\0';
-            return (int)i;
-        }
-    }
-    return -1;
+    for (; i < maxlen && s[i] != '\0'; ++i) { }
+    return i;
 }
 
-static char *url_decode(const char *s) {
-    size_t n = strlen(s);
-    char *o = (char*)malloc(n + 1);
-    if (!o) return NULL;
-    size_t j = 0;
-    for (size_t i = 0; i < n; i++) {
-        if (s[i] == '%' && i + 2 < n) {
-            char a = s[i+1], b = s[i+2];
-            int hi = -1, lo = -1;
-            if (a >= '0' && a <= '9') hi = a - '0';
-            else if (a >= 'a' && a <= 'f') hi = a - 'a' + 10;
-            else if (a >= 'A' && a <= 'F') hi = a - 'A' + 10;
-            if (b >= '0' && b <= '9') lo = b - '0';
-            else if (b >= 'a' && b <= 'f') lo = b - 'a' + 10;
-            else if (b >= 'A' && b <= 'F') lo = b - 'A' + 10;
-            if (hi >= 0 && lo >= 0) {
-                o[j++] = (char)((hi << 4) | lo);
-                i += 2;
-                continue;
-            }
-        } else if (s[i] == '+') {
-            o[j++] = ' ';
-            continue;
-        }
-        o[j++] = s[i];
+/* Case-insensitive compare for ASCII header names with explicit lengths */
+static int s_strncaseeq(const char *a, size_t alen, const char *b) {
+    size_t blen = s_strnlen(b, 1024);
+    if (alen != blen) return 0;
+    for (size_t i = 0; i < alen; ++i) {
+        unsigned char ca = (unsigned char)a[i];
+        unsigned char cb = (unsigned char)b[i];
+        if (tolower(ca) != tolower(cb)) return 0;
     }
-    o[j] = '\0';
-    return o;
+    return 1;
 }
 
-static char *get_query_param(const char *path, const char *key) {
-    const char *q = strchr(path, '?');
-    if (!q) return NULL;
-    q++;
-    size_t keylen = strlen(key);
-    const char *p = q;
-    while (*p) {
-        const char *amp = strchr(p, '&');
-        size_t seglen = amp ? (size_t)(amp - p) : strlen(p);
-        const char *eq = memchr(p, '=', seglen);
-        if (eq) {
-            size_t klen = (size_t)(eq - p);
-            if (klen == keylen && strncmp(p, key, keylen) == 0) {
-                size_t vlen = seglen - klen - 1;
-                char *val = (char*)malloc(vlen + 1);
-                if (!val) return NULL;
-                memcpy(val, eq + 1, vlen);
-                val[vlen] = '\0';
-                char *dec = url_decode(val);
-                free(val);
-                return dec;
-            }
+/* Memory search; returns pointer or NULL */
+static const uint8_t *s_memmem(const uint8_t *hay, size_t haylen, const uint8_t *needle, size_t nlen) {
+    if (nlen == 0 || haylen < nlen) return NULL;
+    for (size_t i = 0; i + nlen <= haylen; ++i) {
+        if (hay[i] == needle[0] && memcmp(hay + i, needle, nlen) == 0) {
+            return hay + i;
         }
-        if (!amp) break;
-        p = amp + 1;
     }
     return NULL;
 }
 
-static void handle_client(int cfd) {
-    // Read request headers
-    char line[4096];
-    int n = read_line(cfd, line, sizeof(line));
-    if (n <= 0) { close(cfd); return; }
-    // Request line
-    char method[16], path[2048], ver[16];
-    if (sscanf(line, "%15s %2047s %15s", method, path, ver) != 3) {
-        send_all(cfd, "HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n", 47);
-        close(cfd); return;
+/* Trim ASCII spaces around a slice to produce a string into out (bounded) */
+static void s_trim_to_buf(const char *in, size_t inlen, char *out, size_t outcap) {
+    size_t start = 0, end = inlen;
+    while (start < end && (in[start] == ' ' || in[start] == '\t')) start++;
+    while (end > start && (in[end - 1] == ' ' || in[end - 1] == '\t')) end--;
+    size_t n = end > start ? end - start : 0;
+    if (n >= outcap) n = outcap - 1;
+    if (outcap > 0) {
+        memcpy(out, in + start, n);
+        out[n] = '\0';
     }
-    if (strcmp(method, "POST") != 0 || strncmp(path, "/upload", 7) != 0) {
-        send_all(cfd, "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n", 45);
-        close(cfd); return;
-    }
-    // Read headers
-    size_t content_length = 0;
-    for (;;) {
-        int m = read_line(cfd, line, sizeof(line));
-        if (m <= 0) { close(cfd); return; }
-        if (strcmp(line, "\r\n") == 0) break;
-        // Lowercase check for content-length
-        char lower[4096];
-        size_t L = strlen(line);
-        for (size_t i = 0; i < L; i++) lower[i] = (char)tolower((unsigned char)line[i]);
-        lower[L] = '\0';
-        if (strncmp(lower, "content-length:", 15) == 0) {
-            const char *p = line + 15;
-            while (*p == ' ' || *p == '\t') p++;
-            content_length = (size_t)strtoull(p, NULL, 10);
-        }
-    }
-    if (content_length == 0) {
-        send_all(cfd, "HTTP/1.1 411 Length Required\r\nConnection: close\r\n\r\n", 53);
-        close(cfd); return;
-    }
-    if (content_length > MAX_SIZE) {
-        send_all(cfd, "HTTP/1.1 413 Payload Too Large\r\nConnection: close\r\n\r\n", 55);
-        close(cfd); return;
-    }
-    char *name = get_query_param(path, "name");
-    if (!name || !sanitize_name(name)) {
-        if (name) free(name);
-        send_all(cfd, "HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n", 47);
-        close(cfd); return;
-    }
-    int dirfd;
-    if (!ensure_upload_dir(&dirfd)) {
-        free(name);
-        send_all(cfd, "HTTP/1.1 500 Internal Server Error\r\nConnection: close\r\n\r\n", 59);
-        close(cfd); return;
-    }
-    char *stored = gen_stored_name(name);
-    free(name);
-    if (!stored) {
-        close(dirfd);
-        send_all(cfd, "HTTP/1.1 500 Internal Server Error\r\nConnection: close\r\n\r\n", 59);
-        close(cfd); return;
-    }
-    int flags = O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC;
-#ifdef O_NOFOLLOW
-    flags |= O_NOFOLLOW;
-#endif
-    int fd = openat(dirfd, stored, flags, 0600);
-    if (fd < 0) {
-        if (errno == EEXIST) {
-            send_all(cfd, "HTTP/1.1 409 Conflict\r\nConnection: close\r\n\r\n", 45);
-        } else if (errno == ELOOP) {
-            send_all(cfd, "HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n", 47);
-        } else {
-            send_all(cfd, "HTTP/1.1 500 Internal Server Error\r\nConnection: close\r\n\r\n", 59);
-        }
-        close(dirfd);
-        free(stored);
-        close(cfd);
-        return;
-    }
+}
 
-    size_t remaining = content_length;
-    char buf[8192];
-    while (remaining > 0) {
-        ssize_t r = read(cfd, buf, (remaining > sizeof(buf)) ? sizeof(buf) : remaining);
-        if (r <= 0) break;
-        size_t off = 0;
-        while (off < (size_t)r) {
-            ssize_t w = write(fd, buf + off, (size_t)r - off);
-            if (w <= 0) { remaining = 1; break; }
-            off += (size_t)w;
-        }
-        if (off < (size_t)r) { remaining = 1; break; }
-        remaining -= (size_t)r;
-    }
-    if (remaining != 0) {
-        close(fd);
-        unlinkat(dirfd, stored, 0);
-        close(dirfd);
-        free(stored);
-        send_all(cfd, "HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n", 47);
-        close(cfd);
-        return;
-    }
+/* Safely parse unsigned long from buffer with bounds and no trailing junk */
+static int s_parse_size(const char *s, size_t slen, size_t *out) {
+    if (slen == 0 || slen > 32) return -1;
+    char tmp[33];
+    memcpy(tmp, s, slen);
+    tmp[slen] = '\0';
+    errno = 0;
+    char *endptr = NULL;
+    unsigned long v = strtoul(tmp, &endptr, 10);
+    if (errno != 0 || endptr == tmp || *endptr != '\0') return -1;
+    if (v > SIZE_MAX) return -1;
+    *out = (size_t)v;
+    return 0;
+}
 
-    fsync(fd);
-    close(fd);
+/* Secure random bytes */
+static int s_random_bytes(uint8_t *out, size_t n) {
 #ifdef __linux__
-    fsync(dirfd);
+    ssize_t r = getrandom(out, n, 0);
+    if (r == (ssize_t)n) return 0;
+    /* fallthrough to /dev/urandom if partial or not supported */
 #endif
-    close(dirfd);
-
-    char body[512];
-    int blen = snprintf(body, sizeof(body), "{\"stored\":\"%s\"}\n", stored);
-    free(stored);
-    char header[256];
-    int hlen = snprintf(header, sizeof(header),
-                        "HTTP/1.1 201 Created\r\n"
-                        "Content-Type: application/json; charset=utf-8\r\n"
-                        "Content-Length: %d\r\n"
-                        "Connection: close\r\n\r\n",
-                        blen);
-    send_all(cfd, header, (size_t)hlen);
-    send_all(cfd, body, (size_t)blen);
-    close(cfd);
-}
-
-static void server_loop(bool *stopFlag) {
-    int sfd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
-    if (sfd < 0) return;
-    int opt = 1;
-    setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(SERVER_PORT);
-    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    if (bind(sfd, (struct sockaddr*)&addr, sizeof(addr)) != 0) { close(sfd); return; }
-    if (listen(sfd, 16) != 0) { close(sfd); return; }
-    while (!*stopFlag) {
-        struct sockaddr_in cli;
-        socklen_t cl = sizeof(cli);
-        int cfd = accept4(sfd, (struct sockaddr*)&cli, &cl, SOCK_CLOEXEC);
-        if (cfd < 0) {
-            if (errno == EINTR) continue;
-            break;
-        }
-        handle_client(cfd);
-    }
-    close(sfd);
-}
-
-static int http_post(const char *name, const uint8_t *data, size_t len) {
-    int fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
     if (fd < 0) return -1;
-    struct sockaddr_in addr; memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET; addr.sin_port = htons(SERVER_PORT); addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) != 0) { close(fd); return -1; }
-    // URL-encode name
-    char enc[512]; size_t j = 0;
-    for (size_t i = 0; name[i] && j + 4 < sizeof(enc); i++) {
-        unsigned char c = (unsigned char)name[i];
-        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c=='.' || c=='_' || c=='-' ) {
-            enc[j++] = c;
-        } else {
-            j += snprintf(enc + j, sizeof(enc) - j, "%%%02X", c);
-        }
+    size_t got = 0;
+    while (got < n) {
+        ssize_t m = read(fd, out + got, n - got);
+        if (m < 0) { if (errno == EINTR) continue; close(fd); return -1; }
+        if (m == 0) { close(fd); return -1; }
+        got += (size_t)m;
     }
-    enc[j] = '\0';
-    char head[1024];
-    int hlen = snprintf(head, sizeof(head),
-                        "POST /upload?name=%s HTTP/1.1\r\nHost: 127.0.0.1:%d\r\nContent-Type: application/octet-stream\r\nContent-Length: %zu\r\nConnection: close\r\n\r\n",
-                        enc, SERVER_PORT, len);
-    if (!send_all(fd, head, (size_t)hlen)) { close(fd); return -1; }
-    size_t off = 0;
-    while (off < len) {
-        ssize_t w = write(fd, data + off, len - off);
-        if (w <= 0) break;
-        off += (size_t)w;
-    }
-    // Read status line
-    char ch; char line[256]; size_t L = 0;
-    while (L + 1 < sizeof(line)) {
-        ssize_t r = read(fd, &ch, 1);
-        if (r <= 0) break;
-        line[L++] = ch;
-        if (L >= 2 && line[L-2] == '\r' && line[L-1] == '\n') break;
-    }
-    line[L] = '\0';
-    int code = -1;
-    if (strncmp(line, "HTTP/", 5) == 0) {
-        char http[16]; int c;
-        if (sscanf(line, "%15s %d", http, &c) == 2) code = c;
-    }
-    // drain
-    char buf[512];
-    while (read(fd, buf, sizeof(buf)) > 0) {}
     close(fd);
-    return code;
+    return 0;
 }
 
-int main(void) {
-    srand((unsigned)time(NULL));
-    bool stop = false;
-    pid_t pid = fork();
-    if (pid < 0) return 1;
-    if (pid == 0) {
-        server_loop(&stop);
-        _exit(0);
+/* Generate hex string from random bytes */
+static int s_random_hex(char *out, size_t outcap, size_t bytes) {
+    if (outcap < bytes * 2 + 1) return -1;
+    uint8_t buf[32];
+    if (bytes > sizeof(buf)) return -1;
+    if (s_random_bytes(buf, bytes) != 0) return -1;
+    static const char *hex = "0123456789abcdef";
+    for (size_t i = 0; i < bytes; ++i) {
+        out[2*i]   = hex[(buf[i] >> 4) & 0xF];
+        out[2*i+1] = hex[buf[i] & 0xF];
     }
-    // Give server time
-    usleep(200000);
+    out[bytes*2] = '\0';
+    return 0;
+}
 
-    int ok = 0;
-    // 1) Small valid upload
-    uint8_t d1[] = {'H','e','l','l','o'};
-    ok += (http_post("hello.txt", d1, sizeof(d1)) == 201) ? 1 : 0;
-    // 2) Invalid name
-    uint8_t d2[] = {'x'};
-    ok += (http_post("../evil", d2, sizeof(d2)) == 400) ? 1 : 0;
-    // 3) Empty file
-    ok += (http_post("empty.bin", (const uint8_t*)"", 0) == 201) ? 1 : 0;
-    // 4) Too large
-    size_t biglen = (size_t)MAX_SIZE + 1;
-    uint8_t *big = (uint8_t*)malloc(biglen);
-    if (big) memset(big, 'x', biglen);
-    ok += (big && http_post("big.bin", big, biglen) == 413) ? 1 : 0;
-    free(big);
-    // 5) Another valid
-    uint8_t d5[1024]; for (size_t i=0;i<sizeof(d5);i++) d5[i] = (uint8_t)(rand() & 0xFF);
-    ok += (http_post("rand.dat", d5, sizeof(d5)) == 201) ? 1 : 0;
+/* Validate boundary: 1..MAX_BOUNDARY_LEN and only [A-Za-z0-9'()+_,./:=?-] minus risky; we restrict to [A-Za-z0-9._-] */
+static int s_is_allowed_boundary(const char *b, size_t blen) {
+    if (blen == 0 || blen > MAX_BOUNDARY_LEN) return 0;
+    for (size_t i = 0; i < blen; ++i) {
+        char c = b[i];
+        if (!(isalnum((unsigned char)c) || c == '.' || c == '_' || c == '-')) {
+            return 0;
+        }
+    }
+    return 1;
+}
 
-    // Stop server
-    stop = true;
-    // connect to unblock accept
-    int fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
-    struct sockaddr_in addr; memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET; addr.sin_port = htons(SERVER_PORT); addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    connect(fd, (struct sockaddr*)&addr, sizeof(addr)); close(fd);
+/* Validate filename: enforce length, charset, no leading dot, no ".." */
+static int s_is_allowed_filename(const char *name) {
+    size_t n = s_strnlen(name, MAX_FILENAME_LEN + 1);
+    if (n == 0 || n > MAX_FILENAME_LEN) return 0;
+    if (name[0] == '.') return 0; /* avoid dotfiles */
+    /* reject if contains path separators or ".." */
+    for (size_t i = 0; i < n; ++i) {
+        char c = name[i];
+        if (!(isalnum((unsigned char)c) || c == '.' || c == '_' || c == '-')) return 0;
+    }
+    if (strstr(name, "..") != NULL) return 0;
+    return 1;
+}
 
-    // Kill child
-    kill(pid, SIGTERM);
-    printf("Tests passed: %d/5\n", ok);
+/* Ensure uploads directory exists and open safely */
+static int ensure_upload_dir(const char *path) {
+    if (path == NULL) return -1;
+    /* Try to create; ignore if exists */
+    if (mkdir(path, 0700) != 0) {
+        if (errno != EEXIST) {
+            return -1;
+        }
+    }
+    int dfd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+    if (dfd < 0) {
+        return -1;
+    }
+    struct stat st;
+    if (fstat(dfd, &st) != 0) {
+        close(dfd);
+        return -1;
+    }
+    if (!S_ISDIR(st.st_mode)) {
+        close(dfd);
+        errno = ENOTDIR;
+        return -1;
+    }
+    return dfd;
+}
+
+/* Create a unique temporary file in dirfd */
+static int create_temp_file(int dirfd, char *tmpname_out, size_t tmpname_cap) {
+    char rnd[17];
+    if (s_random_hex(rnd, sizeof(rnd), 8) != 0) return -1;
+    int attempts = 10;
+    while (attempts-- > 0) {
+        int n = snprintf(tmpname_out, tmpname_cap, ".tmp-%s", rnd);
+        if (n <= 0 || (size_t)n >= tmpname_cap) return -1;
+        int fd = openat(dirfd, tmpname_out, O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC | O_NOFOLLOW, 0600);
+        if (fd >= 0) {
+            return fd;
+        }
+        if (errno != EEXIST) return -1;
+        /* regenerate suffix */
+        if (s_random_hex(rnd, sizeof(rnd), 8) != 0) return -1;
+    }
+    errno = EEXIST;
+    return -1;
+}
+
+/* Atomically move temp file to final target without overwrite using linkat, then unlink temp */
+static int finalize_temp_to_target(int dirfd, const char *tmpname, const char *finalname) {
+    /* finalname must not contain '/' */
+    if (strchr(finalname, '/') != NULL) { errno = EINVAL; return -1; }
+    /* Create link; fails if final exists */
+    if (linkat(dirfd, tmpname, dirfd, finalname, 0) != 0) {
+        return -1;
+    }
+    /* Unlink temp */
+    if (unlinkat(dirfd, tmpname, 0) != 0) {
+        /* best-effort cleanup; final already created */
+        return -1;
+    }
+    return 0;
+}
+
+/* Save upload data to base_dir/filename using atomic safe pattern */
+static int save_upload(const char *base_dir, const char *filename, const uint8_t *data, size_t data_len) {
+    if (!base_dir || !filename || !data) return -1;
+    if (data_len > MAX_UPLOAD_SIZE) { errno = EFBIG; return -1; }
+    if (!s_is_allowed_filename(filename)) { errno = EINVAL; return -1; }
+
+    int dirfd = ensure_upload_dir(base_dir);
+    if (dirfd < 0) return -1;
+
+    char tmpname[64];
+    int tfd = create_temp_file(dirfd, tmpname, sizeof(tmpname));
+    if (tfd < 0) {
+        close(dirfd);
+        return -1;
+    }
+
+    int rc = -1;
+    do {
+        /* Validate file descriptor is a regular file */
+        struct stat st;
+        if (fstat(tfd, &st) != 0) break;
+        if (!S_ISREG(st.st_mode)) { errno = EINVAL; break; }
+
+        /* Write data */
+        size_t written = 0;
+        while (written < data_len) {
+            ssize_t w = write(tfd, data + written, data_len - written);
+            if (w < 0) { if (errno == EINTR) continue; goto out; }
+            written += (size_t)w;
+        }
+        if (fsync(tfd) != 0) goto out;
+        if (close(tfd) != 0) { tfd = -1; goto out; }
+        tfd = -1;
+
+        /* fsync directory before link to be safe (optional, after link is also fine) */
+        /* Create final link atomically */
+        if (finalize_temp_to_target(dirfd, tmpname, filename) != 0) goto out;
+
+        /* Sync directory to persist new name */
+        if (fsync(dirfd) != 0) goto out;
+
+        rc = 0;
+    } while (0);
+
+out:
+    if (tfd >= 0) {
+        /* ensure temp is removed */
+        close(tfd);
+        unlinkat(dirfd, tmpname, 0);
+    }
+    close(dirfd);
+    return rc;
+}
+
+/* Extract filename from Content-Disposition value; expects quoted filename; returns 0 on success */
+static int parse_cd_filename(const char *val, size_t vlen, char *out, size_t outcap) {
+    /* We accept: form-data; name="file"; filename="name.ext" (order may vary) */
+    /* Search for filename="..." */
+    const char *p = val;
+    const char *end = val + vlen;
+    int found = 0;
+    while (p < end) {
+        while (p < end && (*p == ';' || *p == ' ' || *p == '\t')) p++;
+        const char *k = p;
+        while (p < end && *p != '=' && *p != ';') p++;
+        size_t klen = (size_t)(p - k);
+        while (p < end && *p != '=') {
+            if (*p == ';') break;
+            p++;
+        }
+        if (p >= end || *p != '=') {
+            while (p < end && *p != ';') p++;
+            continue;
+        }
+        p++; /* skip '=' */
+        while (p < end && (*p == ' ' || *p == '\t')) p++;
+        if (p >= end) break;
+        char valbuf[256];
+        size_t vout = 0;
+        if (*p == '"') {
+            p++;
+            const char *q = p;
+            while (q < end && *q != '"') q++;
+            if (q >= end) break;
+            size_t len = (size_t)(q - p);
+            if (len >= sizeof(valbuf)) len = sizeof(valbuf) - 1;
+            memcpy(valbuf, p, len); valbuf[len] = '\0';
+            p = q + 1;
+        } else {
+            const char *q = p;
+            while (q < end && *q != ';') q++;
+            size_t len = (size_t)(q - p);
+            if (len >= sizeof(valbuf)) len = sizeof(valbuf) - 1;
+            memcpy(valbuf, p, len); valbuf[len] = '\0';
+            p = q;
+        }
+        /* Trim key */
+        char key[64];
+        s_trim_to_buf(k, klen, key, sizeof(key));
+        if (s_strncaseeq(key, s_strnlen(key, sizeof(key)), "filename")) {
+            /* Copy to out */
+            size_t n = s_strnlen(valbuf, sizeof(valbuf));
+            if (n >= outcap) n = outcap - 1;
+            memcpy(out, valbuf, n);
+            out[n] = '\0';
+            found = 1;
+        }
+        while (p < end && *p != ';') p++;
+        if (p < end && *p == ';') p++;
+    }
+    if (!found) return -1;
+    return 0;
+}
+
+/* Multipart parser: extracts first file part named via Content-Disposition filename; validates size and filename */
+static int parse_multipart(const uint8_t *body, size_t blen, const char *boundary, upload_part_t *out_part) {
+    if (!body || !boundary || !out_part) return -1;
+    size_t bl = s_strnlen(boundary, MAX_BOUNDARY_LEN + 1);
+    if (bl == 0 || bl > MAX_BOUNDARY_LEN) return -1;
+    if (!s_is_allowed_boundary(boundary, bl)) return -1;
+
+    /* Initial boundary must be at the start */
+    char initb[2 + MAX_BOUNDARY_LEN + 4];
+    int ninit = snprintf(initb, sizeof(initb), "--%s\r\n", boundary);
+    if (ninit <= 0) return -1;
+    if (blen < (size_t)ninit || memcmp(body, initb, (size_t)ninit) != 0) {
+        return -1;
+    }
+
+    const uint8_t *p = body + ninit;
+    const uint8_t *end = body + blen;
+
+    /* Parse part headers until blank line */
+    const uint8_t *headers_end = NULL;
+    const uint8_t *scan = p;
+    size_t header_bytes = 0;
+    while (scan + 2 <= end) {
+        if (*scan == '\r' && *(scan + 1) == '\n') {
+            size_t line_len = (size_t)(scan - p);
+            header_bytes += (line_len + 2);
+            if (header_bytes > MAX_PART_HEADERS) return -1;
+            if (scan + 4 <= end && memcmp(scan, "\r\n\r\n", 4) == 0) {
+                headers_end = scan + 4;
+                break;
+            }
+            scan += 2;
+            continue;
+        }
+        scan++;
+    }
+    if (headers_end == NULL) return -1;
+
+    /* Process headers line by line */
+    const uint8_t *line = p;
+    char filename[MAX_FILENAME_LEN + 1] = {0};
+    while (line < headers_end - 2) {
+        const uint8_t *eol = s_memmem(line, (size_t)(headers_end - 2 - line), (const uint8_t *)"\r\n", 2);
+        if (!eol) break;
+        const uint8_t *colon = memchr(line, ':', (size_t)(eol - line));
+        if (colon) {
+            size_t klen = (size_t)(colon - line);
+            char key[64];
+            s_trim_to_buf((const char *)line, klen, key, sizeof(key));
+            const uint8_t *valstart = colon + 1;
+            while (valstart < eol && (*valstart == ' ' || *valstart == '\t')) valstart++;
+            size_t vlen = (size_t)(eol - valstart);
+            if (s_strncaseeq(key, s_strnlen(key, sizeof(key)), "Content-Disposition")) {
+                /* parse filename */
+                char valbuf[512];
+                size_t copylen = vlen < sizeof(valbuf) - 1 ? vlen : sizeof(valbuf) - 1;
+                memcpy(valbuf, valstart, copylen);
+                valbuf[copylen] = '\0';
+                if (parse_cd_filename(valbuf, copylen, filename, sizeof(filename)) != 0) {
+                    return -1;
+                }
+            }
+        }
+        line = eol + 2;
+    }
+    if (!s_is_allowed_filename(filename)) return -1;
+
+    /* Find end of part: CRLF--boundary or --boundary (if no CRLF at end of data) */
+    char midb[4 + MAX_BOUNDARY_LEN];
+    int nmid = snprintf(midb, sizeof(midb), "\r\n--%s", boundary);
+    if (nmid <= 0) return -1;
+
+    const uint8_t *content_start = headers_end;
+    const uint8_t *marker = s_memmem(content_start, (size_t)(end - content_start), (const uint8_t *)midb, (size_t)nmid);
+    if (!marker) {
+        /* Some generators may not include CRLF before boundary if content empty; try with "--boundary" directly at end */
+        char endb[2 + MAX_BOUNDARY_LEN];
+        int nendb = snprintf(endb, sizeof(endb), "--%s", boundary);
+        if (nendb <= 0) return -1;
+        marker = s_memmem(content_start, (size_t)(end - content_start), (const uint8_t *)endb, (size_t)nendb);
+        if (!marker) return -1;
+    }
+
+    /* Exclude trailing CRLF before boundary if present */
+    const uint8_t *content_end = marker;
+    if (content_end >= content_start + 2 && memcmp(content_end - 2, "\r\n", 2) == 0) {
+        content_end -= 2;
+    }
+
+    size_t file_len = (size_t)(content_end - content_start);
+    if (file_len > MAX_UPLOAD_SIZE) return -1;
+
+    /* Populate out_part */
+    memset(out_part, 0, sizeof(*out_part));
+    memcpy(out_part->filename, filename, s_strnlen(filename, sizeof(out_part->filename)));
+    out_part->file_data = content_start;
+    out_part->file_len = file_len;
+    return 0;
+}
+
+/* Parse HTTP request, extract upload, save, and compose response */
+static int handle_http_upload_request(const uint8_t *req, size_t req_len, const char *base_dir, char *resp_buf, size_t resp_cap) {
+    if (!req || !resp_buf) return -1;
+    if (req_len == 0 || req_len > MAX_REQUEST_SIZE) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 413 Payload Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+    /* Find header end */
+    const uint8_t *hdr_end = s_memmem(req, req_len, (const uint8_t *)"\r\n\r\n", 4);
+    if (!hdr_end) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+    size_t headers_len = (size_t)(hdr_end - req) + 4;
+    if (headers_len > MAX_HEADER_SECTION) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 431 Request Header Fields Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+
+    /* Parse request line */
+    const uint8_t *line_end = s_memmem(req, headers_len, (const uint8_t *)"\r\n", 2);
+    if (!line_end) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+    const uint8_t *sp1 = memchr(req, ' ', (size_t)(line_end - req));
+    if (!sp1) { int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"); return (n > 0 && (size_t)n < resp_cap) ? n : -1; }
+    const uint8_t *sp2 = memchr(sp1 + 1, ' ', (size_t)(line_end - sp1 - 1));
+    if (!sp2) { int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"); return (n > 0 && (size_t)n < resp_cap) ? n : -1; }
+    slice_t method = { req, (size_t)(sp1 - req) };
+    slice_t target = { sp1 + 1, (size_t)(sp2 - (sp1 + 1)) };
+    /* Only support POST /upload */
+    if (!(method.len == 4 && memcmp(method.data, "POST", 4) == 0) ||
+        !(target.len == 7 && memcmp(target.data, "/upload", 7) == 0)) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+
+    /* Parse headers for Content-Type and Content-Length */
+    const uint8_t *hcur = line_end + 2;
+    const uint8_t *hend = req + headers_len - 2;
+    char content_type[256] = {0};
+    char boundary[MAX_BOUNDARY_LEN + 1] = {0};
+    size_t content_length = 0;
+    int got_ct = 0, got_cl = 0;
+
+    while (hcur < hend) {
+        const uint8_t *eol = s_memmem(hcur, (size_t)(hend - hcur), (const uint8_t *)"\r\n", 2);
+        if (!eol) break;
+        const uint8_t *colon = memchr(hcur, ':', (size_t)(eol - hcur));
+        if (colon) {
+            size_t klen = (size_t)(colon - hcur);
+            char key[64];
+            s_trim_to_buf((const char *)hcur, klen, key, sizeof(key));
+            const uint8_t *valstart = colon + 1;
+            while (valstart < eol && (*valstart == ' ' || *valstart == '\t')) valstart++;
+            size_t vlen = (size_t)(eol - valstart);
+            if (s_strncaseeq(key, s_strnlen(key, sizeof(key)), "Content-Type")) {
+                size_t ncpy = vlen < sizeof(content_type) - 1 ? vlen : sizeof(content_type) - 1;
+                memcpy(content_type, valstart, ncpy);
+                content_type[ncpy] = '\0';
+                got_ct = 1;
+                /* Extract boundary parameter */
+                const char *bptr = strstr(content_type, "boundary=");
+                if (bptr) {
+                    bptr += 9;
+                    char bval[MAX_BOUNDARY_LEN + 4];
+                    size_t bl = 0;
+                    if (*bptr == '"') {
+                        bptr++;
+                        const char *q = strchr(bptr, '"');
+                        if (q) bl = (size_t)(q - bptr);
+                    } else {
+                        const char *q = strpbrk(bptr, " ;\t\r\n");
+                        bl = (size_t)((q ? q : content_type + s_strnlen(content_type, sizeof(content_type))) - bptr);
+                    }
+                    if (bl > MAX_BOUNDARY_LEN) bl = MAX_BOUNDARY_LEN;
+                    memcpy(boundary, bptr, bl);
+                    boundary[bl] = '\0';
+                }
+            } else if (s_strncaseeq(key, s_strnlen(key, sizeof(key)), "Content-Length")) {
+                size_t v = 0;
+                if (s_parse_size((const char *)valstart, vlen, &v) == 0) {
+                    content_length = v;
+                    got_cl = 1;
+                }
+            }
+        }
+        hcur = eol + 2;
+    }
+
+    if (!got_ct || !got_cl) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+    if (content_length > MAX_REQUEST_SIZE) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 413 Payload Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+    /* Enforce multipart/form-data */
+    if (strncasecmp(content_type, "multipart/form-data", 19) != 0 || boundary[0] == '\0' || !s_is_allowed_boundary(boundary, s_strnlen(boundary, sizeof(boundary)))) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 415 Unsupported Media Type\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+
+    const uint8_t *body = req + headers_len;
+    size_t body_len = req_len - headers_len;
+    if (body_len != content_length) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+
+    upload_part_t part;
+    if (parse_multipart(body, body_len, boundary, &part) != 0) {
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+
+    /* Save file */
+    if (save_upload(base_dir, part.filename, part.file_data, part.file_len) != 0) {
+        /* Do not leak internal errors */
+        int n = snprintf(resp_buf, resp_cap, "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+    }
+
+    const char body_ok[] = "{\"status\":\"ok\"}";
+    int n = snprintf(resp_buf, resp_cap,
+                     "HTTP/1.1 201 Created\r\nContent-Type: application/json\r\nContent-Length: %zu\r\nConnection: close\r\n\r\n%s",
+                     (size_t)strlen(body_ok), body_ok);
+    return (n > 0 && (size_t)n < resp_cap) ? n : -1;
+}
+
+/* Build a minimal multipart HTTP request in memory for tests */
+static int build_multipart_request(const char *method, const char *target, const char *boundary, const char *filename, const uint8_t *file_data, size_t file_len, uint8_t **out_req, size_t *out_len) {
+    if (!method || !target || !boundary || !filename || !file_data || !out_req || !out_len) return -1;
+    if (!s_is_allowed_boundary(boundary, s_strnlen(boundary, MAX_BOUNDARY_LEN+1))) return -1;
+
+    char header[1024];
+    char disp[256];
+    int nd = snprintf(disp, sizeof(disp), "form-data; name=\"file\"; filename=\"%s\"", filename);
+    if (nd <= 0 || (size_t)nd >= sizeof(disp)) return -1;
+
+    /* Construct body into a dynamic buffer */
+    size_t est = 512 + file_len + s_strnlen(boundary, MAX_BOUNDARY_LEN+1) * 3;
+    uint8_t *buf = (uint8_t *)calloc(1, est);
+    if (!buf) return -1;
+    size_t off = 0;
+
+    int m = snprintf((char *)buf + off, est - off, "--%s\r\n", boundary);
+    if (m <= 0) { free(buf); return -1; } off += (size_t)m;
+    m = snprintf((char *)buf + off, est - off, "Content-Disposition: %s\r\n", disp);
+    if (m <= 0) { free(buf); return -1; } off += (size_t)m;
+    m = snprintf((char *)buf + off, est - off, "Content-Type: application/octet-stream\r\n\r\n");
+    if (m <= 0) { free(buf); return -1; } off += (size_t)m;
+
+    if (off + file_len + 64 > est) {
+        size_t newcap = off + file_len + 128;
+        uint8_t *nb = (uint8_t *)realloc(buf, newcap);
+        if (!nb) { free(buf); return -1; }
+        buf = nb; est = newcap;
+    }
+    memcpy(buf + off, file_data, file_len);
+    off += file_len;
+
+    m = snprintf((char *)buf + off, est - off, "\r\n--%s--\r\n", boundary);
+    if (m <= 0) { free(buf); return -1; } off += (size_t)m;
+
+    int h = snprintf(header, sizeof(header),
+                     "%s %s HTTP/1.1\r\nHost: localhost\r\nContent-Type: multipart/form-data; boundary=%s\r\nContent-Length: %zu\r\n\r\n",
+                     method, target, boundary, off);
+    if (h <= 0 || (size_t)h >= sizeof(header)) { free(buf); return -1; }
+
+    size_t total = (size_t)h + off;
+    uint8_t *req = (uint8_t *)malloc(total);
+    if (!req) { free(buf); return -1; }
+    memcpy(req, header, (size_t)h);
+    memcpy(req + h, buf, off);
+    free(buf);
+
+    *out_req = req;
+    *out_len = total;
+    return 0;
+}
+
+/* Build a non-multipart request for negative tests */
+static int build_plain_request(const char *method, const char *target, const char *content_type, const uint8_t *data, size_t data_len, uint8_t **out_req, size_t *out_len) {
+    if (!method || !target || !content_type || !data || !out_req || !out_len) return -1;
+    char header[1024];
+    int h = snprintf(header, sizeof(header),
+                     "%s %s HTTP/1.1\r\nHost: localhost\r\nContent-Type: %s\r\nContent-Length: %zu\r\n\r\n",
+                     method, target, content_type, data_len);
+    if (h <= 0 || (size_t)h >= sizeof(header)) return -1;
+    size_t total = (size_t)h + data_len;
+    uint8_t *req = (uint8_t *)malloc(total);
+    if (!req) return -1;
+    memcpy(req, header, (size_t)h);
+    memcpy(req + h, data, data_len);
+    *out_req = req;
+    *out_len = total;
+    return 0;
+}
+
+/* Extract status code from response for tests */
+static int parse_status_code(const char *resp) {
+    if (!resp || strncmp(resp, "HTTP/1.1 ", 9) != 0) return -1;
+    const char *p = resp + 9;
+    if (!isdigit((unsigned char)p[0]) || !isdigit((unsigned char)p[1]) || !isdigit((unsigned char)p[2])) return -1;
+    return (p[0]-'0')*100 + (p[1]-'0')*10 + (p[2]-'0');
+}
+
+/* Main with 5 test cases */
+int main(void) {
+    /* Test 1: Valid upload small file */
+    {
+        const char *boundary = "testboundary123";
+        const char *filename = "hello.txt";
+        const uint8_t file_data[] = "Hello, world!\n";
+        uint8_t *req = NULL; size_t rlen = 0;
+        if (build_multipart_request("POST", "/upload", boundary, filename, file_data, sizeof(file_data)-1, &req, &rlen) != 0) {
+            printf("Test1: build failed\n");
+            return 1;
+        }
+        char resp[RESP_BUF_CAP];
+        int n = handle_http_upload_request(req, rlen, DEFAULT_UPLOAD_DIR, resp, sizeof(resp));
+        int code = n > 0 ? parse_status_code(resp) : -1;
+        printf("Test1 status: %d\n", code);
+        free(req);
+    }
+
+    /* Test 2: Invalid content type (not multipart) */
+    {
+        const uint8_t body[] = "plain body";
+        uint8_t *req = NULL; size_t rlen = 0;
+        if (build_plain_request("POST", "/upload", "text/plain", body, sizeof(body)-1, &req, &rlen) != 0) {
+            printf("Test2: build failed\n");
+            return 1;
+        }
+        char resp[RESP_BUF_CAP];
+        int n = handle_http_upload_request(req, rlen, DEFAULT_UPLOAD_DIR, resp, sizeof(resp));
+        int code = n > 0 ? parse_status_code(resp) : -1;
+        printf("Test2 status: %d\n", code);
+        free(req);
+    }
+
+    /* Test 3: Disallowed filename (path traversal attempt) */
+    {
+        const char *boundary = "bnd123";
+        const char *filename = "..bad.txt";
+        const uint8_t file_data[] = "DATA";
+        uint8_t *req = NULL; size_t rlen = 0;
+        if (build_multipart_request("POST", "/upload", boundary, filename, file_data, sizeof(file_data)-1, &req, &rlen) != 0) {
+            printf("Test3: build failed\n");
+            return 1;
+        }
+        char resp[RESP_BUF_CAP];
+        int n = handle_http_upload_request(req, rlen, DEFAULT_UPLOAD_DIR, resp, sizeof(resp));
+        int code = n > 0 ? parse_status_code(resp) : -1;
+        printf("Test3 status: %d\n", code);
+        free(req);
+    }
+
+    /* Test 4: Oversized payload (exceed MAX_UPLOAD_SIZE) */
+    {
+        const char *boundary = "bigbnd";
+        const char *filename = "big.bin";
+        size_t big = MAX_UPLOAD_SIZE + 1;
+        uint8_t *data = (uint8_t *)malloc(big);
+        if (!data) { printf("Test4: alloc failed\n"); return 1; }
+        memset(data, 'A', big);
+        uint8_t *req = NULL; size_t rlen = 0;
+        if (build_multipart_request("POST", "/upload", boundary, filename, data, big, &req, &rlen) != 0) {
+            printf("Test4: build failed\n");
+            free(data);
+            return 1;
+        }
+        free(data);
+        char resp[RESP_BUF_CAP];
+        int n = handle_http_upload_request(req, rlen, DEFAULT_UPLOAD_DIR, resp, sizeof(resp));
+        int code = n > 0 ? parse_status_code(resp) : -1;
+        printf("Test4 status: %d\n", code);
+        free(req);
+    }
+
+    /* Test 5: Wrong target path */
+    {
+        const char *boundary = "okbnd";
+        const char *filename = "ok.txt";
+        const uint8_t file_data[] = "OK";
+        uint8_t *req = NULL; size_t rlen = 0;
+        if (build_multipart_request("POST", "/wrong", boundary, filename, file_data, sizeof(file_data)-1, &req, &rlen) != 0) {
+            printf("Test5: build failed\n");
+            return 1;
+        }
+        char resp[RESP_BUF_CAP];
+        int n = handle_http_upload_request(req, rlen, DEFAULT_UPLOAD_DIR, resp, sizeof(resp));
+        int code = n > 0 ? parse_status_code(resp) : -1;
+        printf("Test5 status: %d\n", code);
+        free(req);
+    }
+
+    printf("Done.\n");
     return 0;
 }

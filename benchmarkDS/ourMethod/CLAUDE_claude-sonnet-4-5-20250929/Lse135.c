@@ -1,159 +1,200 @@
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <stdlib.h>
 #include <stdbool.h>
-#include <openssl/sha.h>
-#include <openssl/rand.h>
+#include <limits.h>
 
-#define MAX_USERNAME_LENGTH 100
-#define MAX_PASSWORD_LENGTH 128
-#define SALT_LENGTH 16
-#define MAX_USERS 10
+/* Security: Maximum input lengths to prevent buffer overflow */
+#define MAX_USERNAME_LEN 64
+#define MAX_PASSWORD_LEN 128
+#define MAX_INPUT_LEN 256
 
-/* Structure to hold stored credentials */
-typedef struct {
-    char username[MAX_USERNAME_LENGTH + 1];
-    char salt[64];
-    char hashedPassword[64];
-    bool active;
-} StoredCredential;
+/* Security: Stored credentials would normally come from secure configuration
+ * NOT hard-coded. This is for demonstration only. In production, use a 
+ * credential manager or secure vault with hashed passwords. */
+static const char VALID_USERNAME[] = "admin";
+static const char VALID_PASSWORD[] = "securePass123!";
 
-/* Simulated secure storage */
-static StoredCredential userDatabase[MAX_USERS];
-static int userCount = 0;
-
-/**
- * Encodes binary data to base64
- */
-void base64_encode(const unsigned char* input, size_t length, char* output, size_t output_size) {
-    static const char base64_chars[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    
-    size_t i = 0, j = 0;
-    unsigned char char_array_3[3];
-    unsigned char char_array_4[4];
-    size_t out_idx = 0;
-    
-    while (length--) {
-        char_array_3[i++] = *(input++);
-        if (i == 3) {
-            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-            char_array_4[3] = char_array_3[2] & 0x3f;
-            
-            for (i = 0; i < 4 && out_idx < output_size - 1; i++) {
-                output[out_idx++] = base64_chars[char_array_4[i]];
-            }
-            i = 0;
-        }
+/* Security: Constant-time string comparison to prevent timing attacks */
+static bool secure_strcmp(const char *a, const char *b, size_t max_len) {
+    if (a == NULL || b == NULL) {
+        return false;
     }
     
-    if (i && out_idx < output_size - 1) {
-        for (j = i; j < 3; j++) {
-            char_array_3[j] = '\\0';
-        }
-        
-        char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-        
-        for (j = 0; j < i + 1 && out_idx < output_size - 1; j++) {
-            output[out_idx++] = base64_chars[char_array_4[j]];
-        }
-        
-        while (i++ < 3 && out_idx < output_size - 1) {
-            output[out_idx++] = '=';
-        }
+    size_t len_a = strnlen(a, max_len);
+    size_t len_b = strnlen(b, max_len);
+    
+    /* Security: Compare lengths in constant time */
+    unsigned char result = (unsigned char)(len_a ^ len_b);
+    
+    /* Security: Always compare up to the shorter length to prevent timing leaks */
+    size_t compare_len = (len_a < len_b) ? len_a : len_b;
+    
+    for (size_t i = 0; i < compare_len; i++) {
+        result |= (unsigned char)(a[i] ^ b[i]);
     }
     
-    output[out_idx] = '\\0';
+    return (result == 0);
 }
 
-/**
- * Generates a cryptographically secure random salt
- * CWE-759 mitigation: Always use unpredictable unique salt
- * CWE-327 mitigation: Use OpenSSL RAND for cryptographic operations
- */
-bool generateSalt(char* salt, size_t salt_size) {
-    unsigned char random_bytes[SALT_LENGTH];
-    
-    /* Use OpenSSL's CSPRNG */\n    if (RAND_bytes(random_bytes, SALT_LENGTH) != 1) {\n        return false;\n    }\n    \n    base64_encode(random_bytes, SALT_LENGTH, salt, salt_size);\n    return true;\n}\n\n/**\n * Hashes password with salt using SHA-256\n * CWE-327 mitigation: Use strong cryptographic hash\n * CWE-759 mitigation: Include unique salt in hash\n */\nbool hashPassword(const char* password, const char* salt, char* output, size_t output_size) {\n    if (password == NULL || salt == NULL || output == NULL) {\n        return false;\n    }\n    \n    size_t salt_len = strlen(salt);\n    size_t pass_len = strlen(password);\n    size_t total_len = salt_len + pass_len;\n    \n    /* Check for overflow */\n    if (total_len < salt_len || total_len < pass_len) {\n        return false;\n    }\n    \n    char* saltedPassword = (char*)malloc(total_len + 1);\n    if (saltedPassword == NULL) {\n        return false;\n    }\n    \n    /* Combine salt and password */\n    memcpy(saltedPassword, salt, salt_len);\n    memcpy(saltedPassword + salt_len, password, pass_len);\n    saltedPassword[total_len] = '\\0';\n    \n    unsigned char hash[SHA256_DIGEST_LENGTH];\n    SHA256((unsigned char*)saltedPassword, total_len, hash);\n    \n    /* Clear sensitive data before free */\n    memset(saltedPassword, 0, total_len);\n    free(saltedPassword);\n    saltedPassword = NULL;\n    \n    base64_encode(hash, SHA256_DIGEST_LENGTH, output, output_size);\n    return true;\n}\n\n/**\n * Validates input string against null, length, and content\n * CWE-20 mitigation: Strict input validation\n * Rules#3: Validate format, type, and length\n */\nbool isValidInput(const char* input, size_t maxLength) {\n    if (input == NULL) {\n        return false;\n    }\n    \n    size_t len = strlen(input);\n    if (len == 0 || len > maxLength) {\n        return false;\n    }\n    \n    /* Check for only alphanumeric and safe special characters */\n    for (size_t i = 0; i < len; i++) {\n        char c = input[i];\n        if (!isalnum((unsigned char)c) && c != '@' && c != '.' && c != '_' && c != '-') {\n            return false;\n        }\n    }\n    \n    return true;\n}\n\n/**\n * Constant-time string comparison to prevent timing attacks\n * CWE-208 mitigation: Avoid timing side channels\n */\nbool constantTimeEquals(const char* a, const char* b) {\n    if (a == NULL || b == NULL) {\n        return false;\n    }\n    \n    size_t len_a = strlen(a);\n    size_t len_b = strlen(b);\n    \n    if (len_a != len_b) {\n        return false;\n    }\n    \n    volatile int result = 0;\n    for (size_t i = 0; i < len_a; i++) {\n        result |= a[i] ^ b[i];\n    }\n    \n    return result == 0;\n}\n\n/**\n * Initialize test users with securely hashed passwords\n */\nvoid initializeTestUsers(void) {\n    char salt[64];\n    char hash[64];\n    \n    /* Test user 1: "testuser" with password "SecurePass123!" */\n    if (generateSalt(salt, sizeof(salt)) && \n        hashPassword("SecurePass123!", salt, hash, sizeof(hash))) {\n        strncpy(userDatabase[userCount].username, "testuser", MAX_USERNAME_LENGTH);\n        userDatabase[userCount].username[MAX_USERNAME_LENGTH] = '\\0';\n        strncpy(userDatabase[userCount].salt, salt, sizeof(userDatabase[userCount].salt) - 1);\n        userDatabase[userCount].salt[sizeof(userDatabase[userCount].salt) - 1] = '\\0';\n        strncpy(userDatabase[userCount].hashedPassword, hash, sizeof(userDatabase[userCount].hashedPassword) - 1);\n        userDatabase[userCount].hashedPassword[sizeof(userDatabase[userCount].hashedPassword) - 1] = '\\0';\n        userDatabase[userCount].active = true;\n        userCount++;\n    }\n    \n    /* Test user 2: "admin" with password "Admin@2024Secure" */\n    if (userCount < MAX_USERS && generateSalt(salt, sizeof(salt)) && \n        hashPassword("Admin@2024Secure", salt, hash, sizeof(hash))) {\n        strncpy(userDatabase[userCount].username, "admin", MAX_USERNAME_LENGTH);\n        userDatabase[userCount].username[MAX_USERNAME_LENGTH] = '\\0';\n        strncpy(userDatabase[userCount].salt, salt, sizeof(userDatabase[userCount].salt) - 1);\n        userDatabase[userCount].salt[sizeof(userDatabase[userCount].salt) - 1] = '\\0';\n        strncpy(userDatabase[userCount].hashedPassword, hash, sizeof(userDatabase[userCount].hashedPassword) - 1);\n        userDatabase[userCount].hashedPassword[sizeof(userDatabase[userCount].hashedPassword) - 1] = '\\0';
-        userDatabase[userCount].active = true;
-        userCount++;
+/* Security: Safe input reading with bounds checking */
+static bool read_input(char *buffer, size_t buffer_size, const char *prompt) {
+    if (buffer == NULL || buffer_size == 0) {
+        return false;
     }
+    
+    /* Security: Initialize buffer to prevent info leaks */
+    memset(buffer, 0, buffer_size);
+    
+    printf("%s", prompt);
+    fflush(stdout);
+    
+    /* Security: Use fgets with explicit bound to prevent overflow */
+    if (fgets(buffer, (int)buffer_size, stdin) == NULL) {
+        return false;
+    }
+    
+    /* Security: Remove trailing newline and validate length */
+    size_t len = strnlen(buffer, buffer_size);
+    if (len > 0 && buffer[len - 1] == '\\n') {
+        buffer[len - 1] = '\\0';
+        len--;
+    }
+    
+    /* Security: Validate input length is within acceptable range */
+    if (len == 0 || len >= buffer_size - 1) {
+        return false;
+    }
+    
+    return true;
 }
 
-/**
- * Checks if provided credentials are valid
- * CWE-798 mitigation: No hardcoded credentials
- * CWE-257 mitigation: Password stored as hash only
- * CWE-306 mitigation: Proper authentication check
- * Rules#6: Strong password policy enforcement
- * Rules#7: Credentials from secure storage, not hardcoded
- */
-bool check_mod(const char* username, const char* password) {
-    char hashedInput[64];
-    char dummySalt[64];
-    StoredCredential* stored = NULL;
-    
-    /* Input validation - Rules#3 */
-    if (!isValidInput(username, MAX_USERNAME_LENGTH)) {
+/* Security: Input validation - check for valid characters only */
+static bool validate_username(const char *username) {
+    if (username == NULL) {
         return false;
     }
     
-    if (password == NULL || strlen(password) == 0 || strlen(password) > MAX_PASSWORD_LENGTH) {
+    size_t len = strnlen(username, MAX_USERNAME_LEN + 1);
+    
+    /* Security: Enforce length constraints */
+    if (len == 0 || len > MAX_USERNAME_LEN) {
         return false;
     }
     
-    /* Find user in database */
-    for (int i = 0; i < userCount; i++) {
-        if (userDatabase[i].active && strcmp(userDatabase[i].username, username) == 0) {
-            stored = &userDatabase[i];
-            break;
+    /* Security: Allow list validation - only alphanumeric and underscore */
+    for (size_t i = 0; i < len; i++) {
+        char c = username[i];
+        if (!((c >= 'a' && c <= 'z') || 
+              (c >= 'A' && c <= 'Z') || 
+              (c >= '0' && c <= '9') || 
+              c == '_')) {
+            return false;
         }
     }
     
-    if (stored == NULL) {
-        /* User not found - perform dummy hash to prevent timing attack */
-        if (generateSalt(dummySalt, sizeof(dummySalt))) {
-            hashPassword(password, dummySalt, hashedInput, sizeof(hashedInput));
-        }
-        return false;
-    }
-    
-    /* Hash the provided password with stored salt */
-    if (!hashPassword(password, stored->salt, hashedInput, sizeof(hashedInput))) {
-        return false;
-    }
-    
-    /* Constant-time comparison to prevent timing attacks */
-    return constantTimeEquals(hashedInput, stored->hashedPassword);
+    return true;
 }
 
-/* Test cases */
+/* Security: Validate password meets basic requirements */
+static bool validate_password(const char *password) {
+    if (password == NULL) {
+        return false;
+    }
+    
+    size_t len = strnlen(password, MAX_PASSWORD_LEN + 1);
+    
+    /* Security: Enforce length constraints */
+    if (len == 0 || len > MAX_PASSWORD_LEN) {
+        return false;
+    }
+    
+    /* Security: Check for printable ASCII characters only */
+    for (size_t i = 0; i < len; i++) {
+        if (password[i] < 32 || password[i] > 126) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+/* Main authentication function */
+bool check_mod(const char *username, const char *password) {
+    /* Security: Validate inputs are not NULL */
+    if (username == NULL || password == NULL) {
+        return false;
+    }
+    
+    /* Security: Validate input format before comparison */
+    if (!validate_username(username)) {
+        return false;
+    }
+    
+    if (!validate_password(password)) {
+        return false;
+    }
+    
+    /* Security: Use constant-time comparison to prevent timing attacks */
+    bool username_match = secure_strcmp(username, VALID_USERNAME, MAX_USERNAME_LEN);
+    bool password_match = secure_strcmp(password, VALID_PASSWORD, MAX_PASSWORD_LEN);
+    
+    /* Security: Return combined result without early exit */
+    return (username_match && password_match);
+}
+
+/* Simulated form input and button click handler */
 int main(void) {
-    /* Initialize test data */
-    initializeTestUsers();
+    char username[MAX_USERNAME_LEN + 1];
+    char password[MAX_PASSWORD_LEN + 1];
     
-    printf("Test Case 1 - Valid user testuser:\\n");
-    printf("%s\\n", check_mod("testuser", "SecurePass123!") ? "true" : "false");
+    printf("=== Authentication System Test Cases ===\\n\\n");
     
-    printf("\\nTest Case 2 - Valid user admin:\\n");
-    printf("%s\\n", check_mod("admin", "Admin@2024Secure") ? "true" : "false");
+    /* Test Case 1: Valid credentials */
+    printf("Test Case 1: Valid credentials\\n");
+    memset(username, 0, sizeof(username));
+    memset(password, 0, sizeof(password));
+    strncpy(username, "admin", sizeof(username) - 1);
+    strncpy(password, "securePass123!", sizeof(password) - 1);
+    bool result1 = check_mod(username, password);
+    printf("Result: %s\\n\\n", result1 ? "PASS (true)" : "FAIL (false)");
     
-    printf("\\nTest Case 3 - Invalid password:\\n");
-    printf("%s\\n", check_mod("testuser", "WrongPassword") ? "true" : "false");
+    /* Test Case 2: Invalid username */
+    printf("Test Case 2: Invalid username\\n");
+    memset(username, 0, sizeof(username));
+    memset(password, 0, sizeof(password));
+    strncpy(username, "wronguser", sizeof(username) - 1);
+    strncpy(password, "securePass123!", sizeof(password) - 1);
+    bool result2 = check_mod(username, password);
+    printf("Result: %s\\n\\n", result2 ? "FAIL (true)" : "PASS (false)");
     
-    printf("\\nTest Case 4 - Non-existent user:\\n");
-    printf("%s\\n", check_mod("nonexistent", "AnyPassword") ? "true" : "false");
+    /* Test Case 3: Invalid password */
+    printf("Test Case 3: Invalid password\\n");
+    memset(username, 0, sizeof(username));
+    memset(password, 0, sizeof(password));
+    strncpy(username, "admin", sizeof(username) - 1);
+    strncpy(password, "wrongpass", sizeof(password) - 1);
+    bool result3 = check_mod(username, password);
+    printf("Result: %s\\n\\n", result3 ? "FAIL (true)" : "PASS (false)");
     
-    printf("\\nTest Case 5 - Invalid inputs:\\n");
-    printf("%s\\n", check_mod(NULL, "password") ? "true" : "false");
-    printf("%s\\n", check_mod("testuser", NULL) ? "true" : "false");
-    printf("%s\\n", check_mod("", "") ? "true" : "false");
+    /* Test Case 4: NULL inputs */
+    printf("Test Case 4: NULL inputs\\n");
+    bool result4 = check_mod(NULL, NULL);
+    printf("Result: %s\\n\\n", result4 ? "FAIL (true)" : "PASS (false)");
+    
+    /* Test Case 5: Invalid characters in username */
+    printf("Test Case 5: Invalid characters in username\\n");
+    memset(username, 0, sizeof(username));
+    memset(password, 0, sizeof(password));
+    strncpy(username, "admin'; DROP TABLE users--", sizeof(username) - 1);
+    strncpy(password, "securePass123!", sizeof(password) - 1);
+    bool result5 = check_mod(username, password);
+    printf("Result: %s\\n\\n", result5 ? "FAIL (true)" : "PASS (false)");
+    
+    /* Security: Clear sensitive data before program exit */
+    memset(username, 0, sizeof(username));
+    memset(password, 0, sizeof(password));
     
     return 0;
 }

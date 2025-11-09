@@ -1,0 +1,1612 @@
+2025-11-08 01:05:39,041 INFO active_integration ------------------ ['GEMINI', 'gemini-2.5-pro']
+2025-11-08 01:05:39,053 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following: 
+ A decorator above the img() function associates the URL of /img with this function.The img() function gets the name parameter from the URL and opens the file images/name.The open() function returns a file object which is sent back to the browser as the response.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-11-08 01:05:39,900 INFO AFC is enabled with max remote calls: 10.
+2025-11-08 01:05:39,902 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-08 01:05:40,557 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002569B2E5E50>
+2025-11-08 01:05:40,557 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000025697D19450> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-08 01:05:40,671 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002569B343B90>
+2025-11-08 01:05:40,673 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-08 01:05:40,673 DEBUG send_request_headers.complete
+2025-11-08 01:05:40,673 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-08 01:05:40,673 DEBUG send_request_body.complete
+2025-11-08 01:05:40,673 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-08 01:05:49,935 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Fri, 07 Nov 2025 23:05:50 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=9126'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-08 01:05:49,937 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-08 01:05:49,939 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-08 01:05:49,939 DEBUG receive_response_body.complete
+2025-11-08 01:05:49,939 DEBUG response_closed.started
+2025-11-08 01:05:49,939 DEBUG response_closed.complete
+2025-11-08 01:05:49,947 INFO ```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "File & I/O Handling",
+  "Language Basics"
+]
+```
+2025-11-08 01:05:49,947 DEBUG close.started
+2025-11-08 01:05:49,949 DEBUG close.complete
+2025-11-08 01:05:49,951 INFO Assigned tags -->>>>```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "File & I/O Handling",
+  "Language Basics"
+]
+```
+2025-11-08 01:05:49,955 INFO Lse46_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following programming language: C. all function should accept the input as parameters and return the output if any.
+3) Put the code like the below template/example:
+```c  
+code here:
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse46.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following: 
+ A decorator above the img() function associates the URL of /img with this function.The img() function gets the name parameter from the URL and opens the file images/name.The open() function returns a file object which is sent back to the browser as the response.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+## General Mitigation
+["Rules#1: Validate and sanitize every external input before use. Enforce expected type, format, encoding, length, and range."]
+["Rules#2: Use allow lists over block lists. Reject on validation failure and return minimal, generic error messages."]
+["Rules#3: Normalize and canonicalize paths, URLs, and identifiers before validation to prevent bypasses."]
+["Rules#4: Separate validation from business logic; run validation as early as possible at trust boundaries."]
+["Rules#5: Treat all input as untrusted, including environment variables, headers, cookies, query parameters, and file names."]
+["Rules#6: For structured data (JSON, XML, YAML), use strict schemas. Disable features that allow code execution or external entity expansion."]
+["Rules#7: Never hard code secrets. Read them from external configuration or a secret manager."]
+["Rules#8: Use constant format strings for logging. Do not log raw user input without redaction."]
+["Rules#9: For database access, use parameterized queries or safe ORM APIs. Never concatenate untrusted input into queries."]
+
+## C Specific Mitigation
+### Guidance
+- Check buffer sizes before parsing or copying input. Validate numeric conversions and detect overflow.
+- Use strtol, strtoul, or strtod with end pointer checks. Reject on trailing junk or range errors.
+- For text input, bound reads with fgets and parse with length limits. Avoid scanf without width specifiers.
+- Normalize paths and reject traversal after normalization.
+- Use constant format strings with printf-family functions; never pass user input as a format string.
+
+## Code Review Checklist
+- All inputs validated for type, format, encoding, length, and range
+- Strict schemas used for structured data; unsafe features disabled
+- No string concatenation used to build queries or commands
+- Normalization done before validation for paths and URLs
+- Validation errors return generic messages; detailed info goes only to secure logs
+- Logging uses constant format strings; sensitive data redacted
+- Dangerous parsers and dynamic execution features are not used on untrusted input
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Parse an integer from a string safely.
+Input:
+```
+int n = atoi(buf);
+```
+Ideal Output:
+```
+Use strtol with end pointer and errno checks, verify range, reject trailing characters, and handle errors without undefined behavior.
+```
+
+## General Mitigation
+["Rules#11: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]
+["Rules#12: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]
+["Rules#13: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]
+["Rules#14: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]
+["Rules#15: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]
+["Rules#16: Document the rationale for use, constraints, and tests that cover misuse cases."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets, strlcpy/strlcat (where available), or snprintf.
+- Never pass user input as a format string to printf-family functions.
+- Be careful with system, popen, and exec* when arguments may contain user input. Use execve with argv arrays and no shell when feasible.
+- Use secure variants and explicit length checks for string and memory functions.
+
+## Code Review Checklist
+- Safer alternative considered and documented; dangerous function use justified
+- Parameters validated for size, type, encoding, and allowed character set
+- No user input used as a format string, command, or code
+- Timeouts, resource limits, and safe flags configured
+- Errors handled without leaking sensitive details; return codes checked
+- Automated tests cover misuse and edge cases
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Replace dangerous string functions with safe alternatives.
+Input:
+```
+char buf[64]; strcpy(buf, input); printf(buf);
+```
+Ideal Output:
+```
+Use snprintf with an explicit bound, and print with a constant format string like printf("%s", buf). Validate input length before copy.
+```
+
+## General Mitigation
+["Rules#18: Perform explicit bounds checks before every read or write. Use size-aware APIs and track lengths separately from buffers."]
+["Rules#19: Validate all size calculations for integer overflow before allocation and before memcpy or similar operations."]
+["Rules#20: Initialize pointers and buffers. Ensure strings are null terminated where required by the API."]
+["Rules#21: Prefer safe library functions or wrappers that take buffer size and return explicit status codes."]
+["Rules#22: Grow buffers dynamically only up to a defined maximum. Refuse inputs that exceed limits to avoid excessive memory use."]
+["Rules#23: Use memory-safe abstractions where available. Avoid manual pointer arithmetic unless necessary and well reviewed."]
+["Rules#24: On failure, do not use partially initialized buffers. Clear sensitive data before free using a guaranteed zeroization API."]
+["Rules#25: When reading from streams (for example fread or memchr workflows), bound the read by the remaining buffer size and verify the returned count before use."]
+
+## C Specific Mitigation
+### Guidance
+- Check all allocation results for NULL and compute sizes with overflow checks (for example size_t n; if (n > SIZE_MAX / elem_size) fail).
+- Use snprintf, strnlen, memcpy with checked lengths, and memmove when regions may overlap.
+- Use fgets with a bound for input. Avoid gets and scanf without widths.
+- Validate indices and pointer arithmetic against buffer length. Use openat and fstat when validating file descriptors rather than path strings.
+- After fread, verify the number of bytes read before processing; when using memchr, check results and remaining length.
+
+### Checklist
+- All pointers initialized to NULL or valid memory
+- All allocations checked for NULL
+- All copies and reads bounded by destination size
+- All strings explicitly null terminated where required
+- Integer overflow checks before size arithmetic and allocation
+- Each function return value checked
+- All allocated memory freed exactly once
+- Sensitive data cleared before free
+
+## Code Review Checklist
+- All reads and writes guarded by explicit bounds checks
+- All size arithmetic protected against integer overflow
+- Length tracked separately from buffer capacity and validated
+- Safe, size-aware APIs used; dangerous functions avoided
+- Buffer growth capped by a defined maximum; oversize inputs rejected
+- All return values checked; partial reads handled correctly
+- Sensitive data wiped before free; no double frees
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Fix an overflow when copying input into a fixed-size buffer.
+Input:
+```
+char buf[64]; strcpy(buf, input);
+```
+Ideal Output:
+```
+Check the length of input, refuse if it exceeds sizeof(buf) - 1, then use snprintf(buf, sizeof(buf), "%s", input) to copy safely and enforce null termination.
+```
+
+## General Mitigation
+["Rules#27: When generating code, default to XXE-safe parsing. Do not expand entities. Do not load external DTDs. Do not fetch anything over the network while parsing XML."]
+["Rules#28: Reject or strip DOCTYPE declarations. Never enable entity expansion."]
+["Rules#29: Disable external entity resolution and network access in the XML parser."]
+["Rules#30: Avoid API options that expand entities (for example, NOENT). Prefer secure defaults, and set them explicitly."]
+["Rules#31: Set tight resource limits (max size, depth, attributes) to prevent Billion Laughs and quadratic blowups."]
+["Rules#32: Treat XPath/XSLT inputs as untrusted. If XSLT is required, disable document() and network access."]
+["Rules#33: Validate against a local, whitelisted schema only, with external fetches disabled."]
+["Rules#34: Impose input limits (size, element depth, attribute count). Fail closed on limit violations."]
+["Rules#35: Never pass user-controlled XML directly to XSLT. If XSLT is needed, disable reading from network or filesystem and forbid the document() function."]
+["Rules#36: Log rejections generically. Do not echo attacker-controlled XML back in errors."]
+["Rules#37: This policy requires the assistant to emit XML parsing code that disables external entities and network access, forbids DOCTYPE, avoids entity expansion flags, and enforces resource limits by default."]
+
+## C Specific Mitigation
+### Guidance
+- When using libxml2 in C++, apply the same safe configuration as in C.
+- Before parsing: xmlDisableExternalEntityLoader(); xmlSubstituteEntitiesDefault(0); xmlLoadExtDtdDefaultValue = 0;
+- Use xmlReadMemory or xmlReadFile with XML_PARSE_NONET | XML_PARSE_NOCDATA | XML_PARSE_NOERROR | XML_PARSE_NOWARNING to disable network access and external entities.
+- Avoid XML_PARSE_NOENT, as it expands entities and exposes XXE vulnerabilities.
+- If using pugixml or tinyxml2, disable external entity loading (these libraries do not fetch external resources by default).
+- Ensure the parser runs with bounded input size and depth to prevent Billion Laughs or quadratic blowup attacks.
+
+## General Mitigation
+["Rules#39: Validate and sanitize all external input used in path construction to ensure paths resolve within the expected directory."]
+["Rules#40: Accept a base directory and normalize user paths."]
+["Rules#41: Reject any path that resolves outside the base directory after normalization."]
+["Rules#42: Refuse processing of symlinks and directories where a regular file is required."]
+
+## General Mitigation
+["Rules#44: Eliminate check-then-use on paths and shared resources."]
+["Rules#45: Open the resource first in a race-safe way, then validate the already opened descriptor or handle, and operate only on that descriptor or handle."]
+["Rules#46: Do not lstat or stat a path and then reopen it by path. Operate only on the opened handle."]
+["Rules#47: Perform size, type, and permission validation after opening using fstat or an equivalent API."]
+["Rules#48: Avoid following symlinks or reparse points. Use flags or APIs that prevent following them."]
+["Rules#49: For outputs, set restrictive permissions at creation and never widen them later."]
+["Rules#50: Do not rely on per-file locks to prevent TOCTOU across processes. The primary control is open-then-validate-then-use on the same handle."]
+["Rules#51: When updating files, write to a temporary file, fsync, and perform an atomic rename or replacement within the same directory."]
+
+## C Specific Mitigation
+### Guidance
+- POSIX: anchor file operations to a trusted directory using openat rather than absolute paths.
+- POSIX reads: openat(dirfd, rel, O_RDONLY | O_CLOEXEC | O_NOFOLLOW).
+- POSIX writes: openat(dirfd, rel, O_CREAT | O_EXCL | O_NOFOLLOW, 0600).
+- For Directories: stat() \u2192 mkdir() sequence is a TOCTOU risk. Try to create it. If it already exists, we'll verify it below. open without following symlinks and verify it's a directory, open(UPLOAD_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);.
+- Immediately call fstat(fd) and reject if not a regular file or if size exceeds policy limits.
+- For safe writes on POSIX: create a temp file in the same directory, write, fflush and fsync the file, fsync the directory, then renameat or linkat plus unlink for an atomic move.
+- uses an atomic operation to open the file and check for its existence beforehand: FILE *f = fopen(file, "wx");
+
+## Code Review Checklist
+- No check-then-use logic; file or resource is opened first, then validated
+- Code uses APIs that prevent following symlinks or reparse points
+- Type and size checks are enforced after opening, not before
+- Writes use temporary files, fsync, and atomic renames or replacements
+- Permissions set restrictively on creation; not widened later
+- No reopening by path after validation; operations use the same descriptor or handle
+- Locks are not used as the sole protection against TOCTOU
+
+## General Mitigation
+["Rules#53: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]
+["Rules#54: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]
+["Rules#55: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]
+["Rules#56: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]
+["Rules#57: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]
+["Rules#58: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]
+["Rules#59: Files: open first, validate the opened handle, and operate only on that handle."]
+["Rules#60: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]
+["Rules#61: Sensitive data handling: clear secrets before free using a guaranteed zeroization API."]
+["Rules#62: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]
+["Rules#63: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]
+["Rules#64: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]
+["Rules#65: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]
+["Rules#66: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]
+["Rules#67: Treat each line you generate as insecure until you review it against these rules and fix it."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths.
+- Use fgets and snprintf. Check all return values.
+- Use RAII-like cleanup with a single failure label and goto for deterministic teardown.
+- Always use memset_s instead of memset, followed by the destruction/free of the buffer.
+- When using libcurl, enforce certificate and hostname verification and a minimum TLS version as noted in general_rules.
+
+### Checklist
+- All pointers initialized to NULL or valid memory
+- All malloc and calloc results checked for NULL
+- All array accesses bounds checked
+- All strings null terminated
+- Buffer sizes validated before copy and read operations
+- All allocated memory freed exactly once
+- Integer overflow checked before arithmetic and allocation
+- All function return values checked
+- Sensitive data cleared before free using memset_s or a portable explicit zero
+
+## Code Review Checklist
+- Inputs validated for type, length, range, and encoding
+- No hard coded secrets or keys
+- No eval, exec, unsafe reflection, or insecure deserialization
+- Crypto uses AEAD and modern KDFs with proper parameters
+- TLS verification and minimum version enforced in all clients
+- No TOCTOU patterns; safe file operations and atomic writes
+- All logging redacts sensitive data and uses constant format strings
+- Errors do not leak internal details to callers
+- Memory safety and integer overflow checks present where relevant
+- Concurrency hazards addressed with safe primitives
+- Build hardening flags on; static analysis and tests in place
+
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-11-08 01:05:50,875 INFO AFC is enabled with max remote calls: 10.
+2025-11-08 01:05:50,877 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-08 01:05:50,940 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002569B363920>
+2025-11-08 01:05:50,942 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x000002569B32BDD0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-08 01:05:51,029 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000002569B363830>
+2025-11-08 01:05:51,029 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-08 01:05:51,029 DEBUG send_request_headers.complete
+2025-11-08 01:05:51,029 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-08 01:05:51,029 DEBUG send_request_body.complete
+2025-11-08 01:05:51,029 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-08 01:06:50,551 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Fri, 07 Nov 2025 23:06:51 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=59357'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-08 01:06:50,552 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-08 01:06:50,552 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-08 01:06:50,554 DEBUG receive_response_body.complete
+2025-11-08 01:06:50,554 DEBUG response_closed.started
+2025-11-08 01:06:50,554 DEBUG response_closed.complete
+2025-11-08 01:06:50,556 INFO ```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <limits.h>
+#include <ctype.h>
+
+#if defined(_WIN32) || defined(_WIN64)
+#include <direct.h>
+#define MKDIR(path, mode) _mkdir(path)
+#define REALPATH(path, resolved) _fullpath(resolved, path, _MAX_PATH)
+#else
+#include <errno.h>
+#define MKDIR(path, mode) mkdir(path, mode)
+#define REALPATH(path, resolved) realpath(path, resolved)
+#endif
+
+
+// --- Constants ---
+#define IMAGE_DIR "images"
+#define MAX_FILENAME_LEN 255
+#define READ_BUFFER_SIZE 4096
+
+/**
+ * @brief Validates a filename against a strict allow-list of characters.
+ *
+ * Rules#1, #2, #5: This function validates the input filename. It checks for
+ * length, emptiness, and enforces a strict character set (alphanumeric, '.', '_', '-')
+ * to prevent injection of path traversal sequences or other malicious characters.
+ * It acts as the first line of defense at the trust boundary.
+ *
+ * @param filename The filename to validate.
+ * @return true if the filename is valid, false otherwise.
+ */
+static bool is_valid_filename(const char *filename) {
+    if (!filename || filename[0] == '\0') {
+        return false;
+    }
+
+    if (strlen(filename) > MAX_FILENAME_LEN) {
+        return false;
+    }
+
+    // Disallow special directory names explicitly.
+    if (strcmp(filename, ".") == 0 || strcmp(filename, "..") == 0) {
+        return false;
+    }
+
+    // Allow-list validation for filename characters.
+    for (size_t i = 0; filename[i] != '\0'; i++) {
+        unsigned char c = filename[i];
+        if (!isalnum(c) && c != '.' && c != '_' && c != '-') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * @brief Simulates serving an image file based on a 'name' parameter.
+ *
+ * This function models a web handler for a URL like /img?name=<filename>.
+ * It securely constructs the path, validates it to prevent directory traversal,
+ * and sends the file content to standard output.
+ *
+ * @param name The filename provided as a URL parameter.
+ */
+void serve_image(const char *name) {
+    // 1. Validate input filename (Rules #1, #2, #5, #54)
+    if (!is_valid_filename(name)) {
+        fprintf(stderr, "Error: Invalid filename provided.\n");
+        // In a real server, send an HTTP 400 Bad Request response.
+        return;
+    }
+
+    // 2. Safely construct the full file path (Rules #18, #60)
+    char full_path[PATH_MAX];
+    int written = snprintf(full_path, sizeof(full_path), "%s/%s", IMAGE_DIR, name);
+
+    // Check for truncation or encoding errors from snprintf.
+    if (written < 0 || (size_t)written >= sizeof(full_path)) {
+        fprintf(stderr, "Error: Path construction failed due to length.\n");
+        // In a real server, send an HTTP 500 Internal Server Error response.
+        return;
+    }
+
+    // 3. Normalize paths and verify the result is within the base directory (Rules #3, #39, #41)
+    char canonical_base_path[PATH_MAX];
+    if (REALPATH(IMAGE_DIR, canonical_base_path) == NULL) {
+        fprintf(stderr, "Error: Base image directory '%s' is inaccessible.\n", IMAGE_DIR);
+        return;
+    }
+
+    char canonical_file_path[PATH_MAX];
+    if (REALPATH(full_path, canonical_file_path) == NULL) {
+        // This is the expected path for a file that doesn't exist.
+        fprintf(stderr, "Error: File not found.\n");
+        // In a real server, send an HTTP 404 Not Found response.
+        return;
+    }
+
+    // Check that the canonical file path starts with the canonical base path.
+    size_t base_len = strlen(canonical_base_path);
+    if (strncmp(canonical_file_path, canonical_base_path, base_len) != 0 ||
+        (canonical_file_path[base_len] != '/' && canonical_file_path[base_len] != '\\' && canonical_file_path[base_len] != '\0')) {
+        fprintf(stderr, "Error: Directory traversal attempt detected.\n");
+        // In a real server, send an HTTP 403 Forbidden response.
+        return;
+    }
+
+    // 4. Open file and validate handle to prevent TOCTOU races (Rules #45, #47, #59, #64)
+    FILE *file = fopen(canonical_file_path, "rb");
+    if (!file) {
+        // This might be redundant due to realpath, but serves as defense-in-depth.
+        fprintf(stderr, "Error: Could not open file after validation.\n");
+        return;
+    }
+
+    // Use the file handle to verify file type, avoiding check-then-use on the path.
+    int fd = fileno(file);
+    struct stat file_stat;
+    if (fstat(fd, &file_stat) != 0) {
+        fprintf(stderr, "Error: Could not get file stats.\n");
+        fclose(file);
+        return;
+    }
+
+    // Ensure we are only serving regular files.
+    if (!S_ISREG(file_stat.st_mode)) {
+        fprintf(stderr, "Error: Requested path is not a regular file.\n");
+        fclose(file);
+        return;
+    }
+
+    // 5. Read file in chunks and send to output (simulates response) (Rules #18, #25)
+    printf("--- Simulating HTTP Response ---\n");
+    printf("Content-Type: application/octet-stream\n");
+    printf("Content-Length: %ld\n\n", (long)file_stat.st_size);
+
+    char buffer[READ_BUFFER_SIZE];
+    size_t bytes_read;
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+        // In a real server, this would write to a socket. We write to stdout.
+        fwrite(buffer, 1, bytes_read, stdout);
+    }
+
+    // Check for read errors after the loop.
+    if (ferror(file)) {
+        fprintf(stderr, "\nError: An error occurred while reading the file.\n");
+    }
+
+    // 6. Cleanup
+    fclose(file);
+    printf("\n--- End of Response ---\n");
+}
+
+
+/**
+ * @brief Sets up a temporary directory and files for testing.
+ */
+static void setup_test_environment() {
+    // Create the image directory.
+    if (MKDIR(IMAGE_DIR, 0755) != 0 && errno != EEXIST) {
+        perror("Failed to create 'images' directory");
+        exit(EXIT_FAILURE);
+    }
+    
+    // Create a valid image file.
+    FILE *f1 = fopen("images/cat.jpg", "w");
+    if (f1) {
+        fprintf(f1, "This is the content of cat.jpg.");
+        fclose(f1);
+    } else {
+        perror("Failed to create test file 'images/cat.jpg'");
+    }
+    
+    // Create a file outside the allowed directory for traversal tests.
+    FILE *f2 = fopen("secret.txt", "w");
+     if (f2) {
+        fprintf(f2, "This is a secret file.");
+        fclose(f2);
+    } else {
+        perror("Failed to create test file 'secret.txt'");
+    }
+}
+
+/**
+ * @brief Cleans up the files and directory created for testing.
+ */
+static void cleanup_test_environment() {
+    remove("images/cat.jpg");
+    remove("secret.txt");
+    rmdir(IMAGE_DIR);
+}
+
+
+int main() {
+    setup_test_environment();
+
+    printf(">>> Test Case 1: Valid image request\n");
+    serve_image("cat.jpg");
+    printf("\n\n");
+
+    printf(">>> Test Case 2: Non-existent file request\n");
+    serve_image("dog.png");
+    printf("\n\n");
+
+    printf(">>> Test Case 3: Path traversal attempt with '..'\n");
+    serve_image("../secret.txt"); // Blocked by is_valid_filename()
+    printf("\n\n");
+    
+    printf(">>> Test Case 4: Invalid characters in filename\n");
+    serve_image("file<>&.txt"); // Blocked by is_valid_filename()
+    printf("\n\n");
+
+    printf(">>> Test Case 5: Requesting a directory instead of a file\n");
+    serve_image("."); // Blocked by is_valid_filename()
+    printf("\n\n");
+    
+    cleanup_test_environment();
+    return 0;
+}
+```
+2025-11-08 01:06:50,561 DEBUG close.started
+2025-11-08 01:06:50,561 DEBUG close.complete
+2025-11-08 01:06:50,574 INFO Created file: Lse46.c
+2025-11-08 01:06:53,576 INFO All files processed.
+2025-11-08 01:07:00,824 INFO active_integration ------------------ ['GEMINI', 'gemini-2.5-pro']
+2025-11-08 01:07:00,829 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following: 
+ Generate 3 random floats. Convert them to strings. Concatenate them into a single string. Writes the string to a file.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-11-08 01:07:01,427 INFO AFC is enabled with max remote calls: 10.
+2025-11-08 01:07:01,429 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-08 01:07:01,513 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000001C022A928D0>
+2025-11-08 01:07:01,513 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x000001C01F419450> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-08 01:07:01,807 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000001C022A72990>
+2025-11-08 01:07:01,807 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-08 01:07:01,808 DEBUG send_request_headers.complete
+2025-11-08 01:07:01,808 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-08 01:07:01,808 DEBUG send_request_body.complete
+2025-11-08 01:07:01,808 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-08 01:07:09,083 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Fri, 07 Nov 2025 23:07:09 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=6666'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-08 01:07:09,083 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-08 01:07:09,083 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-08 01:07:09,084 DEBUG receive_response_body.complete
+2025-11-08 01:07:09,084 DEBUG response_closed.started
+2025-11-08 01:07:09,084 DEBUG response_closed.complete
+2025-11-08 01:07:09,086 INFO ```json
+[
+  "File & I/O Handling",
+  "Language Basics"
+]
+```
+2025-11-08 01:07:09,086 DEBUG close.started
+2025-11-08 01:07:09,086 DEBUG close.complete
+2025-11-08 01:07:09,088 INFO Assigned tags -->>>>```json
+[
+  "File & I/O Handling",
+  "Language Basics"
+]
+```
+2025-11-08 01:07:09,090 INFO Lse118_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following programming language: C. all function should accept the input as parameters and return the output if any.
+3) Put the code like the below template/example:
+```c  
+code here:
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse118.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following: 
+ Generate 3 random floats. Convert them to strings. Concatenate them into a single string. Writes the string to a file.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+## General Mitigation
+["Rules#1: Validate and sanitize all external input used in path construction to ensure paths resolve within the expected directory."]
+["Rules#2: Accept a base directory and normalize user paths."]
+["Rules#3: Reject any path that resolves outside the base directory after normalization."]
+["Rules#4: Refuse processing of symlinks and directories where a regular file is required."]
+
+## General Mitigation
+["Rules#6: Eliminate check-then-use on paths and shared resources."]
+["Rules#7: Open the resource first in a race-safe way, then validate the already opened descriptor or handle, and operate only on that descriptor or handle."]
+["Rules#8: Do not lstat or stat a path and then reopen it by path. Operate only on the opened handle."]
+["Rules#9: Perform size, type, and permission validation after opening using fstat or an equivalent API."]
+["Rules#10: Avoid following symlinks or reparse points. Use flags or APIs that prevent following them."]
+["Rules#11: For outputs, set restrictive permissions at creation and never widen them later."]
+["Rules#12: Do not rely on per-file locks to prevent TOCTOU across processes. The primary control is open-then-validate-then-use on the same handle."]
+["Rules#13: When updating files, write to a temporary file, fsync, and perform an atomic rename or replacement within the same directory."]
+
+## C Specific Mitigation
+### Guidance
+- POSIX: anchor file operations to a trusted directory using openat rather than absolute paths.
+- POSIX reads: openat(dirfd, rel, O_RDONLY | O_CLOEXEC | O_NOFOLLOW).
+- POSIX writes: openat(dirfd, rel, O_CREAT | O_EXCL | O_NOFOLLOW, 0600).
+- For Directories: stat() \u2192 mkdir() sequence is a TOCTOU risk. Try to create it. If it already exists, we'll verify it below. open without following symlinks and verify it's a directory, open(UPLOAD_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);.
+- Immediately call fstat(fd) and reject if not a regular file or if size exceeds policy limits.
+- For safe writes on POSIX: create a temp file in the same directory, write, fflush and fsync the file, fsync the directory, then renameat or linkat plus unlink for an atomic move.
+- uses an atomic operation to open the file and check for its existence beforehand: FILE *f = fopen(file, "wx");
+
+## Code Review Checklist
+- No check-then-use logic; file or resource is opened first, then validated
+- Code uses APIs that prevent following symlinks or reparse points
+- Type and size checks are enforced after opening, not before
+- Writes use temporary files, fsync, and atomic renames or replacements
+- Permissions set restrictively on creation; not widened later
+- No reopening by path after validation; operations use the same descriptor or handle
+- Locks are not used as the sole protection against TOCTOU
+
+## General Mitigation
+["Rules#15: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]
+["Rules#16: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]
+["Rules#17: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]
+["Rules#18: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]
+["Rules#19: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]
+["Rules#20: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]
+["Rules#21: Files: open first, validate the opened handle, and operate only on that handle."]
+["Rules#22: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]
+["Rules#23: Sensitive data handling: clear secrets before free using a guaranteed zeroization API."]
+["Rules#24: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]
+["Rules#25: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]
+["Rules#26: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]
+["Rules#27: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]
+["Rules#28: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]
+["Rules#29: Treat each line you generate as insecure until you review it against these rules and fix it."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths.
+- Use fgets and snprintf. Check all return values.
+- Use RAII-like cleanup with a single failure label and goto for deterministic teardown.
+- Always use memset_s instead of memset, followed by the destruction/free of the buffer.
+- When using libcurl, enforce certificate and hostname verification and a minimum TLS version as noted in general_rules.
+
+### Checklist
+- All pointers initialized to NULL or valid memory
+- All malloc and calloc results checked for NULL
+- All array accesses bounds checked
+- All strings null terminated
+- Buffer sizes validated before copy and read operations
+- All allocated memory freed exactly once
+- Integer overflow checked before arithmetic and allocation
+- All function return values checked
+- Sensitive data cleared before free using memset_s or a portable explicit zero
+
+## Code Review Checklist
+- Inputs validated for type, length, range, and encoding
+- No hard coded secrets or keys
+- No eval, exec, unsafe reflection, or insecure deserialization
+- Crypto uses AEAD and modern KDFs with proper parameters
+- TLS verification and minimum version enforced in all clients
+- No TOCTOU patterns; safe file operations and atomic writes
+- All logging redacts sensitive data and uses constant format strings
+- Errors do not leak internal details to callers
+- Memory safety and integer overflow checks present where relevant
+- Concurrency hazards addressed with safe primitives
+- Build hardening flags on; static analysis and tests in place
+
+## General Mitigation
+["Rules#31: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]
+["Rules#32: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]
+["Rules#33: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]
+["Rules#34: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]
+["Rules#35: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]
+["Rules#36: Document the rationale for use, constraints, and tests that cover misuse cases."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets, strlcpy/strlcat (where available), or snprintf.
+- Never pass user input as a format string to printf-family functions.
+- Be careful with system, popen, and exec* when arguments may contain user input. Use execve with argv arrays and no shell when feasible.
+- Use secure variants and explicit length checks for string and memory functions.
+
+## Code Review Checklist
+- Safer alternative considered and documented; dangerous function use justified
+- Parameters validated for size, type, encoding, and allowed character set
+- No user input used as a format string, command, or code
+- Timeouts, resource limits, and safe flags configured
+- Errors handled without leaking sensitive details; return codes checked
+- Automated tests cover misuse and edge cases
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Replace dangerous string functions with safe alternatives.
+Input:
+```
+char buf[64]; strcpy(buf, input); printf(buf);
+```
+Ideal Output:
+```
+Use snprintf with an explicit bound, and print with a constant format string like printf("%s", buf). Validate input length before copy.
+```
+
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-11-08 01:07:09,595 INFO AFC is enabled with max remote calls: 10.
+2025-11-08 01:07:09,597 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-08 01:07:09,702 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000001C022A93860>
+2025-11-08 01:07:09,702 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x000001C0229D8CD0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-08 01:07:09,858 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000001C022A93770>
+2025-11-08 01:07:09,858 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-08 01:07:09,858 DEBUG send_request_headers.complete
+2025-11-08 01:07:09,858 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-08 01:07:09,858 DEBUG send_request_body.complete
+2025-11-08 01:07:09,858 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-08 01:07:53,033 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Fri, 07 Nov 2025 23:07:53 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=42699'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-08 01:07:53,033 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-08 01:07:53,035 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-08 01:07:53,035 DEBUG receive_response_body.complete
+2025-11-08 01:07:53,035 DEBUG response_closed.started
+2025-11-08 01:07:53,035 DEBUG response_closed.complete
+2025-11-08 01:07:53,036 INFO ```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+#include <errno.h>
+
+/**
+ * @brief Generates 3 random floats, concatenates them into a string, 
+ *        and writes the string to a new file.
+ * 
+ * This function creates a new file and writes to it. It uses exclusive create
+ * mode ("wx") for the file opening, which is an atomic operation that prevents 
+ * race conditions (TOCTOU) and avoids overwriting existing files.
+ *
+ * @param filename The path to the file to be created. The function will fail 
+ *                 if the file already exists. The filename must not be NULL 
+ *                 or an empty string.
+ * @return 0 on success, -1 on failure.
+ */
+int generate_and_write_floats(const char *filename) {
+    // Rule #16: Input validation. Check for NULL or empty filename.
+    if (filename == NULL || filename[0] == '\0') {
+        fprintf(stderr, "Error: Invalid filename provided.\n");
+        return -1;
+    }
+
+    // Generate 3 random floats between 0.0 and 1.0
+    float f1 = (float)rand() / (float)RAND_MAX;
+    float f2 = (float)rand() / (float)RAND_MAX;
+    float f3 = (float)rand() / (float)RAND_MAX;
+
+    // Buffer to hold the concatenated string of floats.
+    // A standard float string representation is relatively small.
+    // 128 bytes is a safe size for three floats and separators.
+    char buffer[128];
+    
+    // Rule #36 (C-specific): Use snprintf to prevent buffer overflows.
+    // It returns the number of characters that would have been written.
+    int chars_written = snprintf(buffer, sizeof(buffer), "%.8f, %.8f, %.8f", f1, f2, f3);
+
+    // Check for snprintf errors or truncation.
+    // Rule #22: Check all function return values.
+    if (chars_written < 0) {
+        fprintf(stderr, "Error: snprintf encoding error occurred.\n");
+        return -1;
+    }
+    if ((size_t)chars_written >= sizeof(buffer)) {
+        fprintf(stderr, "Error: snprintf output was truncated. Buffer too small.\n");
+        return -1;
+    }
+
+    FILE *file = NULL;
+
+    // C-Specific Mitigation: Use "wx" mode for atomic file creation.
+    // This prevents TOCTOU (Time-of-Check to Time-of-Use) race conditions
+    // by ensuring the file is created and opened in a single, atomic step.
+    // It fails if the file already exists. This follows Rules #6, #7, #21.
+    file = fopen(filename, "wx");
+    if (file == NULL) {
+        // perror provides a descriptive error message from the OS (e.g., "File exists")
+        // Rule #25: Do not leak internal details. perror is safe.
+        perror("Error opening file for exclusive writing");
+        return -1;
+    }
+
+    // Write the concatenated string to the file.
+    if (fputs(buffer, file) == EOF) {
+        perror("Error writing to file");
+        fclose(file); // Attempt to close the file even on write error
+        return -1;
+    }
+
+    // Close the file stream.
+    if (fclose(file) != 0) {
+        perror("Error closing file");
+        return -1;
+    }
+
+    return 0;
+}
+
+int main(void) {
+    // Seed the random number generator once at the beginning of the program.
+    srand((unsigned int)time(NULL));
+
+    printf("--- Running Test Cases ---\n\n");
+
+    // Test Case 1: Successful creation
+    const char* file1 = "output1.txt";
+    printf("Test 1: Writing to %s\n", file1);
+    // For test repeatability, remove the file if it exists from a previous run.
+    // In a real application, the failure on an existing file would be desired.
+    remove(file1); 
+    if (generate_and_write_floats(file1) == 0) {
+        printf("Test 1: Success. File '%s' created.\n", file1);
+    } else {
+        printf("Test 1: Failed.\n");
+    }
+    printf("\n");
+
+    // Test Case 2: Another successful creation
+    const char* file2 = "output2.txt";
+    printf("Test 2: Writing to %s\n", file2);
+    remove(file2);
+    if (generate_and_write_floats(file2) == 0) {
+        printf("Test 2: Success. File '%s' created.\n", file2);
+    } else {
+        printf("Test 2: Failed.\n");
+    }
+    printf("\n");
+    
+    // Test Case 3: Test failure on an existing file
+    const char* file3 = "output3.txt";
+    printf("Test 3: Attempting to write to '%s' twice.\n", file3);
+    remove(file3);
+    if (generate_and_write_floats(file3) == 0) {
+        printf("Test 3: First write successful (as expected).\n");
+        // Second attempt should fail because the file now exists.
+        if (generate_and_write_floats(file3) != 0) {
+            printf("Test 3: Second write failed as expected ('File exists').\n");
+        } else {
+            printf("Test 3: Second write succeeded (UNEXPECTED).\n");
+        }
+    } else {
+        printf("Test 3: First write failed (UNEXPECTED).\n");
+    }
+    printf("\n");
+
+    // Test Case 4: Test with NULL filename
+    printf("Test 4: Calling with NULL filename.\n");
+    if (generate_and_write_floats(NULL) != 0) {
+        printf("Test 4: Failed as expected.\n");
+    } else {
+        printf("Test 4: Succeeded (UNEXPECTED).\n");
+    }
+    printf("\n");
+
+    // Test Case 5: Test with empty filename
+    printf("Test 5: Calling with empty filename.\n");
+    if (generate_and_write_floats("") != 0) {
+        printf("Test 5: Failed as expected.\n");
+    } else {
+        printf("Test 5: Succeeded (UNEXPECTED).\n");
+    }
+    printf("\n");
+
+    printf("--- Test Cases Finished ---\n");
+
+    return 0;
+}
+```
+2025-11-08 01:07:53,040 DEBUG close.started
+2025-11-08 01:07:53,040 DEBUG close.complete
+2025-11-08 01:07:53,050 INFO Created file: Lse118.c
+2025-11-08 01:07:56,050 INFO All files processed.
+2025-11-08 01:23:52,029 INFO active_integration ------------------ ['GEMINI', 'gemini-2.5-pro']
+2025-11-08 01:23:52,037 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following: 
+ The img() function is called when the user visits the /img route.The request.args.get('file') function gets the value of the file parameter in the URL.The open() function opens the file in read binary mode.The read() function reads the file and returns it.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-11-08 01:23:52,711 INFO AFC is enabled with max remote calls: 10.
+2025-11-08 01:23:52,711 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-08 01:23:53,230 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000017BAEBC2B40>
+2025-11-08 01:23:53,230 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000017BAB529450> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-08 01:23:53,382 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000017BAEA9C620>
+2025-11-08 01:23:53,382 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-08 01:23:53,384 DEBUG send_request_headers.complete
+2025-11-08 01:23:53,384 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-08 01:23:53,384 DEBUG send_request_body.complete
+2025-11-08 01:23:53,384 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-08 01:24:01,195 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Fri, 07 Nov 2025 23:24:02 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=7717'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-08 01:24:01,196 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-08 01:24:01,196 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-08 01:24:01,196 DEBUG receive_response_body.complete
+2025-11-08 01:24:01,196 DEBUG response_closed.started
+2025-11-08 01:24:01,197 DEBUG response_closed.complete
+2025-11-08 01:24:01,198 INFO ```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "File & I/O Handling",
+  "Language Basics"
+]
+```
+2025-11-08 01:24:01,199 DEBUG close.started
+2025-11-08 01:24:01,199 DEBUG close.complete
+2025-11-08 01:24:01,200 INFO Assigned tags -->>>>```json
+[
+  "Web Development, API & Web Services",
+  "Input Validation & Sanitization",
+  "File & I/O Handling",
+  "Language Basics"
+]
+```
+2025-11-08 01:24:01,206 INFO Lse48_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following programming language: C. all function should accept the input as parameters and return the output if any.
+3) Put the code like the below template/example:
+```c  
+code here:
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse48.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following: 
+ The img() function is called when the user visits the /img route.The request.args.get('file') function gets the value of the file parameter in the URL.The open() function opens the file in read binary mode.The read() function reads the file and returns it.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+## General Mitigation
+["Rules#1: Validate and sanitize every external input before use. Enforce expected type, format, encoding, length, and range."]
+["Rules#2: Use allow lists over block lists. Reject on validation failure and return minimal, generic error messages."]
+["Rules#3: Normalize and canonicalize paths, URLs, and identifiers before validation to prevent bypasses."]
+["Rules#4: Separate validation from business logic; run validation as early as possible at trust boundaries."]
+["Rules#5: Treat all input as untrusted, including environment variables, headers, cookies, query parameters, and file names."]
+["Rules#6: For structured data (JSON, XML, YAML), use strict schemas. Disable features that allow code execution or external entity expansion."]
+["Rules#7: Never hard code secrets. Read them from external configuration or a secret manager."]
+["Rules#8: Use constant format strings for logging. Do not log raw user input without redaction."]
+["Rules#9: For database access, use parameterized queries or safe ORM APIs. Never concatenate untrusted input into queries."]
+
+## C Specific Mitigation
+### Guidance
+- Check buffer sizes before parsing or copying input. Validate numeric conversions and detect overflow.
+- Use strtol, strtoul, or strtod with end pointer checks. Reject on trailing junk or range errors.
+- For text input, bound reads with fgets and parse with length limits. Avoid scanf without width specifiers.
+- Normalize paths and reject traversal after normalization.
+- Use constant format strings with printf-family functions; never pass user input as a format string.
+
+## Code Review Checklist
+- All inputs validated for type, format, encoding, length, and range
+- Strict schemas used for structured data; unsafe features disabled
+- No string concatenation used to build queries or commands
+- Normalization done before validation for paths and URLs
+- Validation errors return generic messages; detailed info goes only to secure logs
+- Logging uses constant format strings; sensitive data redacted
+- Dangerous parsers and dynamic execution features are not used on untrusted input
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Parse an integer from a string safely.
+Input:
+```
+int n = atoi(buf);
+```
+Ideal Output:
+```
+Use strtol with end pointer and errno checks, verify range, reject trailing characters, and handle errors without undefined behavior.
+```
+
+## General Mitigation
+["Rules#11: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]
+["Rules#12: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]
+["Rules#13: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]
+["Rules#14: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]
+["Rules#15: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]
+["Rules#16: Document the rationale for use, constraints, and tests that cover misuse cases."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets, strlcpy/strlcat (where available), or snprintf.
+- Never pass user input as a format string to printf-family functions.
+- Be careful with system, popen, and exec* when arguments may contain user input. Use execve with argv arrays and no shell when feasible.
+- Use secure variants and explicit length checks for string and memory functions.
+
+## Code Review Checklist
+- Safer alternative considered and documented; dangerous function use justified
+- Parameters validated for size, type, encoding, and allowed character set
+- No user input used as a format string, command, or code
+- Timeouts, resource limits, and safe flags configured
+- Errors handled without leaking sensitive details; return codes checked
+- Automated tests cover misuse and edge cases
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Replace dangerous string functions with safe alternatives.
+Input:
+```
+char buf[64]; strcpy(buf, input); printf(buf);
+```
+Ideal Output:
+```
+Use snprintf with an explicit bound, and print with a constant format string like printf("%s", buf). Validate input length before copy.
+```
+
+## General Mitigation
+["Rules#18: Perform explicit bounds checks before every read or write. Use size-aware APIs and track lengths separately from buffers."]
+["Rules#19: Validate all size calculations for integer overflow before allocation and before memcpy or similar operations."]
+["Rules#20: Initialize pointers and buffers. Ensure strings are null terminated where required by the API."]
+["Rules#21: Prefer safe library functions or wrappers that take buffer size and return explicit status codes."]
+["Rules#22: Grow buffers dynamically only up to a defined maximum. Refuse inputs that exceed limits to avoid excessive memory use."]
+["Rules#23: Use memory-safe abstractions where available. Avoid manual pointer arithmetic unless necessary and well reviewed."]
+["Rules#24: On failure, do not use partially initialized buffers. Clear sensitive data before free using a guaranteed zeroization API."]
+["Rules#25: When reading from streams (for example fread or memchr workflows), bound the read by the remaining buffer size and verify the returned count before use."]
+
+## C Specific Mitigation
+### Guidance
+- Check all allocation results for NULL and compute sizes with overflow checks (for example size_t n; if (n > SIZE_MAX / elem_size) fail).
+- Use snprintf, strnlen, memcpy with checked lengths, and memmove when regions may overlap.
+- Use fgets with a bound for input. Avoid gets and scanf without widths.
+- Validate indices and pointer arithmetic against buffer length. Use openat and fstat when validating file descriptors rather than path strings.
+- After fread, verify the number of bytes read before processing; when using memchr, check results and remaining length.
+
+### Checklist
+- All pointers initialized to NULL or valid memory
+- All allocations checked for NULL
+- All copies and reads bounded by destination size
+- All strings explicitly null terminated where required
+- Integer overflow checks before size arithmetic and allocation
+- Each function return value checked
+- All allocated memory freed exactly once
+- Sensitive data cleared before free
+
+## Code Review Checklist
+- All reads and writes guarded by explicit bounds checks
+- All size arithmetic protected against integer overflow
+- Length tracked separately from buffer capacity and validated
+- Safe, size-aware APIs used; dangerous functions avoided
+- Buffer growth capped by a defined maximum; oversize inputs rejected
+- All return values checked; partial reads handled correctly
+- Sensitive data wiped before free; no double frees
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Fix an overflow when copying input into a fixed-size buffer.
+Input:
+```
+char buf[64]; strcpy(buf, input);
+```
+Ideal Output:
+```
+Check the length of input, refuse if it exceeds sizeof(buf) - 1, then use snprintf(buf, sizeof(buf), "%s", input) to copy safely and enforce null termination.
+```
+
+## General Mitigation
+["Rules#27: When generating code, default to XXE-safe parsing. Do not expand entities. Do not load external DTDs. Do not fetch anything over the network while parsing XML."]
+["Rules#28: Reject or strip DOCTYPE declarations. Never enable entity expansion."]
+["Rules#29: Disable external entity resolution and network access in the XML parser."]
+["Rules#30: Avoid API options that expand entities (for example, NOENT). Prefer secure defaults, and set them explicitly."]
+["Rules#31: Set tight resource limits (max size, depth, attributes) to prevent Billion Laughs and quadratic blowups."]
+["Rules#32: Treat XPath/XSLT inputs as untrusted. If XSLT is required, disable document() and network access."]
+["Rules#33: Validate against a local, whitelisted schema only, with external fetches disabled."]
+["Rules#34: Impose input limits (size, element depth, attribute count). Fail closed on limit violations."]
+["Rules#35: Never pass user-controlled XML directly to XSLT. If XSLT is needed, disable reading from network or filesystem and forbid the document() function."]
+["Rules#36: Log rejections generically. Do not echo attacker-controlled XML back in errors."]
+["Rules#37: This policy requires the assistant to emit XML parsing code that disables external entities and network access, forbids DOCTYPE, avoids entity expansion flags, and enforces resource limits by default."]
+
+## C Specific Mitigation
+### Guidance
+- When using libxml2 in C++, apply the same safe configuration as in C.
+- Before parsing: xmlDisableExternalEntityLoader(); xmlSubstituteEntitiesDefault(0); xmlLoadExtDtdDefaultValue = 0;
+- Use xmlReadMemory or xmlReadFile with XML_PARSE_NONET | XML_PARSE_NOCDATA | XML_PARSE_NOERROR | XML_PARSE_NOWARNING to disable network access and external entities.
+- Avoid XML_PARSE_NOENT, as it expands entities and exposes XXE vulnerabilities.
+- If using pugixml or tinyxml2, disable external entity loading (these libraries do not fetch external resources by default).
+- Ensure the parser runs with bounded input size and depth to prevent Billion Laughs or quadratic blowup attacks.
+
+## General Mitigation
+["Rules#39: Validate and sanitize all external input used in path construction to ensure paths resolve within the expected directory."]
+["Rules#40: Accept a base directory and normalize user paths."]
+["Rules#41: Reject any path that resolves outside the base directory after normalization."]
+["Rules#42: Refuse processing of symlinks and directories where a regular file is required."]
+
+## General Mitigation
+["Rules#44: Eliminate check-then-use on paths and shared resources."]
+["Rules#45: Open the resource first in a race-safe way, then validate the already opened descriptor or handle, and operate only on that descriptor or handle."]
+["Rules#46: Do not lstat or stat a path and then reopen it by path. Operate only on the opened handle."]
+["Rules#47: Perform size, type, and permission validation after opening using fstat or an equivalent API."]
+["Rules#48: Avoid following symlinks or reparse points. Use flags or APIs that prevent following them."]
+["Rules#49: For outputs, set restrictive permissions at creation and never widen them later."]
+["Rules#50: Do not rely on per-file locks to prevent TOCTOU across processes. The primary control is open-then-validate-then-use on the same handle."]
+["Rules#51: When updating files, write to a temporary file, fsync, and perform an atomic rename or replacement within the same directory."]
+
+## C Specific Mitigation
+### Guidance
+- POSIX: anchor file operations to a trusted directory using openat rather than absolute paths.
+- POSIX reads: openat(dirfd, rel, O_RDONLY | O_CLOEXEC | O_NOFOLLOW).
+- POSIX writes: openat(dirfd, rel, O_CREAT | O_EXCL | O_NOFOLLOW, 0600).
+- For Directories: stat() \u2192 mkdir() sequence is a TOCTOU risk. Try to create it. If it already exists, we'll verify it below. open without following symlinks and verify it's a directory, open(UPLOAD_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);.
+- Immediately call fstat(fd) and reject if not a regular file or if size exceeds policy limits.
+- For safe writes on POSIX: create a temp file in the same directory, write, fflush and fsync the file, fsync the directory, then renameat or linkat plus unlink for an atomic move.
+- uses an atomic operation to open the file and check for its existence beforehand: FILE *f = fopen(file, "wx");
+
+## Code Review Checklist
+- No check-then-use logic; file or resource is opened first, then validated
+- Code uses APIs that prevent following symlinks or reparse points
+- Type and size checks are enforced after opening, not before
+- Writes use temporary files, fsync, and atomic renames or replacements
+- Permissions set restrictively on creation; not widened later
+- No reopening by path after validation; operations use the same descriptor or handle
+- Locks are not used as the sole protection against TOCTOU
+
+## General Mitigation
+["Rules#53: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]
+["Rules#54: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]
+["Rules#55: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]
+["Rules#56: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]
+["Rules#57: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]
+["Rules#58: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]
+["Rules#59: Files: open first, validate the opened handle, and operate only on that handle."]
+["Rules#60: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]
+["Rules#61: Sensitive data handling: clear secrets before free using a guaranteed zeroization API."]
+["Rules#62: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]
+["Rules#63: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]
+["Rules#64: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]
+["Rules#65: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]
+["Rules#66: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]
+["Rules#67: Treat each line you generate as insecure until you review it against these rules and fix it."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths.
+- Use fgets and snprintf. Check all return values.
+- Use RAII-like cleanup with a single failure label and goto for deterministic teardown.
+- Always use memset_s instead of memset, followed by the destruction/free of the buffer.
+- When using libcurl, enforce certificate and hostname verification and a minimum TLS version as noted in general_rules.
+
+### Checklist
+- All pointers initialized to NULL or valid memory
+- All malloc and calloc results checked for NULL
+- All array accesses bounds checked
+- All strings null terminated
+- Buffer sizes validated before copy and read operations
+- All allocated memory freed exactly once
+- Integer overflow checked before arithmetic and allocation
+- All function return values checked
+- Sensitive data cleared before free using memset_s or a portable explicit zero
+
+## Code Review Checklist
+- Inputs validated for type, length, range, and encoding
+- No hard coded secrets or keys
+- No eval, exec, unsafe reflection, or insecure deserialization
+- Crypto uses AEAD and modern KDFs with proper parameters
+- TLS verification and minimum version enforced in all clients
+- No TOCTOU patterns; safe file operations and atomic writes
+- All logging redacts sensitive data and uses constant format strings
+- Errors do not leak internal details to callers
+- Memory safety and integer overflow checks present where relevant
+- Concurrency hazards addressed with safe primitives
+- Build hardening flags on; static analysis and tests in place
+
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified.
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-11-08 01:24:01,689 INFO AFC is enabled with max remote calls: 10.
+2025-11-08 01:24:01,691 DEBUG connect_tcp.started host='generativelanguage.googleapis.com' port=443 local_address=None timeout=None socket_options=None
+2025-11-08 01:24:01,772 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000017BAEBC3920>
+2025-11-08 01:24:01,773 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000017BAEB8BDD0> server_hostname='generativelanguage.googleapis.com' timeout=None
+2025-11-08 01:24:01,847 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000017BAEBC3830>
+2025-11-08 01:24:01,849 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-08 01:24:01,849 DEBUG send_request_headers.complete
+2025-11-08 01:24:01,849 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-08 01:24:01,849 DEBUG send_request_body.complete
+2025-11-08 01:24:01,850 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-08 01:25:01,593 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Vary', b'Origin'), (b'Vary', b'X-Origin'), (b'Vary', b'Referer'), (b'Content-Encoding', b'gzip'), (b'Date', b'Fri, 07 Nov 2025 23:25:02 GMT'), (b'Server', b'scaffolding on HTTPServer2'), (b'X-XSS-Protection', b'0'), (b'X-Frame-Options', b'SAMEORIGIN'), (b'X-Content-Type-Options', b'nosniff'), (b'Server-Timing', b'gfet4t7; dur=59652'), (b'Alt-Svc', b'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'), (b'Transfer-Encoding', b'chunked')])
+2025-11-08 01:25:01,595 INFO HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent "HTTP/1.1 200 OK"
+2025-11-08 01:25:01,595 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-08 01:25:01,595 DEBUG receive_response_body.complete
+2025-11-08 01:25:01,595 DEBUG response_closed.started
+2025-11-08 01:25:01,595 DEBUG response_closed.complete
+2025-11-08 01:25:01,596 INFO ```c
+/**
+ * This C code demonstrates a secure way to read a file from a designated directory,
+ * simulating a backend function for a route like `/img?file=...`.
+ *
+ * It emphasizes security by preventing path traversal, time-of-check-to-time-of-use
+ * (TOCTOU) race conditions, and other common file-related vulnerabilities.
+ *
+ * This code is designed for POSIX-compliant systems (like Linux, macOS)
+ * due to its use of functions like openat(), fstat(), and POSIX file flags.
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <errno.h>
+
+// POSIX-specific headers for secure file operations
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#define BASE_IMAGE_PATH "./images"
+#define MAX_FILENAME_LEN 255
+#define MAX_FILE_SIZE (10 * 1024 * 1024) // 10 MB limit
+
+// A struct to hold the file content and its size.
+typedef struct {
+    char *data;
+    size_t size;
+} FileContent;
+
+/**
+ * @brief Validates a filename to ensure it is safe to use.
+ *
+ * This function enforces several rules:
+ * - The filename must not be NULL or empty.
+ * - The length must be within a reasonable limit.
+ * - It must not contain path traversal sequences ('..') or directory separators ('/', '\').
+ * - It should not start with a '.' to avoid accessing hidden files.
+ * - It should only contain characters from a predefined allow-list.
+ *
+ * @param filename The filename string to validate.
+ * @return true if the filename is valid, false otherwise.
+ */
+bool is_valid_filename(const char *filename) {
+    if (filename == NULL || filename[0] == '\0') {
+        return false;
+    }
+
+    size_t len = strnlen(filename, MAX_FILENAME_LEN + 1);
+    if (len == 0 || len > MAX_FILENAME_LEN) {
+        return false;
+    }
+    
+    // Rule #3: Normalize and canonicalize paths... before validation.
+    // Here, we disallow path characters entirely, which is a stronger prevention.
+    if (strchr(filename, '/') != NULL || strchr(filename, '\\') != NULL || strstr(filename, "..") != NULL) {
+        return false;
+    }
+
+    // Rule #2: Use allow lists over block lists.
+    for (size_t i = 0; i < len; ++i) {
+        char c = filename[i];
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-')) {
+            return false;
+        }
+    }
+    
+    if (filename[0] == '.') {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief Simulates serving an image file based on a filename parameter.
+ *
+ * This function securely reads a file from a predefined base directory. It serves as an
+ * example of how to handle file access from untrusted user input.
+ *
+ * Security measures implemented:
+ * - Rule #1, #5: All input is treated as untrusted and validated by is_valid_filename().
+ * - Rule #39, #41: Path traversal is prevented by validating the filename and using `openat()`
+ *   to anchor file access to a specific base directory.
+ * - Rule #44, #45, #47: TOCTOU race conditions are avoided by opening the file first (`openat`)
+ *   and then checking its properties (`fstat`) on the resulting file descriptor.
+ * - Rule #48: Symlink following is disabled with the `O_NOFOLLOW` flag.
+ * - Rule #18, #22, #25: File size is checked against a maximum limit, and reads are bounded.
+ *
+ * @param filename The name of the file to read.
+ * @return A FileContent struct. On success, `data` points to a heap-allocated
+ *         buffer with the file contents, and `size` is the file size. The caller
+ *         is responsible for freeing `data`. On failure, `data` is NULL and `size` is 0.
+ */
+FileContent img(const char *filename) {
+    FileContent result = { .data = NULL, .size = 0 };
+    int dir_fd = -1;
+    int file_fd = -1;
+    char *buffer = NULL;
+
+    if (!is_valid_filename(filename)) {
+        fprintf(stderr, "Error: Invalid filename provided.\n");
+        return result;
+    }
+
+    dir_fd = open(BASE_IMAGE_PATH, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (dir_fd == -1) {
+        perror("Error opening base directory");
+        return result;
+    }
+
+    file_fd = openat(dir_fd, filename, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (file_fd == -1) {
+        // Suppress "No such file or directory" for non-existent files, which is normal.
+        if (errno != ENOENT) {
+            perror("Error opening file");
+        }
+        goto cleanup;
+    }
+
+    struct stat st;
+    if (fstat(file_fd, &st) == -1) {
+        perror("Error getting file stats");
+        goto cleanup;
+    }
+
+    if (!S_ISREG(st.st_mode)) {
+        fprintf(stderr, "Error: Path does not correspond to a regular file.\n");
+        goto cleanup;
+    }
+
+    if (st.st_size > MAX_FILE_SIZE) {
+        fprintf(stderr, "Error: File size exceeds the maximum limit of %d MB.\n", MAX_FILE_SIZE / (1024 * 1024));
+        goto cleanup;
+    }
+
+    if (st.st_size == 0) {
+        result.size = 0;
+        result.data = malloc(1); // Allocate 1 byte to return a valid, free-able pointer
+        if (result.data) {
+             result.data[0] = '\0';
+        }
+        goto cleanup;
+    }
+    
+    // Rule #19: Check for potential overflow before allocation. st.st_size is off_t,
+    // which might be larger than size_t, but MAX_FILE_SIZE provides a practical upper bound.
+    buffer = malloc(st.st_size);
+    if (buffer == NULL) {
+        perror("Error allocating memory for file content");
+        goto cleanup;
+    }
+
+    ssize_t bytes_read = read(file_fd, buffer, st.st_size);
+    if (bytes_read < 0) {
+        perror("Error reading file");
+        free(buffer);
+        goto cleanup;
+    }
+
+    if ((size_t)bytes_read != (size_t)st.st_size) {
+        fprintf(stderr, "Error: Incomplete read of the file.\n");
+        free(buffer);
+        goto cleanup;
+    }
+
+    result.data = buffer;
+    result.size = st.st_size;
+
+cleanup:
+    if (file_fd != -1) close(file_fd);
+    if (dir_fd != -1) close(dir_fd);
+    return result;
+}
+
+/**
+ * @brief Sets up a test environment by creating a directory and some test files.
+ */
+void setup_test_environment() {
+    mkdir(BASE_IMAGE_PATH, 0755);
+
+    FILE *f = fopen(BASE_IMAGE_PATH "/test.png", "w");
+    if (f) {
+        fputs("PNG_DATA_HERE", f);
+        fclose(f);
+    }
+    
+    f = fopen("secret.txt", "w");
+    if (f) {
+        fputs("This is a secret.", f);
+        fclose(f);
+    }
+}
+
+/**
+ * @brief Runs a single test case and prints the outcome.
+ *
+ * @param test_name A descriptive name for the test.
+ * @param filename The filename to pass to the img() function.
+ */
+void run_test_case(const char *test_name, const char *filename) {
+    printf("--- Running test case: %s ---\n", test_name);
+    printf("Requesting file: \"%s\"\n", filename ? filename : "NULL");
+
+    FileContent content = img(filename);
+
+    if (content.data != NULL) {
+        printf("Success! Read %zu bytes.\n", content.size);
+        if (content.size > 0) {
+            printf("Content preview: '%.*s...'\n", (int)(content.size > 10 ? 10 : content.size), content.data);
+        }
+        free(content.data);
+    } else {
+        printf("Failed as expected.\n");
+    }
+    printf("\n");
+}
+
+int main() {
+    setup_test_environment();
+
+    // Test case 1: A valid file request.
+    run_test_case("Valid file", "test.png");
+
+    // Test case 2: A file that does not exist.
+    run_test_case("Non-existent file", "notfound.gif");
+
+    // Test case 3: A path traversal attempt to access a file outside the base directory.
+    run_test_case("Path traversal", "../secret.txt");
+
+    // Test case 4: A filename containing a disallowed directory separator.
+    run_test_case("Disallowed characters", "images/test.png");
+    
+    // Test case 5: An empty filename string.
+    run_test_case("Empty filename", "");
+
+    return 0;
+}
+```
+2025-11-08 01:25:01,602 DEBUG close.started
+2025-11-08 01:25:01,602 DEBUG close.complete
+2025-11-08 01:25:01,611 INFO Created file: Lse48.c
+2025-11-08 01:25:04,613 INFO All files processed.

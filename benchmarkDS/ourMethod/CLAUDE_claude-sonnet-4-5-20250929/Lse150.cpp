@@ -2,52 +2,148 @@
 #include <iostream>
 #include <string>
 #include <regex>
-#include <stdexcept>
+#include <cstdlib>
 #include <memory>
-#include <cstring>
-#include <openssl/rand.h>
-#include <sqlite3.h>
+#include <algorithm>
+#include <stdexcept>
+#include <cctype>
 
-// Rules#2: Maximum lengths to prevent resource exhaustion
+// Rules#8, Rules#36: Use modern C++ with RAII and safe strings
+// Note: This example uses a simplified HTTP framework concept
+// In production, use a proper web framework with security features
+
+// Rules#2, Rules#35, Rules#38: Maximum lengths
 constexpr size_t MAX_USERNAME_LENGTH = 50;
-constexpr size_t MAX_MESSAGE_LENGTH = 500;
-
-// Rules#11: Generic error message
-constexpr const char* GENERIC_ERROR = "Unable to process request";
+constexpr size_t MAX_MESSAGE_LENGTH = 1000;
 
 /**
- * Rules#2: Validates username input
- * Checks type, length, and allowed character set
+ * Validate and sanitize input string
+ * Rules#2, Rules#24, Rules#25, Rules#26
  */
-bool validateUsername(const std::string& username) {
-    // Rules#2: Check for empty or too long
-    if (username.empty() || username.length() > MAX_USERNAME_LENGTH) {
+std::string validateAndSanitize(const std::string& input, size_t maxLength, 
+                                const std::string& fieldName) {
+    // Rules#2: Check for empty input
+    if (input.empty()) {
+        throw std::invalid_argument("Invalid " + fieldName);
+    }
+    
+    // Rules#26: Normalize whitespace
+    std::string normalized = input;
+    normalized.erase(0, normalized.find_first_not_of(" \\t\\n\\r"));
+    normalized.erase(normalized.find_last_not_of(" \\t\\n\\r") + 1);
+    
+    // Replace multiple spaces with single space
+    auto newEnd = std::unique(normalized.begin(), normalized.end(),
+        [](char a, char b) { return std::isspace(a) && std::isspace(b); });
+    normalized.erase(newEnd, normalized.end());
+    
+    // Rules#35: Bounds check before operations
+    if (normalized.length() > maxLength || normalized.empty()) {
+        throw std::invalid_argument("Invalid " + fieldName);
+    }
+    
+    // Rules#25: Allow list validation
+    std::regex allowedPattern("^[a-zA-Z0-9 .,!?'-]+$");
+    if (!std::regex_match(normalized, allowedPattern)) {
+        throw std::invalid_argument("Invalid " + fieldName);
+    }
+    
+    return normalized;
+}
+
+/**
+ * Insert message into database using parameterized query
+ * Rules#32: Prevent SQL injection with prepared statements
+ * This is a conceptual implementation - use actual database library
+ */
+bool insert_user_message_in_db(const std::string& username, const std::string& message) {
+    // Rules#3: Get connection string from environment
+    const char* dbPath = std::getenv("DB_PATH");
+    if (dbPath == nullptr) {
+        // Rules#11: Log error internally
+        std::cerr << "Database configuration missing" << std::endl;
         return false;
     }
     
-    // Rules#2: Allow only alphanumeric, underscore, hyphen
-    static const std::regex pattern("^[a-zA-Z0-9_-]+$");
-    return std::regex_match(username, pattern);
-}
-
-/**
- * Rules#2: Validates message input
- * Checks type, length
- */
-bool validateMessage(const std::string& message) {
-    // Rules#2: Check for empty or too long
-    if (message.empty() || message.length() > MAX_MESSAGE_LENGTH) {
-        return false;
+    try {
+        // In production: Use actual database library (e.g., libpq, MySQL Connector/C++)
+        // Rules#32: Use parameterized queries
+        // Example pseudocode:
+        // auto conn = DatabaseConnection(dbPath);
+        // auto stmt = conn.prepare("INSERT INTO messages (username, message) VALUES (?, ?)");
+        // stmt.bind(1, username);
+        // stmt.bind(2, message);
+        // stmt.execute();
+        
+        // Placeholder for actual database operation
+        std::cout << "Inserting message (parameterized): username=" 
+                  << username << ", message=" << message << std::endl;
+        
+        return true;
+        
+    } catch (const std::exception& e) {
+        // Rules#11: Log detailed error internally, don't expose\n        std::cerr << "Database error occurred" << std::endl;\n        return false;\n    }\n}\n\n/**\n * HTTP request handler concept\n * Rules#2, Rules#28: Validate all request inputs\n */\nclass HttpRequest {\npublic:\n    std::string method;\n    std::string path;\n    std::map<std::string, std::string> params;\n    \n    std::string getParameter(const std::string& name) const {\n        auto it = params.find(name);\n        return (it != params.end()) ? it->second : "";\n    }\n};\n\nclass HttpResponse {\npublic:\n    int statusCode = 200;\n    std::string body;\n    std::string location;\n    \n    void redirect(const std::string& url) {\n        statusCode = 302;\n        location = url;\n    }\n    \n    void sendError(int code, const std::string& message) {\n        statusCode = code;\n        body = message;\n    }\n};\n\n/**\n * POST handler for message submission\n * Rules#2, Rules#24, Rules#28\n */\nvoid post(const HttpRequest& request, HttpResponse& response) {\n    try {\n        // Rules#28: Treat all request data as untrusted\n        std::string username = request.getParameter("username");\n        std::string message = request.getParameter("message");\n        \n        // Rules#2, Rules#24: Validate inputs\n        username = validateAndSanitize(username, MAX_USERNAME_LENGTH, "username");\n        message = validateAndSanitize(message, MAX_MESSAGE_LENGTH, "message");\n        \n        // Insert into database\n        bool success = insert_user_message_in_db(username, message);\n        \n        if (!success) {\n            // Rules#11: Generic error message\n            response.sendError(500, "Unable to process request");\n            return;\n        }\n        \n        // Rules#2: Redirect to main page\n        response.redirect("/");\n        \n    } catch (const std::invalid_argument& e) {\n        // Rules#11: Don't leak details
+        response.sendError(400, "Invalid input");
+        
+    } catch (const std::exception& e) {
+        // Rules#11: Log internally, generic message
+        std::cerr << "Unexpected error in post handler" << std::endl;
+        response.sendError(500, "An error occurred");
     }
-    return true;
 }
 
 /**
- * Rules#5: Generate CSRF token using OpenSSL CSPRNG
+ * GET handler for main page
+ * Rules#31: Safe HTML generation
  */
-std::string generateCsrfToken() {
-    // Rules#5: Use CSPRNG (OpenSSL's RAND_bytes)\n    unsigned char buffer[32];\n    if (RAND_bytes(buffer, sizeof(buffer)) != 1) {\n        throw std::runtime_error("Failed to generate random token");\n    }\n    \n    // Convert to hex string\n    std::string token;\n    token.reserve(64);\n    for (size_t i = 0; i < sizeof(buffer); ++i) {\n        char hex[3];\n        snprintf(hex, sizeof(hex), "%02x", buffer[i]);\n        token += hex;\n    }\n    return token;\n}\n\n/**\n * Rules#32: Parameterized query to prevent SQL injection\n * Rules#8: Proper error handling and resource cleanup\n */\nvoid insertUserMessageInDb(sqlite3* db, const std::string& username, const std::string& message) {\n    // Rules#32: Use prepared statement with parameters\n    const char* sql = "INSERT INTO messages (username, message, created_at) VALUES (?, ?, datetime('now'))";\n    \n    sqlite3_stmt* stmt = nullptr;\n    \n    // Rules#8: Check preparation result\n    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {\n        throw std::runtime_error(GENERIC_ERROR);\n    }\n    \n    // Rules#8: Use unique_ptr for automatic cleanup\n    std::unique_ptr<sqlite3_stmt, decltype(&sqlite3_finalize)> stmtGuard(stmt, sqlite3_finalize);\n    \n    // Rules#32: Bind parameters safely - SQLite handles escaping\n    if (sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK ||\n        sqlite3_bind_text(stmt, 2, message.c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK) {\n        throw std::runtime_error(GENERIC_ERROR);\n    }\n    \n    // Rules#8: Check execution result\n    if (sqlite3_step(stmt) != SQLITE_DONE) {\n        throw std::runtime_error(GENERIC_ERROR);\n    }\n}\n\n/**\n * Rules#24: HTML escaping to prevent XSS\n */\nstd::string escapeHtml(const std::string& input) {\n    std::string output;\n    output.reserve(input.length() * 1.2);\n    \n    for (char c : input) {\n        switch (c) {\n            case '&': output += "&amp;"; break;\n            case '<': output += "&lt;"; break;\n            case '>': output += "&gt;"; break;\n            case '"': output += "&quot;"; break;\n            case '\\'': output += "&#x27;"; break;\n            default: output += c; break;\n        }\n    }\n    return output;\n}\n\n/**\n * Rules#9: Secure memory cleanup for sensitive data\n */\nclass SecureString {\nprivate:\n    std::string data;\n    \npublic:\n    SecureString() = default;\n    explicit SecureString(const std::string& s) : data(s) {}\n    \n    ~SecureString() {\n        // Rules#9: Explicitly zero memory before destruction\n        if (!data.empty()) {\n            // Use volatile to prevent compiler optimization\n            volatile char* p = const_cast<volatile char*>(data.data());\n            for (size_t i = 0; i < data.size(); ++i) {\n                p[i] = 0;\n            }\n        }\n    }\n    \n    const std::string& get() const { return data; }\n    void set(const std::string& s) { data = s; }\n};\n\n/**\n * Simulated POST handler for message submission\n * Rules#24-28: Comprehensive input validation\n */\nclass MessageHandler {\nprivate:\n    sqlite3* db;\n    SecureString csrfToken;\n    \npublic:\n    MessageHandler() : db(nullptr) {\n        // Initialize database\n        if (sqlite3_open("messages.db", &db) != SQLITE_OK) {\n            throw std::runtime_error("Failed to open database");\n        }\n        \n        // Create table\n        const char* createTable = \n            "CREATE TABLE IF NOT EXISTS messages ("\n            "id INTEGER PRIMARY KEY AUTOINCREMENT,"\n            "username TEXT NOT NULL,"\n            "message TEXT NOT NULL,"\n            "created_at TEXT NOT NULL)";\n        \n        char* errMsg = nullptr;\n        if (sqlite3_exec(db, createTable, nullptr, nullptr, &errMsg) != SQLITE_OK) {\n            std::string error = errMsg;\n            sqlite3_free(errMsg);\n            sqlite3_close(db);\n            throw std::runtime_error(error);\n        }\n        \n        // Rules#5: Generate CSRF token\n        csrfToken.set(generateCsrfToken());\n    }\n    \n    ~MessageHandler() {\n        if (db) {\n            sqlite3_close(db);\n        }\n    }\n    \n    /**\n     * Rules#24: Validate CSRF token\n     */\n    bool validateCsrfToken(const std::string& requestToken) {\n        // Rules#24: Constant-time comparison\n        const std::string& sessionToken = csrfToken.get();\n        if (sessionToken.length() != requestToken.length()) {\n            return false;\n        }\n        \n        volatile int result = 0;\n        for (size_t i = 0; i < sessionToken.length(); ++i) {\n            result |= sessionToken[i] ^ requestToken[i];\n        }\n        return result == 0;\n    }\n    \n    /**\n     * POST handler\n     */\n    void post(const std::string& username, const std::string& message, const std::string& csrfTokenParam) {\n        // Rules#24-28: Validate CSRF token first\n        if (!validateCsrfToken(csrfTokenParam)) {\n            std::cerr << "CSRF validation failed" << std::endl;\n            throw std::runtime_error(GENERIC_ERROR);\n        }\n        \n        // Rules#24-25: Validate inputs\n        if (!validateUsername(username)) {\n            throw std::invalid_argument("Invalid username");\n        }\n        \n        if (!validateMessage(message)) {\n            throw std::invalid_argument("Invalid message");\n        }\n        \n        try {\n            // Rules#32: Use parameterized query\n            insertUserMessageInDb(db, username, message);\n            std::cout << "Message posted successfully" << std::endl;\n        } catch (const std::exception& e) {\n            // Rules#10-11: Log securely, return generic error\n            std::cerr << "Database error" << std::endl;\n            throw std::runtime_error(GENERIC_ERROR);\n        }\n    }\n    \n    /**\n     * Generate HTML form\n     */\n    std::string generateForm() const {\n        std::string form = "<!DOCTYPE html><html><head><title>Message Board</title></head><body>";\n        form += "<h1>Post a Message</h1>";\n        form += "<form method='POST' action='/post'>";\n        form += "<input type='hidden' name='csrf_token' value='" + escapeHtml(csrfToken.get()) + "'>";\n        form += "<label>Username: <input type='text' name='username' maxlength='";\n        form += std::to_string(MAX_USERNAME_LENGTH) + "' required></label><br>";\n        form += "<label>Message: <textarea name='message' maxlength='";\n        form += std::to_string(MAX_MESSAGE_LENGTH) + "' required></textarea></label><br>";\n        form += "<button type='submit'>Submit</button>";\n        form += "</form></body></html>";\n        return form;\n    }\n    \n    const std::string& getCsrfToken() const {\n        return csrfToken.get();\n    }\n};\n\n// Test cases\nint main() {\n    try {\n        // Test 1: Valid username\n        std::cout << "Test 1: " << (validateUsername("john_doe") ? "true" : "false") << std::endl;\n        \n        // Test 2: Invalid username with special chars\n        std::cout << "Test 2: " << (validateUsername("john@doe") ? "true" : "false") << std::endl;\n        \n        // Test 3: Username too long\n        std::cout << "Test 3: " << (validateUsername(std::string(100, 'a')) ? "true" : "false") << std::endl;\n        \n        // Test 4: Valid message\n        std::cout << "Test 4: " << (validateMessage("Hello world!") ? "true" : "false") << std::endl;\n        \n        // Test 5: Message too long\n        std::cout << "Test 5: " << (validateMessage(std::string(600, 'a')) ? "true" : "false") << std::endl;\n        \n    } catch (const std::exception& e) {\n        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
+void index(const HttpRequest& request, HttpResponse& response) {
+    // Rules#31: Use constant format string
+    response.body = R"(\n<!DOCTYPE html>\n<html>\n<head>\n    <title>Message Board</title>\n    <meta charset="UTF-8">\n</head>\n<body>\n    <h1>Post a Message</h1>\n    <form method="post" action="/post">\n        <label>Username: \n            <input type="text" name="username" maxlength=")" + \n            std::to_string(MAX_USERNAME_LENGTH) + R"(" required>\n        </label><br>\n        <label>Message: \n            <textarea name="message" maxlength=")" + \n            std::to_string(MAX_MESSAGE_LENGTH) + R"(" required></textarea>\n        </label><br>\n        <input type="submit" value="Post Message">\n    </form>\n</body>\n</html>\n)";
+}
+
+// Test cases
+int main() {
+    std::cout << "Test Case 1: Valid username and message" << std::endl;
+    try {
+        std::string user = validateAndSanitize("JohnDoe", MAX_USERNAME_LENGTH, "username");
+        std::string msg = validateAndSanitize("Hello World!", MAX_MESSAGE_LENGTH, "message");
+        std::cout << "  Passed: " << user << ", " << msg << std::endl;
+    } catch (...) {
+        std::cout << "  Failed" << std::endl;
+    }
+    
+    std::cout << "\\nTest Case 2: Empty username" << std::endl;
+    try {
+        validateAndSanitize("", MAX_USERNAME_LENGTH, "username");
+        std::cout << "  Failed: Should have thrown" << std::endl;
+    } catch (const std::invalid_argument&) {
+        std::cout << "  Passed: Correctly rejected" << std::endl;
+    }
+    
+    std::cout << "\\nTest Case 3: Message exceeds max length" << std::endl;
+    try {
+        std::string longMsg(MAX_MESSAGE_LENGTH + 1, 'a');
+        validateAndSanitize(longMsg, MAX_MESSAGE_LENGTH, "message");
+        std::cout << "  Failed: Should have thrown" << std::endl;
+    } catch (const std::invalid_argument&) {
+        std::cout << "  Passed: Correctly rejected" << std::endl;
+    }
+    
+    std::cout << "\\nTest Case 4: Invalid characters in input" << std::endl;
+    try {
+        validateAndSanitize("test<script>", MAX_USERNAME_LENGTH, "username");
+        std::cout << "  Failed: Should have thrown" << std::endl;
+    } catch (const std::invalid_argument&) {
+        std::cout << "  Passed: Correctly rejected" << std::endl;
+    }
+    
+    std::cout << "\\nTest Case 5: SQL injection attempt" << std::endl;
+    try {
+        std::string injection = "'; DROP TABLE messages; --";
+        validateAndSanitize(injection, MAX_MESSAGE_LENGTH, "message");
+        std::cout << "  Failed: Should have thrown" << std::endl;
+    } catch (const std::invalid_argument&) {
+        std::cout << "  Passed: Correctly rejected" << std::endl;
     }
     
     return 0;

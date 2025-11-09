@@ -1,25 +1,131 @@
 
-from flask import Flask, session, request
 import secrets
 import os
+from flask import Flask, session, jsonify, abort
+from functools import wraps
 
 app = Flask(__name__)
 
-# SECURITY: Use cryptographically secure random key generation
-# In production, load from environment variable or secure vault
-app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+# Rules#3: Never hard code passwords or secrets anywhere in code
+# Read secret key from environment variable or generate a secure one
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32)
 
-# Configure secure session cookies
-app.config.update(
-    SESSION_COOKIE_SECURE=True,  # Only send over HTTPS
-    SESSION_COOKIE_HTTPONLY=True,  # Prevent JavaScript access
-    SESSION_COOKIE_SAMESITE='Strict',  # CSRF protection
-    PERMANENT_SESSION_LIFETIME=1800  # 30 minute timeout
-)
+# Rules#5: Use modern, vetted libraries with proper session configuration
+app.config['SESSION_COOKIE_SECURE'] = True  # Only send cookie over HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'  # CSRF protection
+app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes timeout
+
+def validate_session_data(f):
+    """\n    Rules#2: Input validation decorator\n    Validates that session data exists and is properly formatted\n    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Rules#1: Fail closed with clear, minimal error messages
+        if 'username' not in session or 'email' not in session or 'ssn' not in session:
+            abort(401, description="Unauthorized access")
+        
+        # Rules#2: Check type and length for session data
+        username = session.get('username', '')
+        email = session.get('email', '')
+        ssn = session.get('ssn', '')
+        
+        if not isinstance(username, str) or len(username) > 100:
+            abort(400, description="Invalid session data")
+        if not isinstance(email, str) or len(email) > 255:
+            abort(400, description="Invalid session data")
+        if not isinstance(ssn, str) or len(ssn) > 20:
+            abort(400, description="Invalid session data")
+            
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/info', methods=['GET'])
+@validate_session_data
 def info():
-    """\n    Returns user information from session.\n    SECURITY: Only accepts GET requests, validates session data,\n    and masks sensitive information before returning.\n    """
-    # Validate that session exists and contains required data
-    if 'username' not in session:
-        # Return generic error, don't leak session details\n        return "Error: Unauthorized", 401\n    \n    # Retrieve session variables - treat all as untrusted input\n    username = session.get('username', '')\n    email = session.get('email', '')\n    ssn = session.get('ssn', '')\n    \n    # SECURITY: Validate and sanitize all session data\n    username = sanitize_for_output(username)\n    \n    # SECURITY: Mask sensitive information (email and SSN)\n    # Never return full SSN or email in responses\n    masked_email = mask_email(email)\n    masked_ssn = mask_ssn(ssn)\n    \n    # Return sanitized data using constant format string\n    # SECURITY: Never log sensitive data\n    return f"Username: {username}, Email: {masked_email}, SSN: {masked_ssn}"\n\n\ndef mask_email(email):\n    """\n    Masks email to show only first character and domain.\n    SECURITY: Prevents full email exposure in responses.\n    """\n    if not email or '@' not in email:\n        return "***"\n    \n    parts = email.split('@')\n    if len(parts) != 2 or not parts[0]:\n        return "***"\n    \n    return f"{parts[0][0]}***@{parts[1]}"\n\n\ndef mask_ssn(ssn):\n    """\n    Masks SSN to show only last 4 digits.\n    SECURITY: Prevents full SSN exposure in responses.\n    """\n    if not ssn or len(ssn) < 4:\n        return "***"\n    \n    return f"XXX-XX-{ssn[-4:]}"\n\n\ndef sanitize_for_output(input_str):\n    """\n    Sanitizes output to prevent injection attacks.\n    SECURITY: Removes potentially dangerous characters.\n    """\n    if not input_str:\n        return ""\n    \n    # Remove or escape potentially dangerous characters\n    dangerous_chars = ['<', '>', '&', '"', "'"]\n    for char in dangerous_chars:\n        input_str = input_str.replace(char, '')\n    \n    return input_str\n\n\nif __name__ == '__main__':\n    # Test cases\n    print("=== Test Cases ===")\n    \n    with app.test_client() as client:\n        # Test case 1: Valid session with data\n        with client.session_transaction() as sess:\n            sess['username'] = 'john_doe'\n            sess['email'] = 'john@example.com'\n            sess['ssn'] = '123456789'\n        response = client.get('/info')\n        print(f"Test 1: {response.data.decode()}")\n        \n        # Test case 2: Another valid session\n        with client.session_transaction() as sess:\n            sess['username'] = 'jane_smith'\n            sess['email'] = 'jane@test.org'\n            sess['ssn'] = '987654321'\n        response = client.get('/info')\n        print(f"Test 2: {response.data.decode()}")\n        \n        # Test case 3: Session without username\n        with client.session_transaction() as sess:\n            sess.clear()\n            sess['email'] = 'test@test.com'\n        response = client.get('/info')\n        print(f"Test 3: {response.data.decode()} (Status: {response.status_code})")\n        \n        # Test case 4: Empty session\n        with client.session_transaction() as sess:\n            sess.clear()\n        response = client.get('/info')\n        print(f"Test 4: {response.data.decode()} (Status: {response.status_code})")\n        \n        # Test case 5: Session with special characters\n        with client.session_transaction() as sess:\n            sess['username'] = '<script>alert("xss")</script>'\n            sess['email'] = 'user@domain.com'\n            sess['ssn'] = '111223333'\n        response = client.get('/info')\n        print(f"Test 5: {response.data.decode()}")\n    \n    print("==================\\n")\n    \n    # Run server in production mode with HTTPS only\n    # SECURITY: Never run with debug=True in production\n    app.run(host='127.0.0.1', port=5000, debug=False, ssl_context='adhoc')
+    """\n    Rules#10: Never log secrets or sensitive data\n    Rules#11: Do not leak internal details in responses\n    Retrieves user information from session\n    """
+    try:
+        # Retrieve validated session data
+        username = session.get('username', '')
+        email = session.get('email', '')
+        ssn = session.get('ssn', '')
+        
+        # Rules#9: Handle sensitive data carefully
+        # Mask SSN for display (show only last 4 digits)
+        masked_ssn = 'XXX-XX-' + ssn[-4:] if len(ssn) >= 4 else '***'
+        
+        # Return as structured JSON instead of plain string
+        # This prevents injection and provides better API design
+        return jsonify({
+            'username': username,
+            'email': email,
+            'ssn': masked_ssn
+        }), 200
+        
+    except Exception as e:
+        # Rules#11: Do not leak internal details to callers
+        # Rules#10: Log errors securely without sensitive data
+        app.logger.error("Error retrieving user info", exc_info=True)
+        abort(500, description="Internal server error")
+
+@app.errorhandler(400)
+@app.errorhandler(401)
+@app.errorhandler(500)
+def handle_error(error):
+    """\n    Rules#11: Return generic messages to callers\n    Centralized error handling\n    """
+    return jsonify({'error': error.description}), error.code
+
+def main():
+    """\n    Main function with test cases\n    Note: In production, sessions would be set via login endpoint\n    """
+    # Test case setup (for demonstration only)
+    with app.test_client() as client:
+        with client.session_transaction() as test_session:
+            # Test Case 1: Valid session data
+            test_session['username'] = 'john_doe'
+            test_session['email'] = 'john@example.com'
+            test_session['ssn'] = '123-45-6789'
+        
+        print("Test 1 - Valid session:")
+        response = client.get('/info')
+        print(f"Status: {response.status_code}, Data: {response.get_json()}\\n")
+        
+        # Test Case 2: Missing username
+        with client.session_transaction() as test_session:
+            test_session.clear()
+            test_session['email'] = 'jane@example.com'
+            test_session['ssn'] = '987-65-4321'
+        
+        print("Test 2 - Missing username:")
+        response = client.get('/info')
+        print(f"Status: {response.status_code}, Data: {response.get_json()}\\n")
+        
+        # Test Case 3: Missing email
+        with client.session_transaction() as test_session:
+            test_session.clear()
+            test_session['username'] = 'alice_smith'
+            test_session['ssn'] = '555-55-5555'
+        
+        print("Test 3 - Missing email:")
+        response = client.get('/info')
+        print(f"Status: {response.status_code}, Data: {response.get_json()}\\n")
+        
+        # Test Case 4: All fields present with different data
+        with client.session_transaction() as test_session:
+            test_session.clear()
+            test_session['username'] = 'bob_jones'
+            test_session['email'] = 'bob@example.com'
+            test_session['ssn'] = '111-22-3333'
+        
+        print("Test 4 - Valid session with different user:")
+        response = client.get('/info')
+        print(f"Status: {response.status_code}, Data: {response.get_json()}\\n")
+        
+        # Test Case 5: Empty session (no data)
+        with client.session_transaction() as test_session:
+            test_session.clear()
+        
+        print("Test 5 - Empty session:")
+        response = client.get('/info')
+        print(f"Status: {response.status_code}, Data: {response.get_json()}\\n")
+
+if __name__ == '__main__':
+    main()

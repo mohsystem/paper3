@@ -2,156 +2,118 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <stdbool.h>
 
-/* Maximum URL length to prevent excessive memory usage */
 #define MAX_URL_LENGTH 2048
+#define DOMAIN "example.com"
 
-/* Convert string to lowercase in place - bounds safe */
-static void to_lowercase(char* str, size_t len) {
-    if (str == NULL) {
-        return;
-    }
-    for (size_t i = 0; i < len && str[i] != '\\0'; i++) {
-        str[i] = (char)tolower((unsigned char)str[i]);
-    }
-}
-
-/* 
- * Validates that the URL belongs to example.com domain.
- * Returns true only if the URL is valid and from example.com.
- * Prevents open redirect vulnerabilities.
+/**
+ * Validates and extracts the domain from a URL
+ * Returns true if domain matches expected domain, false otherwise
+ * This prevents open redirect vulnerabilities by validating the domain
  */
-bool is_valid_example_com_url(const char* url_string) {
-    if (url_string == NULL) {
+bool is_valid_domain(const char *url) {
+    // Rules#2: Input validation - check type, length, and format
+    if (url == NULL) {
         return false;
     }
     
-    size_t url_len = strnlen(url_string, MAX_URL_LENGTH + 1);
-    
-    /* Check length bounds */
+    // Rules#35: Validate size before processing
+    size_t url_len = strnlen(url, MAX_URL_LENGTH + 1);
     if (url_len == 0 || url_len > MAX_URL_LENGTH) {
         return false;
     }
     
-    /* Check for valid scheme (http:// or https://) */
-    const char* scheme_end = strstr(url_string, "://");
-    if (scheme_end == NULL) {
-        return false;
-    }
+    // Rules#26: Normalize URL before validation
+    // Check for common URL schemes
+    const char *domain_start = NULL;
     
-    size_t scheme_len = scheme_end - url_string;
-    if ((scheme_len != 4 && scheme_len != 5) ||
-        (strncmp(url_string, "http://", 7) != 0 && 
-         strncmp(url_string, "https://", 8) != 0)) {
-        return false;
-    }
-    
-    /* Extract host part */
-    const char* host_start = scheme_end + 3;
-    const char* path_start = strchr(host_start, '/');
-    
-    size_t host_len;
-    if (path_start != NULL) {
-        host_len = path_start - host_start;
+    if (strncmp(url, "http://", 7) == 0) {
+        domain_start = url + 7;
+    } else if (strncmp(url, "https://", 8) == 0) {
+        domain_start = url + 8;
     } else {
-        host_len = strlen(host_start);
-    }
-    
-    /* Allocate buffer for host with size validation */
-    if (host_len == 0 || host_len > 255) { /* Max domain length is 255 */
+        // No scheme found - invalid URL format
         return false;
     }
     
-    char* host = (char*)calloc(host_len + 1, sizeof(char));
-    if (host == NULL) {
+    // Rules#25: Use allowlist - only accept exact domain match
+    // Find the end of the domain (before port, path, or query)
+    size_t domain_len = strcspn(domain_start, ":/?#");
+    
+    // Check if domain matches exactly
+    if (domain_len != strlen(DOMAIN)) {
         return false;
     }
     
-    /* Copy host with bounds checking */
-    memcpy(host, host_start, host_len);
-    host[host_len] = '\\0';
-    
-    /* Check for @ symbol (prevents user info injection) */
-    if (strchr(host, '@') != NULL) {
-        free(host);
-        return false;
+    // Rules#34: Explicit bounds check before comparison
+    if (strncmp(domain_start, DOMAIN, domain_len) == 0) {
+        return true;
     }
     
-    /* Remove port if present */
-    char* port_pos = strchr(host, ':');
-    if (port_pos != NULL) {
-        *port_pos = '\\0';
-        host_len = port_pos - host;
-    }
-    
-    /* Convert to lowercase for comparison */
-    to_lowercase(host, host_len);
-    
-    /* Validate domain is example.com or subdomain */
-    bool is_valid = false;
-    if (strcmp(host, "example.com") == 0) {
-        is_valid = true;
-    } else if (host_len > 12) { /* ".example.com" is 12 chars */
-        const char* suffix = host + host_len - 12;
-        if (strcmp(suffix, ".example.com") == 0) {
-            is_valid = true;
-        }
-    }
-    
-    /* Clear and free host buffer */
-    memset(host, 0, host_len + 1);
-    free(host);
-    
-    return is_valid;
+    return false;
 }
 
-/*
- * Simulated redirect function.
- * In a real web application, this would set HTTP redirect headers.
+/**
+ * Safely redirects to URL if domain is valid
+ * Rules#1: Fail closed with clear error messages
+ * Rules#11: Return generic messages, detailed info only to logs
  */
-const char* redirect_invalid_url(const char* url) {
-    /* Validate input is not NULL */
-    if (url == NULL || url[0] == '\\0') {
-        return "Error: URL parameter is required";
+int redirect_invalid_url(const char *url, char *output_buffer, size_t buffer_size) {
+    // Rules#28: Treat all input as untrusted
+    if (url == NULL || output_buffer == NULL || buffer_size == 0) {
+        return -1;
     }
     
-    /* Validate the URL is from example.com domain */
-    if (!is_valid_example_com_url(url)) {
-        return "Error: Invalid URL. Only example.com URLs are allowed.";
-    }
+    // Rules#36: Initialize buffer
+    memset(output_buffer, 0, buffer_size);
     
-    /* In a real web app, this would set Location header and return 302 */
-    return "Redirect successful";
+    // Validate domain before redirecting
+    if (is_valid_domain(url)) {
+        // Rules#37: Use safe library functions with size limits
+        int written = snprintf(output_buffer, buffer_size, 
+                              "Redirect to: %s", url);
+        
+        // Check for truncation
+        if (written < 0 || (size_t)written >= buffer_size) {
+            return -1;
+        }
+        return 0; // Success
+    } else {
+        // Rules#11: Generic error message, no internal details leaked
+        int written = snprintf(output_buffer, buffer_size, 
+                              "Error: Invalid URL domain");
+        
+        if (written < 0 || (size_t)written >= buffer_size) {
+            return -1;
+        }
+        return 1; // Error
+    }
 }
 
 int main(void) {
-    /* Test cases */
-    printf("Test Case 1 - Valid example.com URL:\\n");
-    const char* test1 = "https://example.com/path";
-    printf("%s\\n", is_valid_example_com_url(test1) ? "PASS" : "FAIL");
-    printf("%s\\n\\n", redirect_invalid_url(test1));
+    char output[512];
+    int result;
     
-    printf("Test Case 2 - Valid subdomain:\\n");
-    const char* test2 = "https://sub.example.com/page";
-    printf("%s\\n", is_valid_example_com_url(test2) ? "PASS" : "FAIL");
-    printf("%s\\n\\n", redirect_invalid_url(test2));
+    printf("Test Case 1: Valid URL with http://example.com\\n");
+    result = redirect_invalid_url("http://example.com/page", output, sizeof(output));
+    printf("Result: %d, Output: %s\\n\\n", result, output);
     
-    printf("Test Case 3 - Invalid domain:\\n");
-    const char* test3 = "https://evil.com";
-    printf("%s\\n", !is_valid_example_com_url(test3) ? "PASS" : "FAIL");
-    printf("%s\\n\\n", redirect_invalid_url(test3));
+    printf("Test Case 2: Valid URL with https://example.com\\n");
+    result = redirect_invalid_url("https://example.com/secure", output, sizeof(output));
+    printf("Result: %d, Output: %s\\n\\n", result, output);
     
-    printf("Test Case 4 - Domain confusion attack:\\n");
-    const char* test4 = "https://example.com.evil.com";
-    printf("%s\\n", !is_valid_example_com_url(test4) ? "PASS" : "FAIL");
-    printf("%s\\n\\n", redirect_invalid_url(test4));
+    printf("Test Case 3: Invalid domain (malicious.com)\\n");
+    result = redirect_invalid_url("https://malicious.com/phishing", output, sizeof(output));
+    printf("Result: %d, Output: %s\\n\\n", result, output);
     
-    printf("Test Case 5 - Invalid scheme:\\n");
-    const char* test5 = "javascript:alert(1)";
-    printf("%s\\n", !is_valid_example_com_url(test5) ? "PASS" : "FAIL");
-    printf("%s\\n\\n", redirect_invalid_url(test5));
+    printf("Test Case 4: Invalid subdomain attack\\n");
+    result = redirect_invalid_url("https://example.com.evil.com/attack", output, sizeof(output));
+    printf("Result: %d, Output: %s\\n\\n", result, output);
+    
+    printf("Test Case 5: NULL input\\n");
+    result = redirect_invalid_url(NULL, output, sizeof(output));
+    printf("Result: %d, Output: %s\\n\\n", result, output);
     
     return 0;
 }

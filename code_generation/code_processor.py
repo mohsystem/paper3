@@ -64,6 +64,8 @@ class CodeProcessor:
                 output_path = os.path.join(self.output_directory, output_filename)
 
                 formatted_code = self.replace_newlines(code)
+                formatted_code = formatted_code.replace(r'\\"', r'\"')
+                formatted_code = formatted_code.replace(r"'\\0'", r"'\0'")
                 with open(output_path, 'w', encoding="utf-8") as output_file:
                     output_file.write(formatted_code)
 

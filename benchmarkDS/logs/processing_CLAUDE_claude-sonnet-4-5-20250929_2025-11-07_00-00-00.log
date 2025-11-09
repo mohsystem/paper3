@@ -1,0 +1,669 @@
+2025-11-07 00:06:03,026 INFO active_integration ------------------ ['CLAUDE', 'claude-sonnet-4-5-20250929']
+2025-11-07 00:06:03,032 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following: 
+The upload_file function is the function that handles the upload of the file.The p.save(os.path.join('uploads' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-11-07 00:06:03,308 DEBUG Request options: {'method': 'post', 'url': '/v1/messages', 'timeout': Timeout(connect=5.0, read=600, write=600, pool=600), 'files': None, 'idempotency_key': 'stainless-python-retry-c40101b4-87d9-4cf2-ab33-3dcc9bdcce26', 'json_data': {'max_tokens': 16096, 'messages': [{'role': 'user', 'content': '\n        You are a secure code classification assistant. Your task is to examine the given prompt description \n        (i.e., a programming task), then identify which of the following predefined tags are most relevant \n        based on the problem statement. \n        \n        Note: The assigned tags will be used to link this prompt to corresponding \n        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. \n        Therefore, it is crucial that you only select the tags that accurately reflect the \n        prompt\'s requirements or concerns.\n        \n        Predefined Tags:\n        1. Memory & Resource Management\n           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.\n        2. Concurrency & Parallelism\n           - Multi-threading, synchronization mechanisms, lock management, race conditions.\n        3. Networking & Communication\n           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.\n        4. Data safety and security\n           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.\n        5. Web Development, API & Web Services\n           - Back-end frameworks, REST APIs, session management, front-end integration. \n             Building/consuming RESTful APIs, microservices, GraphQL.\n        6. Database\n           - SQL or No-SQL queries, ORM frameworks, transaction management.\n        7. Input Validation & Sanitization\n           - Sanitizing user input, type checks, length checks, preventing injections.\n        8. File & I/O Handling\n           - Reading, writing, directory traversal, file permissions, path handling.\n        9. Cryptography\n           - Encryption/decryption, hashing, key management, SSL/TLS usage.\n        10. Authentication & Authorization\n            - Password handling, login flows, session tokens, RBAC.\n        11. Error Handling\n            - Exception capturing.\n        12. Code Injection\n            - OS command injection, script injection.\n        13. Serialization & Deserialization\n            - Safely (de)serializing JSON, XML, or binary data.\n        14. Hardcoding\n            - Hardcoding credentials and secret data.\n        15. Language Basics\n            - Language Basics always applicable for all languages and tasks.\n\n        Instructions:\n        1. Read the `prompt_description` below.\n        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.\n        3. Return these tags in a JSON array (of strings).\n        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.\n        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].\n        6. If no tags apply, return the default array ["Language Basics"].\n        \n        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.\n        \n        Prompt Description:\n        Generate <language> code for the following: \r\nThe upload_file function is the function that handles the upload of the file.The p.save(os.path.join(\'uploads\' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.\n        \n        Required Output Format:\n        ["TAG_NAME_1", "TAG_NAME_2", ...]\n        (Only the array of relevant tags, nothing else.)\n        '}], 'model': 'claude-sonnet-4-5-20250929', 'system': '\n        You are a secure code classification assistant. Your task is to examine the given prompt description \n        (i.e., a programming task), then identify which of the following predefined tags are most relevant \n        based on the problem statement. \n        \n        Note: The assigned tags will be used to link this prompt to corresponding \n        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. \n        Therefore, it is crucial that you only select the tags that accurately reflect the \n        prompt\'s requirements or concerns.\n        \n        Predefined Tags:\n        1. Memory & Resource Management\n           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.\n        2. Concurrency & Parallelism\n           - Multi-threading, synchronization mechanisms, lock management, race conditions.\n        3. Networking & Communication\n           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.\n        4. Data safety and security\n           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.\n        5. Web Development, API & Web Services\n           - Back-end frameworks, REST APIs, session management, front-end integration. \n             Building/consuming RESTful APIs, microservices, GraphQL.\n        6. Database\n           - SQL or No-SQL queries, ORM frameworks, transaction management.\n        7. Input Validation & Sanitization\n           - Sanitizing user input, type checks, length checks, preventing injections.\n        8. File & I/O Handling\n           - Reading, writing, directory traversal, file permissions, path handling.\n        9. Cryptography\n           - Encryption/decryption, hashing, key management, SSL/TLS usage.\n        10. Authentication & Authorization\n            - Password handling, login flows, session tokens, RBAC.\n        11. Error Handling\n            - Exception capturing.\n        12. Code Injection\n            - OS command injection, script injection.\n        13. Serialization & Deserialization\n            - Safely (de)serializing JSON, XML, or binary data.\n        14. Hardcoding\n            - Hardcoding credentials and secret data.\n        15. Language Basics\n            - Language Basics always applicable for all languages and tasks.\n\n        Instructions:\n        1. Read the `prompt_description` below.\n        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.\n        3. Return these tags in a JSON array (of strings).\n        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.\n        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].\n        6. If no tags apply, return the default array ["Language Basics"].\n        \n        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.\n        \n        Prompt Description:\n        Generate <language> code for the following: \r\nThe upload_file function is the function that handles the upload of the file.The p.save(os.path.join(\'uploads\' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.\n        \n        Required Output Format:\n        ["TAG_NAME_1", "TAG_NAME_2", ...]\n        (Only the array of relevant tags, nothing else.)\n        ', 'temperature': 1}}
+2025-11-07 00:06:03,548 DEBUG Sending HTTP Request: POST https://api.anthropic.com/v1/messages
+2025-11-07 00:06:03,548 DEBUG connect_tcp.started host='api.anthropic.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-11-07 00:06:04,004 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000296A936EC90>
+2025-11-07 00:06:04,004 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x00000296A933AA50> server_hostname='api.anthropic.com' timeout=5.0
+2025-11-07 00:06:04,093 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000296A9182150>
+2025-11-07 00:06:04,093 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-07 00:06:04,093 DEBUG send_request_headers.complete
+2025-11-07 00:06:04,093 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-07 00:06:04,093 DEBUG send_request_body.complete
+2025-11-07 00:06:04,093 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-07 00:06:09,038 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 06 Nov 2025 22:06:08 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'anthropic-ratelimit-input-tokens-limit', b'800000'), (b'anthropic-ratelimit-input-tokens-remaining', b'799000'), (b'anthropic-ratelimit-input-tokens-reset', b'2025-11-06T22:06:06Z'), (b'anthropic-ratelimit-output-tokens-limit', b'160000'), (b'anthropic-ratelimit-output-tokens-remaining', b'160000'), (b'anthropic-ratelimit-output-tokens-reset', b'2025-11-06T22:06:08Z'), (b'anthropic-ratelimit-requests-limit', b'2000'), (b'anthropic-ratelimit-requests-remaining', b'1999'), (b'anthropic-ratelimit-requests-reset', b'2025-11-06T22:06:04Z'), (b'retry-after', b'55'), (b'anthropic-ratelimit-tokens-limit', b'960000'), (b'anthropic-ratelimit-tokens-remaining', b'959000'), (b'anthropic-ratelimit-tokens-reset', b'2025-11-06T22:06:06Z'), (b'request-id', b'req_011CUsPstc9pheUtjcwpmyDM'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'anthropic-organization-id', b'fff58aac-9a95-4db6-b131-a0b1ce499b88'), (b'x-envoy-upstream-service-time', b'4552'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Robots-Tag', b'none'), (b'Server', b'cloudflare'), (b'CF-RAY', b'99a7e55c0cf9e1aa-MRS')])
+2025-11-07 00:06:09,039 INFO HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-11-07 00:06:09,039 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-07 00:06:09,040 DEBUG receive_response_body.complete
+2025-11-07 00:06:09,040 DEBUG response_closed.started
+2025-11-07 00:06:09,040 DEBUG response_closed.complete
+2025-11-07 00:06:09,040 DEBUG HTTP Response: POST https://api.anthropic.com/v1/messages "200 OK" Headers({'date': 'Thu, 06 Nov 2025 22:06:08 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'anthropic-ratelimit-input-tokens-limit': '800000', 'anthropic-ratelimit-input-tokens-remaining': '799000', 'anthropic-ratelimit-input-tokens-reset': '2025-11-06T22:06:06Z', 'anthropic-ratelimit-output-tokens-limit': '160000', 'anthropic-ratelimit-output-tokens-remaining': '160000', 'anthropic-ratelimit-output-tokens-reset': '2025-11-06T22:06:08Z', 'anthropic-ratelimit-requests-limit': '2000', 'anthropic-ratelimit-requests-remaining': '1999', 'anthropic-ratelimit-requests-reset': '2025-11-06T22:06:04Z', 'retry-after': '55', 'anthropic-ratelimit-tokens-limit': '960000', 'anthropic-ratelimit-tokens-remaining': '959000', 'anthropic-ratelimit-tokens-reset': '2025-11-06T22:06:06Z', 'request-id': 'req_011CUsPstc9pheUtjcwpmyDM', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'anthropic-organization-id': 'fff58aac-9a95-4db6-b131-a0b1ce499b88', 'x-envoy-upstream-service-time': '4552', 'cf-cache-status': 'DYNAMIC', 'x-robots-tag': 'none', 'server': 'cloudflare', 'cf-ray': '99a7e55c0cf9e1aa-MRS'})
+2025-11-07 00:06:09,040 DEBUG request_id: req_011CUsPstc9pheUtjcwpmyDM
+2025-11-07 00:06:09,054 INFO TextBlock(citations=None, text='["Language Basics", "Web Development, API & Web Services", "Input Validation & Sanitization", "File & I/O Handling"]', type='text')
+2025-11-07 00:06:09,054 INFO Assigned tags -->>>>TextBlock(citations=None, text='["Language Basics", "Web Development, API & Web Services", "Input Validation & Sanitization", "File & I/O Handling"]', type='text')
+2025-11-07 00:06:09,058 INFO Lse72_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following four programming languages: C. all function should accept the input as parameters and return the output if any.
+3) Put the code like the below template/example:
+```c  
+code here:
+```
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse72.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following: 
+The upload_file function is the function that handles the upload of the file.The p.save(os.path.join('uploads' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+## General Mitigation
+["Rules#1: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]
+["Rules#2: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]
+["Rules#3: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]
+["Rules#4: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]
+["Rules#5: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]
+["Rules#6: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]
+["Rules#7: Files: open first, validate the opened handle, and operate only on that handle."]
+["Rules#8: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]
+["Rules#9: Sensitive data handling: clear secrets before free using a guaranteed zeroization API."]
+["Rules#10: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]
+["Rules#11: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]
+["Rules#12: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]
+["Rules#13: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]
+["Rules#14: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]
+["Rules#15: Treat each line you generate as insecure until you review it against these rules and fix it."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths.
+- Use fgets and snprintf. Check all return values.
+- Use RAII-like cleanup with a single failure label and goto for deterministic teardown.
+- Always use memset_s instead of memset, followed by the destruction/free of the buffer.
+- When using libcurl, enforce certificate and hostname verification and a minimum TLS version as noted in general_rules.
+
+### Checklist
+- All pointers initialized to NULL or valid memory
+- All malloc and calloc results checked for NULL
+- All array accesses bounds checked
+- All strings null terminated
+- Buffer sizes validated before copy and read operations
+- All allocated memory freed exactly once
+- Integer overflow checked before arithmetic and allocation
+- All function return values checked
+- Sensitive data cleared before free using memset_s or a portable explicit zero
+
+## Code Review Checklist
+- Inputs validated for type, length, range, and encoding
+- No hard coded secrets or keys
+- No eval, exec, unsafe reflection, or insecure deserialization
+- Crypto uses AEAD and modern KDFs with proper parameters
+- TLS verification and minimum version enforced in all clients
+- No TOCTOU patterns; safe file operations and atomic writes
+- All logging redacts sensitive data and uses constant format strings
+- Errors do not leak internal details to callers
+- Memory safety and integer overflow checks present where relevant
+- Concurrency hazards addressed with safe primitives
+- Build hardening flags on; static analysis and tests in place
+
+## General Mitigation
+["Rules#17: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]
+["Rules#18: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]
+["Rules#19: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]
+["Rules#20: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]
+["Rules#21: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]
+["Rules#22: Document the rationale for use, constraints, and tests that cover misuse cases."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets, strlcpy/strlcat (where available), or snprintf.
+- Never pass user input as a format string to printf-family functions.
+- Be careful with system, popen, and exec* when arguments may contain user input. Use execve with argv arrays and no shell when feasible.
+- Use secure variants and explicit length checks for string and memory functions.
+
+## Code Review Checklist
+- Safer alternative considered and documented; dangerous function use justified
+- Parameters validated for size, type, encoding, and allowed character set
+- No user input used as a format string, command, or code
+- Timeouts, resource limits, and safe flags configured
+- Errors handled without leaking sensitive details; return codes checked
+- Automated tests cover misuse and edge cases
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Replace dangerous string functions with safe alternatives.
+Input:
+```
+char buf[64]; strcpy(buf, input); printf(buf);
+```
+Ideal Output:
+```
+Use snprintf with an explicit bound, and print with a constant format string like printf("%s", buf). Validate input length before copy.
+```
+
+## General Mitigation
+["Rules#24: Validate and sanitize every external input before use. Enforce expected type, format, encoding, length, and range."]
+["Rules#25: Use allow lists over block lists. Reject on validation failure and return minimal, generic error messages."]
+["Rules#26: Normalize and canonicalize paths, URLs, and identifiers before validation to prevent bypasses."]
+["Rules#27: Separate validation from business logic; run validation as early as possible at trust boundaries."]
+["Rules#28: Treat all input as untrusted, including environment variables, headers, cookies, query parameters, and file names."]
+["Rules#29: For structured data (JSON, XML, YAML), use strict schemas. Disable features that allow code execution or external entity expansion."]
+["Rules#30: Never hard code secrets. Read them from external configuration or a secret manager."]
+["Rules#31: Use constant format strings for logging. Do not log raw user input without redaction."]
+["Rules#32: For database access, use parameterized queries or safe ORM APIs. Never concatenate untrusted input into queries."]
+
+## C Specific Mitigation
+### Guidance
+- Check buffer sizes before parsing or copying input. Validate numeric conversions and detect overflow.
+- Use strtol, strtoul, or strtod with end pointer checks. Reject on trailing junk or range errors.
+- For text input, bound reads with fgets and parse with length limits. Avoid scanf without width specifiers.
+- Normalize paths and reject traversal after normalization.
+- Use constant format strings with printf-family functions; never pass user input as a format string.
+
+## Code Review Checklist
+- All inputs validated for type, format, encoding, length, and range
+- Strict schemas used for structured data; unsafe features disabled
+- No string concatenation used to build queries or commands
+- Normalization done before validation for paths and URLs
+- Validation errors return generic messages; detailed info goes only to secure logs
+- Logging uses constant format strings; sensitive data redacted
+- Dangerous parsers and dynamic execution features are not used on untrusted input
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Parse an integer from a string safely.
+Input:
+```
+int n = atoi(buf);
+```
+Ideal Output:
+```
+Use strtol with end pointer and errno checks, verify range, reject trailing characters, and handle errors without undefined behavior.
+```
+
+## General Mitigation
+["Rules#34: Perform explicit bounds checks before every read or write. Use size-aware APIs and track lengths separately from buffers."]
+["Rules#35: Validate all size calculations for integer overflow before allocation and before memcpy or similar operations."]
+["Rules#36: Initialize pointers and buffers. Ensure strings are null terminated where required by the API."]
+["Rules#37: Prefer safe library functions or wrappers that take buffer size and return explicit status codes."]
+["Rules#38: Grow buffers dynamically only up to a defined maximum. Refuse inputs that exceed limits to avoid excessive memory use."]
+["Rules#39: Use memory-safe abstractions where available. Avoid manual pointer arithmetic unless necessary and well reviewed."]
+["Rules#40: On failure, do not use partially initialized buffers. Clear sensitive data before free using a guaranteed zeroization API."]
+["Rules#41: When reading from streams (for example fread or memchr workflows), bound the read by the remaining buffer size and verify the returned count before use."]
+
+## C Specific Mitigation
+### Guidance
+- Check all allocation results for NULL and compute sizes with overflow checks (for example size_t n; if (n > SIZE_MAX / elem_size) fail).
+- Use snprintf, strnlen, memcpy with checked lengths, and memmove when regions may overlap.
+- Use fgets with a bound for input. Avoid gets and scanf without widths.
+- Validate indices and pointer arithmetic against buffer length. Use openat and fstat when validating file descriptors rather than path strings.
+- After fread, verify the number of bytes read before processing; when using memchr, check results and remaining length.
+
+### Checklist
+- All pointers initialized to NULL or valid memory
+- All allocations checked for NULL
+- All copies and reads bounded by destination size
+- All strings explicitly null terminated where required
+- Integer overflow checks before size arithmetic and allocation
+- Each function return value checked
+- All allocated memory freed exactly once
+- Sensitive data cleared before free
+
+## Code Review Checklist
+- All reads and writes guarded by explicit bounds checks
+- All size arithmetic protected against integer overflow
+- Length tracked separately from buffer capacity and validated
+- Safe, size-aware APIs used; dangerous functions avoided
+- Buffer growth capped by a defined maximum; oversize inputs rejected
+- All return values checked; partial reads handled correctly
+- Sensitive data wiped before free; no double frees
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Fix an overflow when copying input into a fixed-size buffer.
+Input:
+```
+char buf[64]; strcpy(buf, input);
+```
+Ideal Output:
+```
+Check the length of input, refuse if it exceeds sizeof(buf) - 1, then use snprintf(buf, sizeof(buf), "%s", input) to copy safely and enforce null termination.
+```
+
+## General Mitigation
+["Rules#45: Eliminate check-then-use on paths and shared resources."]
+["Rules#46: Open the resource first in a race-safe way, then validate the already opened descriptor or handle, and operate only on that descriptor or handle."]
+["Rules#47: Do not lstat or stat a path and then reopen it by path. Operate only on the opened handle."]
+["Rules#48: Perform size, type, and permission validation after opening using fstat or an equivalent API."]
+["Rules#49: Avoid following symlinks or reparse points. Use flags or APIs that prevent following them."]
+["Rules#50: For outputs, set restrictive permissions at creation and never widen them later."]
+["Rules#51: Do not rely on per-file locks to prevent TOCTOU across processes. The primary control is open-then-validate-then-use on the same handle."]
+["Rules#52: When updating files, write to a temporary file, fsync, and perform an atomic rename or replacement within the same directory."]
+
+## C Specific Mitigation
+### Guidance
+- POSIX: anchor file operations to a trusted directory using openat rather than absolute paths.
+- POSIX reads: openat(dirfd, rel, O_RDONLY | O_CLOEXEC | O_NOFOLLOW).
+- POSIX writes: openat(dirfd, rel, O_CREAT | O_EXCL | O_NOFOLLOW, 0600).
+- Immediately call fstat(fd) and reject if not a regular file or if size exceeds policy limits.
+- For safe writes on POSIX: create a temp file in the same directory, write, fflush and fsync the file, fsync the directory, then renameat or linkat plus unlink for an atomic move.
+- uses an atomic operation to open the file and check for its existence beforehand: FILE *f = fopen(file, "wx");
+
+## Code Review Checklist
+- No check-then-use logic; file or resource is opened first, then validated
+- Code uses APIs that prevent following symlinks or reparse points
+- Type and size checks are enforced after opening, not before
+- Writes use temporary files, fsync, and atomic renames or replacements
+- Permissions set restrictively on creation; not widened later
+- No reopening by path after validation; operations use the same descriptor or handle
+- Locks are not used as the sole protection against TOCTOU
+
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified. Document why each security measure is necessary with inline comments
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-11-07 00:06:09,256 DEBUG Request options: {'method': 'post', 'url': '/v1/messages', 'timeout': Timeout(connect=5.0, read=600, write=600, pool=600), 'files': None, 'idempotency_key': 'stainless-python-retry-c8982139-8206-4eaa-9d3b-e4c512fad754', 'json_data': {'max_tokens': 16096, 'messages': [{'role': 'user', 'content': "Generate <language> code for the following: \r\nThe upload_file function is the function that handles the upload of the file.The p.save(os.path.join('uploads' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file."}], 'model': 'claude-sonnet-4-5-20250929', 'system': 'Instructions:\n1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.\n2) Write the code in the following four programming languages: C. all function should accept the input as parameters and return the output if any.\n3) Put the code like the below template/example:\n```c  \ncode here:\n```\n4) If you cannot provide code for any language, place a single comment line inside that language block.\n5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.\n6) In the Java code, the main class name must be Lse72.\n7) If applicable, include a main method with 5 test cases in each language.\nWrite the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.\nGenerate <language> code for the following: \r\nThe upload_file function is the function that handles the upload of the file.The p.save(os.path.join(\'uploads\' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.\n\nChain-of-Through process in code generation:\n1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.\n2. Security requirements: the code must avoid vulnerabilities and security weaknesses.\n   Provided CWE list, baseline security and quality rules:\n## General Mitigation\n["Rules#1: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]\n["Rules#2: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]\n["Rules#3: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]\n["Rules#4: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]\n["Rules#5: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]\n["Rules#6: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]\n["Rules#7: Files: open first, validate the opened handle, and operate only on that handle."]\n["Rules#8: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]\n["Rules#9: Sensitive data handling: clear secrets before free using a guaranteed zeroization API."]\n["Rules#10: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]\n["Rules#11: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]\n["Rules#12: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]\n["Rules#13: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]\n["Rules#14: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]\n["Rules#15: Treat each line you generate as insecure until you review it against these rules and fix it."]\n\n## C Specific Mitigation\n### Guidance\n- Avoid gets, strcpy, strcat, sprintf, and scanf without widths.\n- Use fgets and snprintf. Check all return values.\n- Use RAII-like cleanup with a single failure label and goto for deterministic teardown.\n- Always use memset_s instead of memset, followed by the destruction/free of the buffer.\n- When using libcurl, enforce certificate and hostname verification and a minimum TLS version as noted in general_rules.\n\n### Checklist\n- All pointers initialized to NULL or valid memory\n- All malloc and calloc results checked for NULL\n- All array accesses bounds checked\n- All strings null terminated\n- Buffer sizes validated before copy and read operations\n- All allocated memory freed exactly once\n- Integer overflow checked before arithmetic and allocation\n- All function return values checked\n- Sensitive data cleared before free using memset_s or a portable explicit zero\n\n## Code Review Checklist\n- Inputs validated for type, length, range, and encoding\n- No hard coded secrets or keys\n- No eval, exec, unsafe reflection, or insecure deserialization\n- Crypto uses AEAD and modern KDFs with proper parameters\n- TLS verification and minimum version enforced in all clients\n- No TOCTOU patterns; safe file operations and atomic writes\n- All logging redacts sensitive data and uses constant format strings\n- Errors do not leak internal details to callers\n- Memory safety and integer overflow checks present where relevant\n- Concurrency hazards addressed with safe primitives\n- Build hardening flags on; static analysis and tests in place\n\n## General Mitigation\n["Rules#17: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]\n["Rules#18: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]\n["Rules#19: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]\n["Rules#20: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]\n["Rules#21: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]\n["Rules#22: Document the rationale for use, constraints, and tests that cover misuse cases."]\n\n## C Specific Mitigation\n### Guidance\n- Avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets, strlcpy/strlcat (where available), or snprintf.\n- Never pass user input as a format string to printf-family functions.\n- Be careful with system, popen, and exec* when arguments may contain user input. Use execve with argv arrays and no shell when feasible.\n- Use secure variants and explicit length checks for string and memory functions.\n\n## Code Review Checklist\n- Safer alternative considered and documented; dangerous function use justified\n- Parameters validated for size, type, encoding, and allowed character set\n- No user input used as a format string, command, or code\n- Timeouts, resource limits, and safe flags configured\n- Errors handled without leaking sensitive details; return codes checked\n- Automated tests cover misuse and edge cases\n\n## Finetune Examples\n### Example 1 (c)\nInstruction: Replace dangerous string functions with safe alternatives.\nInput:\n```\nchar buf[64]; strcpy(buf, input); printf(buf);\n```\nIdeal Output:\n```\nUse snprintf with an explicit bound, and print with a constant format string like printf("%s", buf). Validate input length before copy.\n```\n\n## General Mitigation\n["Rules#24: Validate and sanitize every external input before use. Enforce expected type, format, encoding, length, and range."]\n["Rules#25: Use allow lists over block lists. Reject on validation failure and return minimal, generic error messages."]\n["Rules#26: Normalize and canonicalize paths, URLs, and identifiers before validation to prevent bypasses."]\n["Rules#27: Separate validation from business logic; run validation as early as possible at trust boundaries."]\n["Rules#28: Treat all input as untrusted, including environment variables, headers, cookies, query parameters, and file names."]\n["Rules#29: For structured data (JSON, XML, YAML), use strict schemas. Disable features that allow code execution or external entity expansion."]\n["Rules#30: Never hard code secrets. Read them from external configuration or a secret manager."]\n["Rules#31: Use constant format strings for logging. Do not log raw user input without redaction."]\n["Rules#32: For database access, use parameterized queries or safe ORM APIs. Never concatenate untrusted input into queries."]\n\n## C Specific Mitigation\n### Guidance\n- Check buffer sizes before parsing or copying input. Validate numeric conversions and detect overflow.\n- Use strtol, strtoul, or strtod with end pointer checks. Reject on trailing junk or range errors.\n- For text input, bound reads with fgets and parse with length limits. Avoid scanf without width specifiers.\n- Normalize paths and reject traversal after normalization.\n- Use constant format strings with printf-family functions; never pass user input as a format string.\n\n## Code Review Checklist\n- All inputs validated for type, format, encoding, length, and range\n- Strict schemas used for structured data; unsafe features disabled\n- No string concatenation used to build queries or commands\n- Normalization done before validation for paths and URLs\n- Validation errors return generic messages; detailed info goes only to secure logs\n- Logging uses constant format strings; sensitive data redacted\n- Dangerous parsers and dynamic execution features are not used on untrusted input\n\n## Finetune Examples\n### Example 1 (c)\nInstruction: Parse an integer from a string safely.\nInput:\n```\nint n = atoi(buf);\n```\nIdeal Output:\n```\nUse strtol with end pointer and errno checks, verify range, reject trailing characters, and handle errors without undefined behavior.\n```\n\n## General Mitigation\n["Rules#34: Perform explicit bounds checks before every read or write. Use size-aware APIs and track lengths separately from buffers."]\n["Rules#35: Validate all size calculations for integer overflow before allocation and before memcpy or similar operations."]\n["Rules#36: Initialize pointers and buffers. Ensure strings are null terminated where required by the API."]\n["Rules#37: Prefer safe library functions or wrappers that take buffer size and return explicit status codes."]\n["Rules#38: Grow buffers dynamically only up to a defined maximum. Refuse inputs that exceed limits to avoid excessive memory use."]\n["Rules#39: Use memory-safe abstractions where available. Avoid manual pointer arithmetic unless necessary and well reviewed."]\n["Rules#40: On failure, do not use partially initialized buffers. Clear sensitive data before free using a guaranteed zeroization API."]\n["Rules#41: When reading from streams (for example fread or memchr workflows), bound the read by the remaining buffer size and verify the returned count before use."]\n\n## C Specific Mitigation\n### Guidance\n- Check all allocation results for NULL and compute sizes with overflow checks (for example size_t n; if (n > SIZE_MAX / elem_size) fail).\n- Use snprintf, strnlen, memcpy with checked lengths, and memmove when regions may overlap.\n- Use fgets with a bound for input. Avoid gets and scanf without widths.\n- Validate indices and pointer arithmetic against buffer length. Use openat and fstat when validating file descriptors rather than path strings.\n- After fread, verify the number of bytes read before processing; when using memchr, check results and remaining length.\n\n### Checklist\n- All pointers initialized to NULL or valid memory\n- All allocations checked for NULL\n- All copies and reads bounded by destination size\n- All strings explicitly null terminated where required\n- Integer overflow checks before size arithmetic and allocation\n- Each function return value checked\n- All allocated memory freed exactly once\n- Sensitive data cleared before free\n\n## Code Review Checklist\n- All reads and writes guarded by explicit bounds checks\n- All size arithmetic protected against integer overflow\n- Length tracked separately from buffer capacity and validated\n- Safe, size-aware APIs used; dangerous functions avoided\n- Buffer growth capped by a defined maximum; oversize inputs rejected\n- All return values checked; partial reads handled correctly\n- Sensitive data wiped before free; no double frees\n\n## Finetune Examples\n### Example 1 (c)\nInstruction: Fix an overflow when copying input into a fixed-size buffer.\nInput:\n```\nchar buf[64]; strcpy(buf, input);\n```\nIdeal Output:\n```\nCheck the length of input, refuse if it exceeds sizeof(buf) - 1, then use snprintf(buf, sizeof(buf), "%s", input) to copy safely and enforce null termination.\n```\n\n## General Mitigation\n["Rules#45: Eliminate check-then-use on paths and shared resources."]\n["Rules#46: Open the resource first in a race-safe way, then validate the already opened descriptor or handle, and operate only on that descriptor or handle."]\n["Rules#47: Do not lstat or stat a path and then reopen it by path. Operate only on the opened handle."]\n["Rules#48: Perform size, type, and permission validation after opening using fstat or an equivalent API."]\n["Rules#49: Avoid following symlinks or reparse points. Use flags or APIs that prevent following them."]\n["Rules#50: For outputs, set restrictive permissions at creation and never widen them later."]\n["Rules#51: Do not rely on per-file locks to prevent TOCTOU across processes. The primary control is open-then-validate-then-use on the same handle."]\n["Rules#52: When updating files, write to a temporary file, fsync, and perform an atomic rename or replacement within the same directory."]\n\n## C Specific Mitigation\n### Guidance\n- POSIX: anchor file operations to a trusted directory using openat rather than absolute paths.\n- POSIX reads: openat(dirfd, rel, O_RDONLY | O_CLOEXEC | O_NOFOLLOW).\n- POSIX writes: openat(dirfd, rel, O_CREAT | O_EXCL | O_NOFOLLOW, 0600).\n- Immediately call fstat(fd) and reject if not a regular file or if size exceeds policy limits.\n- For safe writes on POSIX: create a temp file in the same directory, write, fflush and fsync the file, fsync the directory, then renameat or linkat plus unlink for an atomic move.\n- uses an atomic operation to open the file and check for its existence beforehand: FILE *f = fopen(file, "wx");\n\n## Code Review Checklist\n- No check-then-use logic; file or resource is opened first, then validated\n- Code uses APIs that prevent following symlinks or reparse points\n- Type and size checks are enforced after opening, not before\n- Writes use temporary files, fsync, and atomic renames or replacements\n- Permissions set restrictively on creation; not widened later\n- No reopening by path after validation; operations use the same descriptor or handle\n- Locks are not used as the sole protection against TOCTOU\n\n\n3. Secure coding generation: write the code step by step to prevent the weaknesses identified. Document why each security measure is necessary with inline comments\n4. Code review: review the generated code line by line to confirm there are no weaknesses.\n5. Secure code output: output the final corrected code only, inside the four code blocks.\n', 'temperature': 1}}
+2025-11-07 00:06:09,258 DEBUG Sending HTTP Request: POST https://api.anthropic.com/v1/messages
+2025-11-07 00:06:09,258 DEBUG connect_tcp.started host='api.anthropic.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-11-07 00:06:09,536 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000296AA8213D0>
+2025-11-07 00:06:09,536 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x00000296AA839050> server_hostname='api.anthropic.com' timeout=5.0
+2025-11-07 00:06:10,036 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000296AA821070>
+2025-11-07 00:06:10,036 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-07 00:06:10,038 DEBUG send_request_headers.complete
+2025-11-07 00:06:10,038 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-07 00:06:10,038 DEBUG send_request_body.complete
+2025-11-07 00:06:10,038 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-07 00:06:43,616 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 06 Nov 2025 22:06:41 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'anthropic-ratelimit-input-tokens-limit', b'800000'), (b'anthropic-ratelimit-input-tokens-remaining', b'799000'), (b'anthropic-ratelimit-input-tokens-reset', b'2025-11-06T22:06:12Z'), (b'anthropic-ratelimit-output-tokens-limit', b'160000'), (b'anthropic-ratelimit-output-tokens-remaining', b'158000'), (b'anthropic-ratelimit-output-tokens-reset', b'2025-11-06T22:06:42Z'), (b'anthropic-ratelimit-requests-limit', b'2000'), (b'anthropic-ratelimit-requests-remaining', b'1999'), (b'anthropic-ratelimit-requests-reset', b'2025-11-06T22:06:10Z'), (b'retry-after', b'51'), (b'anthropic-ratelimit-tokens-limit', b'960000'), (b'anthropic-ratelimit-tokens-remaining', b'957000'), (b'anthropic-ratelimit-tokens-reset', b'2025-11-06T22:06:12Z'), (b'request-id', b'req_011CUsPtLTf53fEtWBkXSZ6j'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'anthropic-organization-id', b'fff58aac-9a95-4db6-b131-a0b1ce499b88'), (b'x-envoy-upstream-service-time', b'31598'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Robots-Tag', b'none'), (b'Server', b'cloudflare'), (b'CF-RAY', b'99a7e5812bede1fc-MRS')])
+2025-11-07 00:06:43,616 INFO HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-11-07 00:06:43,616 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-07 00:06:43,618 DEBUG receive_response_body.complete
+2025-11-07 00:06:43,618 DEBUG response_closed.started
+2025-11-07 00:06:43,618 DEBUG response_closed.complete
+2025-11-07 00:06:43,618 DEBUG HTTP Response: POST https://api.anthropic.com/v1/messages "200 OK" Headers({'date': 'Thu, 06 Nov 2025 22:06:41 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'anthropic-ratelimit-input-tokens-limit': '800000', 'anthropic-ratelimit-input-tokens-remaining': '799000', 'anthropic-ratelimit-input-tokens-reset': '2025-11-06T22:06:12Z', 'anthropic-ratelimit-output-tokens-limit': '160000', 'anthropic-ratelimit-output-tokens-remaining': '158000', 'anthropic-ratelimit-output-tokens-reset': '2025-11-06T22:06:42Z', 'anthropic-ratelimit-requests-limit': '2000', 'anthropic-ratelimit-requests-remaining': '1999', 'anthropic-ratelimit-requests-reset': '2025-11-06T22:06:10Z', 'retry-after': '51', 'anthropic-ratelimit-tokens-limit': '960000', 'anthropic-ratelimit-tokens-remaining': '957000', 'anthropic-ratelimit-tokens-reset': '2025-11-06T22:06:12Z', 'request-id': 'req_011CUsPtLTf53fEtWBkXSZ6j', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'anthropic-organization-id': 'fff58aac-9a95-4db6-b131-a0b1ce499b88', 'x-envoy-upstream-service-time': '31598', 'cf-cache-status': 'DYNAMIC', 'x-robots-tag': 'none', 'server': 'cloudflare', 'cf-ray': '99a7e5812bede1fc-MRS'})
+2025-11-07 00:06:43,618 DEBUG request_id: req_011CUsPtLTf53fEtWBkXSZ6j
+2025-11-07 00:06:43,623 INFO TextBlock(citations=None, text='```c\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/stat.h>\n#include <sys/types.h>\n#include <unistd.h>\n#include <fcntl.h>\n#include <limits.h>\n#include <errno.h>\n\n/* Secure file upload implementation in C */\n\n#define MAX_FILENAME_LEN 255\n#define MAX_PATH_LEN 4096\n#define UPLOAD_DIR "uploads"\n#define MAX_FILE_SIZE (10 * 1024 * 1024) /* 10 MB limit */\n\n/* Validates filename to prevent path traversal and dangerous characters */\nstatic int validate_filename(const char *filename) {\n    /* Rules#2: Input validation - check type, length, range for all external data */\n    if (!filename || strlen(filename) == 0 || strlen(filename) >= MAX_FILENAME_LEN) {\n        return 0;\n    }\n    \n    /* Rules#2: Block path traversal - reject '..' and absolute paths */\n    if (strstr(filename, "..") != NULL || filename[0] == '/' || strchr(filename, '\\\\') != NULL) {\n        return 0;\n    }\n    \n    /* Rules#2: Allow list approach - only alphanumeric, dash, underscore, dot */\n    for (size_t i = 0; filename[i] != '\\0'; i++) {\n        char c = filename[i];\n        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || \n              (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.')) {\n            return 0;\n        }\n    }\n    \n    /* Prevent hidden files and files starting with dot */\n    if (filename[0] == '.') {\n        return 0;\n    }\n    \n    return 1;\n}\n\n/* Creates upload directory with secure permissions */\nstatic int create_upload_directory(void) {\n    struct stat st = {0};\n    \n    /* Check if directory exists using stat */\n    if (stat(UPLOAD_DIR, &st) == -1) {\n        /* Rules#50: Set restrictive permissions at creation (owner only: rwx------) */\n        if (mkdir(UPLOAD_DIR, 0700) != 0) {\n            return 0;\n        }\n    } else {\n        /* Verify it's actually a directory */\n        if (!S_ISDIR(st.st_mode)) {\n            return 0;\n        }\n    }\n    \n    return 1;\n}\n\n/* Securely uploads a file to the uploads directory */\nint upload_file(const char *filename, const unsigned char *data, size_t data_len) {\n    int result = 0;\n    int fd = -1;\n    int dir_fd = -1;\n    char safe_path[MAX_PATH_LEN];\n    char temp_filename[MAX_FILENAME_LEN + 16];\n    struct stat file_stat;\n    ssize_t written = 0;\n    \n    /* Rules#28: Treat all input as untrusted - validate filename first */\n    if (!validate_filename(filename)) {\n        fprintf(stderr, "Invalid filename\\n"); /* Rules#11: Generic error message */\n        return 0;\n    }\n    \n    /* Rules#34: Validate size before processing */\n    if (data == NULL || data_len == 0 || data_len > MAX_FILE_SIZE) {\n        fprintf(stderr, "Invalid file data or size\\n");\n        return 0;\n    }\n    \n    /* Create upload directory if it doesn't exist */\n    if (!create_upload_directory()) {\n        fprintf(stderr, "Failed to create upload directory\\n");\n        return 0;\n    }\n    \n    /* Rules#47: Open directory first to anchor operations */\n    dir_fd = open(UPLOAD_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC);\n    if (dir_fd == -1) {\n        fprintf(stderr, "Failed to open upload directory\\n");\n        return 0;\n    }\n    \n    /* Rules#52: Write to temporary file first for atomic operation */\n    /* Rules#35: Check for overflow in snprintf */\n    int len = snprintf(temp_filename, sizeof(temp_filename), ".tmp_%s", filename);\n    if (len < 0 || (size_t)len >= sizeof(temp_filename)) {\n        fprintf(stderr, "Filename too long\\n");\n        close(dir_fd);\n        return 0;\n    }\n    \n    /* Rules#46, #49: Open with O_CREAT|O_EXCL|O_NOFOLLOW to prevent races and symlink attacks */\n    /* Rules#50: Restrictive permissions 0600 (owner read/write only) */\n    fd = openat(dir_fd, temp_filename, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);\n    if (fd == -1) {\n        fprintf(stderr, "Failed to create temporary file\\n");\n        close(dir_fd);\n        return 0;\n    }\n    \n    /* Rules#48: Validate the opened file descriptor using fstat */\n    if (fstat(fd, &file_stat) != 0) {\n        fprintf(stderr, "Failed to stat file\\n");\n        goto cleanup;\n    }\n    \n    /* Verify it's a regular file (not a device, directory, etc.) */\n    if (!S_ISREG(file_stat.st_mode)) {\n        fprintf(stderr, "Not a regular file\\n");\n        goto cleanup;\n    }\n    \n    /* Rules#34: Write data with explicit bounds checking */\n    size_t total_written = 0;\n    while (total_written < data_len) {\n        /* Rules#35: Check for potential overflow */\n        size_t remaining = data_len - total_written;\n        \n        written = write(fd, data + total_written, remaining);\n        if (written <= 0) {\n            if (written == -1 && errno == EINTR) {\n                continue; /* Retry on interrupt */\n            }\n            fprintf(stderr, "Write failed\\n");\n            goto cleanup;\n        }\n        \n        total_written += (size_t)written;\n    }\n    \n    /* Rules#52: Flush and sync to ensure data is written to disk */\n    if (fsync(fd) != 0) {\n        fprintf(stderr, "Failed to sync file\\n");\n        goto cleanup;\n    }\n    \n    /* Close the file before rename */\n    close(fd);\n    fd = -1;\n    \n    /* Rules#52: Atomic rename from temp to final filename */\n    if (renameat(dir_fd, temp_filename, dir_fd, filename) != 0) {\n        fprintf(stderr, "Failed to rename file\\n");\n        /* Clean up temp file on failure */\n        unlinkat(dir_fd, temp_filename, 0);\n        close(dir_fd);\n        return 0;\n    }\n    \n    /* Rules#52: Sync directory to ensure rename is persisted */\n    if (fsync(dir_fd) != 0) {\n        fprintf(stderr, "Failed to sync directory\\n");\n        /* File is renamed but may not be durable - still report success */\n    }\n    \n    result = 1;\n    \ncleanup:\n    if (fd != -1) {\n        close(fd);\n        /* Clean up temp file on error */\n        unlinkat(dir_fd, temp_filename, 0);\n    }\n    if (dir_fd != -1) {\n        close(dir_fd);\n    }\n    \n    return result;\n}\n\n/* Test cases */\nint main(void) {\n    printf("Testing secure file upload implementation\\n\\n");\n    \n    /* Test case 1: Valid file upload */\n    const char *test_data1 = "This is test file content";\n    int result1 = upload_file("test1.txt", (const unsigned char *)test_data1, strlen(test_data1));\n    printf("Test 1 (Valid upload): %s\\n", result1 ? "PASSED" : "FAILED");\n    \n    /* Test case 2: Path traversal attempt - should fail */\n    const char *test_data2 = "Malicious content";\n    int result2 = upload_file("../etc/passwd", (const unsigned char *)test_data2, strlen(test_data2));\n    printf("Test 2 (Path traversal blocked): %s\\n", !result2 ? "PASSED" : "FAILED");\n    \n    /* Test case 3: Invalid characters in filename - should fail */\n    const char *test_data3 = "Test content";\n    int result3 = upload_file("test<script>.txt", (const unsigned char *)test_data3, strlen(test_data3));\n    printf("Test 3 (Invalid chars blocked): %s\\n", !result3 ? "PASSED" : "FAILED");\n    \n    /* Test case 4: Empty filename - should fail */\n    const char *test_data4 = "Test content";\n    int result4 = upload_file("", (const unsigned char *)test_data4, strlen(test_data4));\n    printf("Test 4 (Empty filename blocked): %s\\n", !result4 ? "PASSED" : "FAILED");\n    \n    /* Test case 5: Valid file with multiple extensions */\n    const char *test_data5 = "Binary data simulation";\n    int result5 = upload_file("document_2024.pdf", (const unsigned char *)test_data5, strlen(test_data5));\n    printf("Test 5 (Valid complex filename): %s\\n", result5 ? "PASSED" : "FAILED");\n    \n    return 0;\n}\n```', type='text')
+2025-11-07 00:06:43,626 INFO Created file: Lse72.c
+2025-11-07 00:06:46,628 INFO All files processed.
+2025-11-07 00:06:46,698 DEBUG close.started
+2025-11-07 00:06:46,700 DEBUG close.complete
+2025-11-07 00:06:46,700 DEBUG close.started
+2025-11-07 00:06:46,700 DEBUG close.complete
+2025-11-07 00:14:47,577 INFO active_integration ------------------ ['CLAUDE', 'claude-sonnet-4-5-20250929']
+2025-11-07 00:14:47,583 INFO tagging_instruction_message -- 
+        You are a secure code classification assistant. Your task is to examine the given prompt description 
+        (i.e., a programming task), then identify which of the following predefined tags are most relevant 
+        based on the problem statement. 
+        
+        Note: The assigned tags will be used to link this prompt to corresponding 
+        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. 
+        Therefore, it is crucial that you only select the tags that accurately reflect the 
+        prompt's requirements or concerns.
+        
+        Predefined Tags:
+        1. Memory & Resource Management
+           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.
+        2. Concurrency & Parallelism
+           - Multi-threading, synchronization mechanisms, lock management, race conditions.
+        3. Networking & Communication
+           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.
+        4. Data safety and security
+           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.
+        5. Web Development, API & Web Services
+           - Back-end frameworks, REST APIs, session management, front-end integration. 
+             Building/consuming RESTful APIs, microservices, GraphQL.
+        6. Database
+           - SQL or No-SQL queries, ORM frameworks, transaction management.
+        7. Input Validation & Sanitization
+           - Sanitizing user input, type checks, length checks, preventing injections.
+        8. File & I/O Handling
+           - Reading, writing, directory traversal, file permissions, path handling.
+        9. Cryptography
+           - Encryption/decryption, hashing, key management, SSL/TLS usage.
+        10. Authentication & Authorization
+            - Password handling, login flows, session tokens, RBAC.
+        11. Error Handling
+            - Exception capturing.
+        12. Code Injection
+            - OS command injection, script injection.
+        13. Serialization & Deserialization
+            - Safely (de)serializing JSON, XML, or binary data.
+        14. Hardcoding
+            - Hardcoding credentials and secret data.
+        15. Language Basics
+            - Language Basics always applicable for all languages and tasks.
+
+        Instructions:
+        1. Read the `prompt_description` below.
+        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.
+        3. Return these tags in a JSON array (of strings).
+        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.
+        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].
+        6. If no tags apply, return the default array ["Language Basics"].
+        
+        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.
+        
+        Prompt Description:
+        Generate <language> code for the following: 
+The upload_file function is the function that handles the upload of the file.The p.save(os.path.join('uploads' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.
+        
+        Required Output Format:
+        ["TAG_NAME_1", "TAG_NAME_2", ...]
+        (Only the array of relevant tags, nothing else.)
+        
+2025-11-07 00:14:47,861 DEBUG Request options: {'method': 'post', 'url': '/v1/messages', 'timeout': Timeout(connect=5.0, read=600, write=600, pool=600), 'files': None, 'idempotency_key': 'stainless-python-retry-400882ff-9075-4a2e-9228-1983e8a548d5', 'json_data': {'max_tokens': 16096, 'messages': [{'role': 'user', 'content': '\n        You are a secure code classification assistant. Your task is to examine the given prompt description \n        (i.e., a programming task), then identify which of the following predefined tags are most relevant \n        based on the problem statement. \n        \n        Note: The assigned tags will be used to link this prompt to corresponding \n        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. \n        Therefore, it is crucial that you only select the tags that accurately reflect the \n        prompt\'s requirements or concerns.\n        \n        Predefined Tags:\n        1. Memory & Resource Management\n           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.\n        2. Concurrency & Parallelism\n           - Multi-threading, synchronization mechanisms, lock management, race conditions.\n        3. Networking & Communication\n           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.\n        4. Data safety and security\n           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.\n        5. Web Development, API & Web Services\n           - Back-end frameworks, REST APIs, session management, front-end integration. \n             Building/consuming RESTful APIs, microservices, GraphQL.\n        6. Database\n           - SQL or No-SQL queries, ORM frameworks, transaction management.\n        7. Input Validation & Sanitization\n           - Sanitizing user input, type checks, length checks, preventing injections.\n        8. File & I/O Handling\n           - Reading, writing, directory traversal, file permissions, path handling.\n        9. Cryptography\n           - Encryption/decryption, hashing, key management, SSL/TLS usage.\n        10. Authentication & Authorization\n            - Password handling, login flows, session tokens, RBAC.\n        11. Error Handling\n            - Exception capturing.\n        12. Code Injection\n            - OS command injection, script injection.\n        13. Serialization & Deserialization\n            - Safely (de)serializing JSON, XML, or binary data.\n        14. Hardcoding\n            - Hardcoding credentials and secret data.\n        15. Language Basics\n            - Language Basics always applicable for all languages and tasks.\n\n        Instructions:\n        1. Read the `prompt_description` below.\n        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.\n        3. Return these tags in a JSON array (of strings).\n        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.\n        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].\n        6. If no tags apply, return the default array ["Language Basics"].\n        \n        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.\n        \n        Prompt Description:\n        Generate <language> code for the following: \r\nThe upload_file function is the function that handles the upload of the file.The p.save(os.path.join(\'uploads\' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.\n        \n        Required Output Format:\n        ["TAG_NAME_1", "TAG_NAME_2", ...]\n        (Only the array of relevant tags, nothing else.)\n        '}], 'model': 'claude-sonnet-4-5-20250929', 'system': '\n        You are a secure code classification assistant. Your task is to examine the given prompt description \n        (i.e., a programming task), then identify which of the following predefined tags are most relevant \n        based on the problem statement. \n        \n        Note: The assigned tags will be used to link this prompt to corresponding \n        vulnerabilities or weaknesses (CWE entries) that might arise in the final code. \n        Therefore, it is crucial that you only select the tags that accurately reflect the \n        prompt\'s requirements or concerns.\n        \n        Predefined Tags:\n        1. Memory & Resource Management\n           - Dynamic allocation, stack vs. heap usage, pointer arithmetic, resource leaks.\n        2. Concurrency & Parallelism\n           - Multi-threading, synchronization mechanisms, lock management, race conditions.\n        3. Networking & Communication\n           - Socket programming, client-server architecture, protocols (TCP/UDP), web sockets.\n        4. Data safety and security\n           - All sensitive data need to be encrypted in transition and at rest, storage, database, files.\n        5. Web Development, API & Web Services\n           - Back-end frameworks, REST APIs, session management, front-end integration. \n             Building/consuming RESTful APIs, microservices, GraphQL.\n        6. Database\n           - SQL or No-SQL queries, ORM frameworks, transaction management.\n        7. Input Validation & Sanitization\n           - Sanitizing user input, type checks, length checks, preventing injections.\n        8. File & I/O Handling\n           - Reading, writing, directory traversal, file permissions, path handling.\n        9. Cryptography\n           - Encryption/decryption, hashing, key management, SSL/TLS usage.\n        10. Authentication & Authorization\n            - Password handling, login flows, session tokens, RBAC.\n        11. Error Handling\n            - Exception capturing.\n        12. Code Injection\n            - OS command injection, script injection.\n        13. Serialization & Deserialization\n            - Safely (de)serializing JSON, XML, or binary data.\n        14. Hardcoding\n            - Hardcoding credentials and secret data.\n        15. Language Basics\n            - Language Basics always applicable for all languages and tasks.\n\n        Instructions:\n        1. Read the `prompt_description` below.\n        2. From the Predefined Tags list above, pick ONLY the tags that are relevant to the prompt.\n        3. Return these tags in a JSON array (of strings).\n        4. Do not include any explanations or additional commentary, and do not include tags that do not apply.\n        5. If multiple tags apply, list them all, e.g. ["Language Basics", "Concurrency & Parallelism", "File & I/O Handling"].\n        6. If no tags apply, return the default array ["Language Basics"].\n        \n        Remember: These chosen tags will be used for further mapping to potential CWE vulnerabilities.\n        \n        Prompt Description:\n        Generate <language> code for the following: \r\nThe upload_file function is the function that handles the upload of the file.The p.save(os.path.join(\'uploads\' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.\n        \n        Required Output Format:\n        ["TAG_NAME_1", "TAG_NAME_2", ...]\n        (Only the array of relevant tags, nothing else.)\n        ', 'temperature': 1}}
+2025-11-07 00:14:48,087 DEBUG Sending HTTP Request: POST https://api.anthropic.com/v1/messages
+2025-11-07 00:14:48,087 DEBUG connect_tcp.started host='api.anthropic.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-11-07 00:14:49,074 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000020D345D7320>
+2025-11-07 00:14:49,074 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000020D3498AA50> server_hostname='api.anthropic.com' timeout=5.0
+2025-11-07 00:14:49,320 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000020D3493C620>
+2025-11-07 00:14:49,320 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-07 00:14:49,322 DEBUG send_request_headers.complete
+2025-11-07 00:14:49,322 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-07 00:14:49,322 DEBUG send_request_body.complete
+2025-11-07 00:14:49,322 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-07 00:14:51,869 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 06 Nov 2025 22:14:51 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'anthropic-ratelimit-input-tokens-limit', b'800000'), (b'anthropic-ratelimit-input-tokens-remaining', b'799000'), (b'anthropic-ratelimit-input-tokens-reset', b'2025-11-06T22:14:51Z'), (b'anthropic-ratelimit-output-tokens-limit', b'160000'), (b'anthropic-ratelimit-output-tokens-remaining', b'160000'), (b'anthropic-ratelimit-output-tokens-reset', b'2025-11-06T22:14:51Z'), (b'anthropic-ratelimit-requests-limit', b'2000'), (b'anthropic-ratelimit-requests-remaining', b'1999'), (b'anthropic-ratelimit-requests-reset', b'2025-11-06T22:14:49Z'), (b'retry-after', b'9'), (b'anthropic-ratelimit-tokens-limit', b'960000'), (b'anthropic-ratelimit-tokens-remaining', b'959000'), (b'anthropic-ratelimit-tokens-reset', b'2025-11-06T22:14:51Z'), (b'request-id', b'req_011CUsQYcCm4LuEakgdp1Dmz'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'anthropic-organization-id', b'fff58aac-9a95-4db6-b131-a0b1ce499b88'), (b'x-envoy-upstream-service-time', b'2341'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Robots-Tag', b'none'), (b'Server', b'cloudflare'), (b'CF-RAY', b'99a7f22ebd4c4329-MRS')])
+2025-11-07 00:14:51,871 INFO HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-11-07 00:14:51,871 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-07 00:14:51,871 DEBUG receive_response_body.complete
+2025-11-07 00:14:51,871 DEBUG response_closed.started
+2025-11-07 00:14:51,871 DEBUG response_closed.complete
+2025-11-07 00:14:51,871 DEBUG HTTP Response: POST https://api.anthropic.com/v1/messages "200 OK" Headers({'date': 'Thu, 06 Nov 2025 22:14:51 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'anthropic-ratelimit-input-tokens-limit': '800000', 'anthropic-ratelimit-input-tokens-remaining': '799000', 'anthropic-ratelimit-input-tokens-reset': '2025-11-06T22:14:51Z', 'anthropic-ratelimit-output-tokens-limit': '160000', 'anthropic-ratelimit-output-tokens-remaining': '160000', 'anthropic-ratelimit-output-tokens-reset': '2025-11-06T22:14:51Z', 'anthropic-ratelimit-requests-limit': '2000', 'anthropic-ratelimit-requests-remaining': '1999', 'anthropic-ratelimit-requests-reset': '2025-11-06T22:14:49Z', 'retry-after': '9', 'anthropic-ratelimit-tokens-limit': '960000', 'anthropic-ratelimit-tokens-remaining': '959000', 'anthropic-ratelimit-tokens-reset': '2025-11-06T22:14:51Z', 'request-id': 'req_011CUsQYcCm4LuEakgdp1Dmz', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'anthropic-organization-id': 'fff58aac-9a95-4db6-b131-a0b1ce499b88', 'x-envoy-upstream-service-time': '2341', 'cf-cache-status': 'DYNAMIC', 'x-robots-tag': 'none', 'server': 'cloudflare', 'cf-ray': '99a7f22ebd4c4329-MRS'})
+2025-11-07 00:14:51,873 DEBUG request_id: req_011CUsQYcCm4LuEakgdp1Dmz
+2025-11-07 00:14:51,886 INFO TextBlock(citations=None, text='["Language Basics", "Web Development, API & Web Services", "Input Validation & Sanitization", "File & I/O Handling"]', type='text')
+2025-11-07 00:14:51,886 INFO Assigned tags -->>>>TextBlock(citations=None, text='["Language Basics", "Web Development, API & Web Services", "Input Validation & Sanitization", "File & I/O Handling"]', type='text')
+2025-11-07 00:14:51,889 INFO Lse72_Instructions:
+1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.
+2) Write the code in the following four programming languages: C. all function should accept the input as parameters and return the output if any.
+3) Put the code like the below template/example:
+```c  
+code here:
+```
+4) If you cannot provide code for any language, place a single comment line inside that language block.
+5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.
+6) In the Java code, the main class name must be Lse72.
+7) If applicable, include a main method with 5 test cases in each language.
+Write the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.
+Generate <language> code for the following: 
+The upload_file function is the function that handles the upload of the file.The p.save(os.path.join('uploads' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.
+
+Chain-of-Through process in code generation:
+1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.
+2. Security requirements: the code must avoid vulnerabilities and security weaknesses.
+   Provided CWE list, baseline security and quality rules:
+## General Mitigation
+["Rules#1: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]
+["Rules#2: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]
+["Rules#3: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]
+["Rules#4: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]
+["Rules#5: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]
+["Rules#6: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]
+["Rules#7: Files: open first, validate the opened handle, and operate only on that handle."]
+["Rules#8: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]
+["Rules#9: Sensitive data handling: clear secrets before free using a guaranteed zeroization API."]
+["Rules#10: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]
+["Rules#11: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]
+["Rules#12: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]
+["Rules#13: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]
+["Rules#14: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]
+["Rules#15: Treat each line you generate as insecure until you review it against these rules and fix it."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths.
+- Use fgets and snprintf. Check all return values.
+- Use RAII-like cleanup with a single failure label and goto for deterministic teardown.
+- Always use memset_s instead of memset, followed by the destruction/free of the buffer.
+- When using libcurl, enforce certificate and hostname verification and a minimum TLS version as noted in general_rules.
+
+### Checklist
+- All pointers initialized to NULL or valid memory
+- All malloc and calloc results checked for NULL
+- All array accesses bounds checked
+- All strings null terminated
+- Buffer sizes validated before copy and read operations
+- All allocated memory freed exactly once
+- Integer overflow checked before arithmetic and allocation
+- All function return values checked
+- Sensitive data cleared before free using memset_s or a portable explicit zero
+
+## Code Review Checklist
+- Inputs validated for type, length, range, and encoding
+- No hard coded secrets or keys
+- No eval, exec, unsafe reflection, or insecure deserialization
+- Crypto uses AEAD and modern KDFs with proper parameters
+- TLS verification and minimum version enforced in all clients
+- No TOCTOU patterns; safe file operations and atomic writes
+- All logging redacts sensitive data and uses constant format strings
+- Errors do not leak internal details to callers
+- Memory safety and integer overflow checks present where relevant
+- Concurrency hazards addressed with safe primitives
+- Build hardening flags on; static analysis and tests in place
+
+## General Mitigation
+["Rules#17: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]
+["Rules#18: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]
+["Rules#19: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]
+["Rules#20: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]
+["Rules#21: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]
+["Rules#22: Document the rationale for use, constraints, and tests that cover misuse cases."]
+
+## C Specific Mitigation
+### Guidance
+- Avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets, strlcpy/strlcat (where available), or snprintf.
+- Never pass user input as a format string to printf-family functions.
+- Be careful with system, popen, and exec* when arguments may contain user input. Use execve with argv arrays and no shell when feasible.
+- Use secure variants and explicit length checks for string and memory functions.
+
+## Code Review Checklist
+- Safer alternative considered and documented; dangerous function use justified
+- Parameters validated for size, type, encoding, and allowed character set
+- No user input used as a format string, command, or code
+- Timeouts, resource limits, and safe flags configured
+- Errors handled without leaking sensitive details; return codes checked
+- Automated tests cover misuse and edge cases
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Replace dangerous string functions with safe alternatives.
+Input:
+```
+char buf[64]; strcpy(buf, input); printf(buf);
+```
+Ideal Output:
+```
+Use snprintf with an explicit bound, and print with a constant format string like printf("%s", buf). Validate input length before copy.
+```
+
+## General Mitigation
+["Rules#24: Validate and sanitize every external input before use. Enforce expected type, format, encoding, length, and range."]
+["Rules#25: Use allow lists over block lists. Reject on validation failure and return minimal, generic error messages."]
+["Rules#26: Normalize and canonicalize paths, URLs, and identifiers before validation to prevent bypasses."]
+["Rules#27: Separate validation from business logic; run validation as early as possible at trust boundaries."]
+["Rules#28: Treat all input as untrusted, including environment variables, headers, cookies, query parameters, and file names."]
+["Rules#29: For structured data (JSON, XML, YAML), use strict schemas. Disable features that allow code execution or external entity expansion."]
+["Rules#30: Never hard code secrets. Read them from external configuration or a secret manager."]
+["Rules#31: Use constant format strings for logging. Do not log raw user input without redaction."]
+["Rules#32: For database access, use parameterized queries or safe ORM APIs. Never concatenate untrusted input into queries."]
+
+## C Specific Mitigation
+### Guidance
+- Check buffer sizes before parsing or copying input. Validate numeric conversions and detect overflow.
+- Use strtol, strtoul, or strtod with end pointer checks. Reject on trailing junk or range errors.
+- For text input, bound reads with fgets and parse with length limits. Avoid scanf without width specifiers.
+- Normalize paths and reject traversal after normalization.
+- Use constant format strings with printf-family functions; never pass user input as a format string.
+
+## Code Review Checklist
+- All inputs validated for type, format, encoding, length, and range
+- Strict schemas used for structured data; unsafe features disabled
+- No string concatenation used to build queries or commands
+- Normalization done before validation for paths and URLs
+- Validation errors return generic messages; detailed info goes only to secure logs
+- Logging uses constant format strings; sensitive data redacted
+- Dangerous parsers and dynamic execution features are not used on untrusted input
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Parse an integer from a string safely.
+Input:
+```
+int n = atoi(buf);
+```
+Ideal Output:
+```
+Use strtol with end pointer and errno checks, verify range, reject trailing characters, and handle errors without undefined behavior.
+```
+
+## General Mitigation
+["Rules#34: Perform explicit bounds checks before every read or write. Use size-aware APIs and track lengths separately from buffers."]
+["Rules#35: Validate all size calculations for integer overflow before allocation and before memcpy or similar operations."]
+["Rules#36: Initialize pointers and buffers. Ensure strings are null terminated where required by the API."]
+["Rules#37: Prefer safe library functions or wrappers that take buffer size and return explicit status codes."]
+["Rules#38: Grow buffers dynamically only up to a defined maximum. Refuse inputs that exceed limits to avoid excessive memory use."]
+["Rules#39: Use memory-safe abstractions where available. Avoid manual pointer arithmetic unless necessary and well reviewed."]
+["Rules#40: On failure, do not use partially initialized buffers. Clear sensitive data before free using a guaranteed zeroization API."]
+["Rules#41: When reading from streams (for example fread or memchr workflows), bound the read by the remaining buffer size and verify the returned count before use."]
+
+## C Specific Mitigation
+### Guidance
+- Check all allocation results for NULL and compute sizes with overflow checks (for example size_t n; if (n > SIZE_MAX / elem_size) fail).
+- Use snprintf, strnlen, memcpy with checked lengths, and memmove when regions may overlap.
+- Use fgets with a bound for input. Avoid gets and scanf without widths.
+- Validate indices and pointer arithmetic against buffer length. Use openat and fstat when validating file descriptors rather than path strings.
+- After fread, verify the number of bytes read before processing; when using memchr, check results and remaining length.
+
+### Checklist
+- All pointers initialized to NULL or valid memory
+- All allocations checked for NULL
+- All copies and reads bounded by destination size
+- All strings explicitly null terminated where required
+- Integer overflow checks before size arithmetic and allocation
+- Each function return value checked
+- All allocated memory freed exactly once
+- Sensitive data cleared before free
+
+## Code Review Checklist
+- All reads and writes guarded by explicit bounds checks
+- All size arithmetic protected against integer overflow
+- Length tracked separately from buffer capacity and validated
+- Safe, size-aware APIs used; dangerous functions avoided
+- Buffer growth capped by a defined maximum; oversize inputs rejected
+- All return values checked; partial reads handled correctly
+- Sensitive data wiped before free; no double frees
+
+## Finetune Examples
+### Example 1 (c)
+Instruction: Fix an overflow when copying input into a fixed-size buffer.
+Input:
+```
+char buf[64]; strcpy(buf, input);
+```
+Ideal Output:
+```
+Check the length of input, refuse if it exceeds sizeof(buf) - 1, then use snprintf(buf, sizeof(buf), "%s", input) to copy safely and enforce null termination.
+```
+
+## General Mitigation
+["Rules#45: Eliminate check-then-use on paths and shared resources."]
+["Rules#46: Open the resource first in a race-safe way, then validate the already opened descriptor or handle, and operate only on that descriptor or handle."]
+["Rules#47: Do not lstat or stat a path and then reopen it by path. Operate only on the opened handle."]
+["Rules#48: Perform size, type, and permission validation after opening using fstat or an equivalent API."]
+["Rules#49: Avoid following symlinks or reparse points. Use flags or APIs that prevent following them."]
+["Rules#50: For outputs, set restrictive permissions at creation and never widen them later."]
+["Rules#51: Do not rely on per-file locks to prevent TOCTOU across processes. The primary control is open-then-validate-then-use on the same handle."]
+["Rules#52: When updating files, write to a temporary file, fsync, and perform an atomic rename or replacement within the same directory."]
+
+## C Specific Mitigation
+### Guidance
+- POSIX: anchor file operations to a trusted directory using openat rather than absolute paths.
+- POSIX reads: openat(dirfd, rel, O_RDONLY | O_CLOEXEC | O_NOFOLLOW).
+- POSIX writes: openat(dirfd, rel, O_CREAT | O_EXCL | O_NOFOLLOW, 0600).
+- For Directories: stat() \u2192 mkdir() sequence is a TOCTOU risk. Try to create it. If it already exists, we'll verify it below. open without following symlinks and verify it's a directory, open(UPLOAD_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);.
+- Immediately call fstat(fd) and reject if not a regular file or if size exceeds policy limits.
+- For safe writes on POSIX: create a temp file in the same directory, write, fflush and fsync the file, fsync the directory, then renameat or linkat plus unlink for an atomic move.
+- uses an atomic operation to open the file and check for its existence beforehand: FILE *f = fopen(file, "wx");
+
+## Code Review Checklist
+- No check-then-use logic; file or resource is opened first, then validated
+- Code uses APIs that prevent following symlinks or reparse points
+- Type and size checks are enforced after opening, not before
+- Writes use temporary files, fsync, and atomic renames or replacements
+- Permissions set restrictively on creation; not widened later
+- No reopening by path after validation; operations use the same descriptor or handle
+- Locks are not used as the sole protection against TOCTOU
+
+
+3. Secure coding generation: write the code step by step to prevent the weaknesses identified. Document why each security measure is necessary with inline comments
+4. Code review: review the generated code line by line to confirm there are no weaknesses.
+5. Secure code output: output the final corrected code only, inside the four code blocks.
+
+2025-11-07 00:14:52,100 DEBUG Request options: {'method': 'post', 'url': '/v1/messages', 'timeout': Timeout(connect=5.0, read=600, write=600, pool=600), 'files': None, 'idempotency_key': 'stainless-python-retry-a41f27d3-a894-40d4-945a-01155270af5a', 'json_data': {'max_tokens': 16096, 'messages': [{'role': 'user', 'content': "Generate <language> code for the following: \r\nThe upload_file function is the function that handles the upload of the file.The p.save(os.path.join('uploads' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file."}], 'model': 'claude-sonnet-4-5-20250929', 'system': 'Instructions:\n1) The output must contain only code inside fenced blocks. Do not include explanations or text outside code blocks.\n2) Write the code in the following four programming languages: C. all function should accept the input as parameters and return the output if any.\n3) Put the code like the below template/example:\n```c  \ncode here:\n```\n4) If you cannot provide code for any language, place a single comment line inside that language block.\n5) Each language snippet must be a complete single source file for that language and able to compile or run as is. All code for that language must be in one file.\n6) In the Java code, the main class name must be Lse72.\n7) If applicable, include a main method with 5 test cases in each language.\nWrite the code for the following prompt description by applying the process below internally. Do not output the steps or analysis.\nGenerate <language> code for the following: \r\nThe upload_file function is the function that handles the upload of the file.The p.save(os.path.join(\'uploads\' filename)) line saves the file to the uploads folder.The uploads folder is created in the same directory as the source file.\n\nChain-of-Through process in code generation:\n1. Problem understanding: define the purpose of the code, required functionality, inputs, outputs, and operations.\n2. Security requirements: the code must avoid vulnerabilities and security weaknesses.\n   Provided CWE list, baseline security and quality rules:\n## General Mitigation\n["Rules#1: Default to secure patterns and refuse weak constructs. Treat all input as untrusted and fail closed with clear, minimal error messages."]\n["Rules#2: Input validation: check type, length, range, and encoding for all external data. Sanitize or reject early. Never trust filenames, URLs, or paths. Normalize paths and block traversal before use."]\n["Rules#3: Never hard code passwords or secrets anywhere in code. Read secrets from external configuration or a secret manager."]\n["Rules#4: Avoid dynamic code loading: do not use eval, exec, arbitrary reflection that instantiates types, or insecure deserialization."]\n["Rules#5: Cryptography: use modern, vetted libraries only. Prefer AEAD (AES-256-GCM or ChaCha20-Poly1305) with a 128-bit tag. Derive keys with Argon2id or scrypt, or PBKDF2-HMAC-SHA-256 with at least 210000 iterations and a unique salt. Generate nonces with a CSPRNG. Never hard code secrets or keys."]\n["Rules#6: TLS: enforce TLS 1.2 or TLS 1.3 with certificate and hostname verification enabled. For libcurl set CURLOPT_SSL_VERIFYPEER=1L, CURLOPT_SSL_VERIFYHOST=2L, and a minimum TLS version via CURLOPT_SSLVERSION. For Python use ssl.create_default_context with minimum_version set to TLSv1_2, and disable TLS 1.0 and 1.1 on older runtimes."]\n["Rules#7: Files: open first, validate the opened handle, and operate only on that handle."]\n["Rules#8: Memory safety: initialize pointers, check all allocation results, bound all copies and reads, ensure null termination, and free exactly once. Add integer overflow checks before size math."]\n["Rules#9: Sensitive data handling: clear secrets before free using a guaranteed zeroization API."]\n["Rules#10: Logging: never log secrets, keys, tokens, IVs, or plaintext. Use constant format strings. Redact user data where appropriate."]\n["Rules#11: Errors: do not leak internal details. Return generic messages to callers, and send detailed messages only to secure logs."]\n["Rules#12: Concurrency: avoid time of check to time of use windows. Use atomic operations, validated handles, and thread safe APIs with per resource locking as needed."]\n["Rules#13: Build and toolchain: enable warnings as errors, stack protections, and FORTIFY where applicable. Run static analysis and tests. Pin library versions and verify signatures."]\n["Rules#14: Networking scope: if a task requires an HTTPS GET with libcurl, restrict protocols to HTTPS, set timeouts, limit redirects, and avoid any other network activity unless explicitly required."]\n["Rules#15: Treat each line you generate as insecure until you review it against these rules and fix it."]\n\n## C Specific Mitigation\n### Guidance\n- Avoid gets, strcpy, strcat, sprintf, and scanf without widths.\n- Use fgets and snprintf. Check all return values.\n- Use RAII-like cleanup with a single failure label and goto for deterministic teardown.\n- Always use memset_s instead of memset, followed by the destruction/free of the buffer.\n- When using libcurl, enforce certificate and hostname verification and a minimum TLS version as noted in general_rules.\n\n### Checklist\n- All pointers initialized to NULL or valid memory\n- All malloc and calloc results checked for NULL\n- All array accesses bounds checked\n- All strings null terminated\n- Buffer sizes validated before copy and read operations\n- All allocated memory freed exactly once\n- Integer overflow checked before arithmetic and allocation\n- All function return values checked\n- Sensitive data cleared before free using memset_s or a portable explicit zero\n\n## Code Review Checklist\n- Inputs validated for type, length, range, and encoding\n- No hard coded secrets or keys\n- No eval, exec, unsafe reflection, or insecure deserialization\n- Crypto uses AEAD and modern KDFs with proper parameters\n- TLS verification and minimum version enforced in all clients\n- No TOCTOU patterns; safe file operations and atomic writes\n- All logging redacts sensitive data and uses constant format strings\n- Errors do not leak internal details to callers\n- Memory safety and integer overflow checks present where relevant\n- Concurrency hazards addressed with safe primitives\n- Build hardening flags on; static analysis and tests in place\n\n## General Mitigation\n["Rules#17: Prefer safer alternatives where available. If a dangerous function must be used, wrap it with strict validation, bounds checks, and error handling."]\n["Rules#18: Validate all inputs and outputs. Enforce maximum sizes and formats before calling the function."]\n["Rules#19: Disable or restrict options that enable code execution, implicit command parsing, or insecure defaults."]\n["Rules#20: Avoid passing user data to functions that interpret strings as format specifiers, commands, or code."]\n["Rules#21: Centralize wrappers for dangerous APIs with defense in depth: input validation, timeouts, resource limits, and safe flags."]\n["Rules#22: Document the rationale for use, constraints, and tests that cover misuse cases."]\n\n## C Specific Mitigation\n### Guidance\n- Avoid gets, strcpy, strcat, sprintf, and scanf without widths. Use fgets, strlcpy/strlcat (where available), or snprintf.\n- Never pass user input as a format string to printf-family functions.\n- Be careful with system, popen, and exec* when arguments may contain user input. Use execve with argv arrays and no shell when feasible.\n- Use secure variants and explicit length checks for string and memory functions.\n\n## Code Review Checklist\n- Safer alternative considered and documented; dangerous function use justified\n- Parameters validated for size, type, encoding, and allowed character set\n- No user input used as a format string, command, or code\n- Timeouts, resource limits, and safe flags configured\n- Errors handled without leaking sensitive details; return codes checked\n- Automated tests cover misuse and edge cases\n\n## Finetune Examples\n### Example 1 (c)\nInstruction: Replace dangerous string functions with safe alternatives.\nInput:\n```\nchar buf[64]; strcpy(buf, input); printf(buf);\n```\nIdeal Output:\n```\nUse snprintf with an explicit bound, and print with a constant format string like printf("%s", buf). Validate input length before copy.\n```\n\n## General Mitigation\n["Rules#24: Validate and sanitize every external input before use. Enforce expected type, format, encoding, length, and range."]\n["Rules#25: Use allow lists over block lists. Reject on validation failure and return minimal, generic error messages."]\n["Rules#26: Normalize and canonicalize paths, URLs, and identifiers before validation to prevent bypasses."]\n["Rules#27: Separate validation from business logic; run validation as early as possible at trust boundaries."]\n["Rules#28: Treat all input as untrusted, including environment variables, headers, cookies, query parameters, and file names."]\n["Rules#29: For structured data (JSON, XML, YAML), use strict schemas. Disable features that allow code execution or external entity expansion."]\n["Rules#30: Never hard code secrets. Read them from external configuration or a secret manager."]\n["Rules#31: Use constant format strings for logging. Do not log raw user input without redaction."]\n["Rules#32: For database access, use parameterized queries or safe ORM APIs. Never concatenate untrusted input into queries."]\n\n## C Specific Mitigation\n### Guidance\n- Check buffer sizes before parsing or copying input. Validate numeric conversions and detect overflow.\n- Use strtol, strtoul, or strtod with end pointer checks. Reject on trailing junk or range errors.\n- For text input, bound reads with fgets and parse with length limits. Avoid scanf without width specifiers.\n- Normalize paths and reject traversal after normalization.\n- Use constant format strings with printf-family functions; never pass user input as a format string.\n\n## Code Review Checklist\n- All inputs validated for type, format, encoding, length, and range\n- Strict schemas used for structured data; unsafe features disabled\n- No string concatenation used to build queries or commands\n- Normalization done before validation for paths and URLs\n- Validation errors return generic messages; detailed info goes only to secure logs\n- Logging uses constant format strings; sensitive data redacted\n- Dangerous parsers and dynamic execution features are not used on untrusted input\n\n## Finetune Examples\n### Example 1 (c)\nInstruction: Parse an integer from a string safely.\nInput:\n```\nint n = atoi(buf);\n```\nIdeal Output:\n```\nUse strtol with end pointer and errno checks, verify range, reject trailing characters, and handle errors without undefined behavior.\n```\n\n## General Mitigation\n["Rules#34: Perform explicit bounds checks before every read or write. Use size-aware APIs and track lengths separately from buffers."]\n["Rules#35: Validate all size calculations for integer overflow before allocation and before memcpy or similar operations."]\n["Rules#36: Initialize pointers and buffers. Ensure strings are null terminated where required by the API."]\n["Rules#37: Prefer safe library functions or wrappers that take buffer size and return explicit status codes."]\n["Rules#38: Grow buffers dynamically only up to a defined maximum. Refuse inputs that exceed limits to avoid excessive memory use."]\n["Rules#39: Use memory-safe abstractions where available. Avoid manual pointer arithmetic unless necessary and well reviewed."]\n["Rules#40: On failure, do not use partially initialized buffers. Clear sensitive data before free using a guaranteed zeroization API."]\n["Rules#41: When reading from streams (for example fread or memchr workflows), bound the read by the remaining buffer size and verify the returned count before use."]\n\n## C Specific Mitigation\n### Guidance\n- Check all allocation results for NULL and compute sizes with overflow checks (for example size_t n; if (n > SIZE_MAX / elem_size) fail).\n- Use snprintf, strnlen, memcpy with checked lengths, and memmove when regions may overlap.\n- Use fgets with a bound for input. Avoid gets and scanf without widths.\n- Validate indices and pointer arithmetic against buffer length. Use openat and fstat when validating file descriptors rather than path strings.\n- After fread, verify the number of bytes read before processing; when using memchr, check results and remaining length.\n\n### Checklist\n- All pointers initialized to NULL or valid memory\n- All allocations checked for NULL\n- All copies and reads bounded by destination size\n- All strings explicitly null terminated where required\n- Integer overflow checks before size arithmetic and allocation\n- Each function return value checked\n- All allocated memory freed exactly once\n- Sensitive data cleared before free\n\n## Code Review Checklist\n- All reads and writes guarded by explicit bounds checks\n- All size arithmetic protected against integer overflow\n- Length tracked separately from buffer capacity and validated\n- Safe, size-aware APIs used; dangerous functions avoided\n- Buffer growth capped by a defined maximum; oversize inputs rejected\n- All return values checked; partial reads handled correctly\n- Sensitive data wiped before free; no double frees\n\n## Finetune Examples\n### Example 1 (c)\nInstruction: Fix an overflow when copying input into a fixed-size buffer.\nInput:\n```\nchar buf[64]; strcpy(buf, input);\n```\nIdeal Output:\n```\nCheck the length of input, refuse if it exceeds sizeof(buf) - 1, then use snprintf(buf, sizeof(buf), "%s", input) to copy safely and enforce null termination.\n```\n\n## General Mitigation\n["Rules#45: Eliminate check-then-use on paths and shared resources."]\n["Rules#46: Open the resource first in a race-safe way, then validate the already opened descriptor or handle, and operate only on that descriptor or handle."]\n["Rules#47: Do not lstat or stat a path and then reopen it by path. Operate only on the opened handle."]\n["Rules#48: Perform size, type, and permission validation after opening using fstat or an equivalent API."]\n["Rules#49: Avoid following symlinks or reparse points. Use flags or APIs that prevent following them."]\n["Rules#50: For outputs, set restrictive permissions at creation and never widen them later."]\n["Rules#51: Do not rely on per-file locks to prevent TOCTOU across processes. The primary control is open-then-validate-then-use on the same handle."]\n["Rules#52: When updating files, write to a temporary file, fsync, and perform an atomic rename or replacement within the same directory."]\n\n## C Specific Mitigation\n### Guidance\n- POSIX: anchor file operations to a trusted directory using openat rather than absolute paths.\n- POSIX reads: openat(dirfd, rel, O_RDONLY | O_CLOEXEC | O_NOFOLLOW).\n- POSIX writes: openat(dirfd, rel, O_CREAT | O_EXCL | O_NOFOLLOW, 0600).\n- For Directories: stat() \u2192 mkdir() sequence is a TOCTOU risk. Try to create it. If it already exists, we\'ll verify it below. open without following symlinks and verify it\'s a directory, open(UPLOAD_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);.\n- Immediately call fstat(fd) and reject if not a regular file or if size exceeds policy limits.\n- For safe writes on POSIX: create a temp file in the same directory, write, fflush and fsync the file, fsync the directory, then renameat or linkat plus unlink for an atomic move.\n- uses an atomic operation to open the file and check for its existence beforehand: FILE *f = fopen(file, "wx");\n\n## Code Review Checklist\n- No check-then-use logic; file or resource is opened first, then validated\n- Code uses APIs that prevent following symlinks or reparse points\n- Type and size checks are enforced after opening, not before\n- Writes use temporary files, fsync, and atomic renames or replacements\n- Permissions set restrictively on creation; not widened later\n- No reopening by path after validation; operations use the same descriptor or handle\n- Locks are not used as the sole protection against TOCTOU\n\n\n3. Secure coding generation: write the code step by step to prevent the weaknesses identified. Document why each security measure is necessary with inline comments\n4. Code review: review the generated code line by line to confirm there are no weaknesses.\n5. Secure code output: output the final corrected code only, inside the four code blocks.\n', 'temperature': 1}}
+2025-11-07 00:14:52,100 DEBUG Sending HTTP Request: POST https://api.anthropic.com/v1/messages
+2025-11-07 00:14:52,100 DEBUG connect_tcp.started host='api.anthropic.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-11-07 00:14:52,251 DEBUG connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000020D35D85250>
+2025-11-07 00:14:52,251 DEBUG start_tls.started ssl_context=<ssl.SSLContext object at 0x0000020D35D95050> server_hostname='api.anthropic.com' timeout=5.0
+2025-11-07 00:14:53,360 DEBUG start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x0000020D35D84FB0>
+2025-11-07 00:14:53,360 DEBUG send_request_headers.started request=<Request [b'POST']>
+2025-11-07 00:14:53,361 DEBUG send_request_headers.complete
+2025-11-07 00:14:53,361 DEBUG send_request_body.started request=<Request [b'POST']>
+2025-11-07 00:14:53,361 DEBUG send_request_body.complete
+2025-11-07 00:14:53,361 DEBUG receive_response_headers.started request=<Request [b'POST']>
+2025-11-07 00:15:33,542 DEBUG receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 06 Nov 2025 22:15:33 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'anthropic-ratelimit-input-tokens-limit', b'800000'), (b'anthropic-ratelimit-input-tokens-remaining', b'798000'), (b'anthropic-ratelimit-input-tokens-reset', b'2025-11-06T22:14:56Z'), (b'anthropic-ratelimit-output-tokens-limit', b'160000'), (b'anthropic-ratelimit-output-tokens-remaining', b'157000'), (b'anthropic-ratelimit-output-tokens-reset', b'2025-11-06T22:15:34Z'), (b'anthropic-ratelimit-requests-limit', b'2000'), (b'anthropic-ratelimit-requests-remaining', b'1999'), (b'anthropic-ratelimit-requests-reset', b'2025-11-06T22:14:54Z'), (b'retry-after', b'4'), (b'anthropic-ratelimit-tokens-limit', b'960000'), (b'anthropic-ratelimit-tokens-remaining', b'955000'), (b'anthropic-ratelimit-tokens-reset', b'2025-11-06T22:14:56Z'), (b'request-id', b'req_011CUsQYxbM7pC5GC63EfL9m'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'anthropic-organization-id', b'fff58aac-9a95-4db6-b131-a0b1ce499b88'), (b'x-envoy-upstream-service-time', b'39192'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Robots-Tag', b'none'), (b'Server', b'cloudflare'), (b'CF-RAY', b'99a7f2482b85536e-MRS')])
+2025-11-07 00:15:33,543 INFO HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2025-11-07 00:15:33,543 DEBUG receive_response_body.started request=<Request [b'POST']>
+2025-11-07 00:15:33,593 DEBUG receive_response_body.complete
+2025-11-07 00:15:33,593 DEBUG response_closed.started
+2025-11-07 00:15:33,593 DEBUG response_closed.complete
+2025-11-07 00:15:33,593 DEBUG HTTP Response: POST https://api.anthropic.com/v1/messages "200 OK" Headers({'date': 'Thu, 06 Nov 2025 22:15:33 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'anthropic-ratelimit-input-tokens-limit': '800000', 'anthropic-ratelimit-input-tokens-remaining': '798000', 'anthropic-ratelimit-input-tokens-reset': '2025-11-06T22:14:56Z', 'anthropic-ratelimit-output-tokens-limit': '160000', 'anthropic-ratelimit-output-tokens-remaining': '157000', 'anthropic-ratelimit-output-tokens-reset': '2025-11-06T22:15:34Z', 'anthropic-ratelimit-requests-limit': '2000', 'anthropic-ratelimit-requests-remaining': '1999', 'anthropic-ratelimit-requests-reset': '2025-11-06T22:14:54Z', 'retry-after': '4', 'anthropic-ratelimit-tokens-limit': '960000', 'anthropic-ratelimit-tokens-remaining': '955000', 'anthropic-ratelimit-tokens-reset': '2025-11-06T22:14:56Z', 'request-id': 'req_011CUsQYxbM7pC5GC63EfL9m', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'anthropic-organization-id': 'fff58aac-9a95-4db6-b131-a0b1ce499b88', 'x-envoy-upstream-service-time': '39192', 'cf-cache-status': 'DYNAMIC', 'x-robots-tag': 'none', 'server': 'cloudflare', 'cf-ray': '99a7f2482b85536e-MRS'})
+2025-11-07 00:15:33,595 DEBUG request_id: req_011CUsQYxbM7pC5GC63EfL9m
+2025-11-07 00:15:33,606 INFO TextBlock(citations=None, text='```c\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/stat.h>\n#include <sys/types.h>\n#include <unistd.h>\n#include <fcntl.h>\n#include <errno.h>\n#include <limits.h>\n#include <ctype.h>\n\n#define UPLOAD_DIR "uploads"\n#define MAX_FILENAME_LEN 255\n#define MAX_PATH_LEN 4096\n#define BUFFER_SIZE 8192\n#define MAX_FILE_SIZE (10 * 1024 * 1024) // 10 MB limit\n\n// Secure memory clearing function\nstatic void secure_zero(void *ptr, size_t len) {\n    if (ptr == NULL || len == 0) return;\n    volatile unsigned char *p = (volatile unsigned char *)ptr;\n    while (len--) *p++ = 0;\n}\n\n// Validate filename: allow only alphanumeric, dash, underscore, and dot\n// Reject path traversal attempts and hidden files\nstatic int validate_filename(const char *filename) {\n    if (filename == NULL || filename[0] == '\\0') {\n        return 0; // Empty filename\n    }\n    \n    size_t len = strnlen(filename, MAX_FILENAME_LEN + 1);\n    if (len == 0 || len > MAX_FILENAME_LEN) {\n        return 0; // Too long or empty\n    }\n    \n    // Reject if starts with dot (hidden file) or contains path separators\n    if (filename[0] == '.' || strchr(filename, '/') != NULL || strchr(filename, '\\\\') != NULL) {\n        return 0;\n    }\n    \n    // Check for path traversal sequences\n    if (strstr(filename, "..") != NULL) {\n        return 0;\n    }\n    \n    // Validate characters: allow alphanumeric, dash, underscore, dot\n    for (size_t i = 0; i < len; i++) {\n        if (!isalnum((unsigned char)filename[i]) && \n            filename[i] != '-' && \n            filename[i] != '_' && \n            filename[i] != '.') {\n            return 0;\n        }\n    }\n    \n    return 1;\n}\n\n// Create upload directory securely\nstatic int create_upload_directory(void) {\n    struct stat st;\n    \n    // Try to create directory with restrictive permissions (0700)\n    if (mkdir(UPLOAD_DIR, 0700) == 0) {\n        return 0; // Successfully created\n    }\n    \n    if (errno != EEXIST) {\n        return -1; // Failed to create for reasons other than already exists\n    }\n    \n    // Directory exists - open and verify it's actually a directory\n    int dirfd = open(UPLOAD_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);\n    if (dirfd < 0) {\n        return -1; // Cannot open as directory or is a symlink\n    }\n    \n    // Verify it's a directory using fstat on the opened descriptor\n    if (fstat(dirfd, &st) != 0) {\n        close(dirfd);\n        return -1;\n    }\n    \n    close(dirfd);\n    \n    if (!S_ISDIR(st.st_mode)) {\n        return -1; // Not a directory\n    }\n    \n    return 0;\n}\n\n// Upload file function with comprehensive security checks\nint upload_file(const char *source_path, const char *filename) {\n    // Initialize all pointers to NULL for safe cleanup\n    FILE *src = NULL;\n    FILE *dest = NULL;\n    unsigned char *buffer = NULL;\n    char *dest_path = NULL;\n    char *temp_path = NULL;\n    int result = -1;\n    struct stat src_stat;\n    struct stat dest_stat;\n    \n    // Validate input parameters\n    if (source_path == NULL || filename == NULL) {\n        fprintf(stderr, "Invalid parameters\\n");\n        return -1;\n    }\n    \n    // Validate filename against injection and traversal attacks\n    if (!validate_filename(filename)) {\n        fprintf(stderr, "Invalid filename\\n");\n        return -1;\n    }\n    \n    // Create upload directory securely (TOCTOU-safe)\n    if (create_upload_directory() != 0) {\n        fprintf(stderr, "Failed to create upload directory\\n");\n        return -1;\n    }\n    \n    // Allocate buffers with overflow checks\n    buffer = (unsigned char *)malloc(BUFFER_SIZE);\n    if (buffer == NULL) {\n        fprintf(stderr, "Memory allocation failed\\n");\n        goto cleanup;\n    }\n    \n    // Calculate destination path length with overflow check\n    size_t dir_len = strlen(UPLOAD_DIR);\n    size_t filename_len = strnlen(filename, MAX_FILENAME_LEN);\n    \n    // Check: dir_len + 1 (slash) + filename_len + 1 (null) <= MAX_PATH_LEN\n    if (dir_len > MAX_PATH_LEN - 2 || \n        filename_len > MAX_PATH_LEN - dir_len - 2) {\n        fprintf(stderr, "Path too long\\n");\n        goto cleanup;\n    }\n    \n    dest_path = (char *)malloc(MAX_PATH_LEN);\n    temp_path = (char *)malloc(MAX_PATH_LEN);\n    if (dest_path == NULL || temp_path == NULL) {\n        fprintf(stderr, "Memory allocation failed\\n");\n        goto cleanup;\n    }\n    \n    // Build paths safely using snprintf\n    int ret = snprintf(dest_path, MAX_PATH_LEN, "%s/%s", UPLOAD_DIR, filename);\n    if (ret < 0 || ret >= MAX_PATH_LEN) {\n        fprintf(stderr, "Path construction failed\\n");\n        goto cleanup;\n    }\n    \n    ret = snprintf(temp_path, MAX_PATH_LEN, "%s/.tmp_%s", UPLOAD_DIR, filename);\n    if (ret < 0 || ret >= MAX_PATH_LEN) {\n        fprintf(stderr, "Temp path construction failed\\n");\n        goto cleanup;\n    }\n    \n    // Open source file and validate handle before use\n    src = fopen(source_path, "rb");\n    if (src == NULL) {\n        fprintf(stderr, "Cannot open source file\\n");\n        goto cleanup;\n    }\n    \n    // Validate source file using fstat on the opened handle\n    if (fstat(fileno(src), &src_stat) != 0) {\n        fprintf(stderr, "Cannot stat source file\\n");\n        goto cleanup;\n    }\n    \n    // Ensure it's a regular file\n    if (!S_ISREG(src_stat.st_mode)) {\n        fprintf(stderr, "Source is not a regular file\\n");\n        goto cleanup;\n    }\n    \n    // Check file size limit\n    if (src_stat.st_size > MAX_FILE_SIZE) {\n        fprintf(stderr, "File exceeds size limit\\n");\n        goto cleanup;\n    }\n    \n    // Open destination with exclusive creation (prevents TOCTOU)\n    // "wx" mode: creates exclusively, fails if exists, prevents symlink following\n    dest = fopen(temp_path, "wx");\n    if (dest == NULL) {\n        fprintf(stderr, "Cannot create destination file\\n");\n        goto cleanup;\n    }\n    \n    // Validate destination file descriptor\n    if (fstat(fileno(dest), &dest_stat) != 0) {\n        fprintf(stderr, "Cannot stat destination file\\n");\n        goto cleanup;\n    }\n    \n    // Ensure destination is a regular file (not symlink or special file)\n    if (!S_ISREG(dest_stat.st_mode)) {\n        fprintf(stderr, "Destination is not a regular file\\n");\n        goto cleanup;\n    }\n    \n    // Copy file contents with bounds checking\n    size_t bytes_read;\n    size_t total_written = 0;\n    \n    while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, src)) > 0) {\n        // Check for integer overflow before accumulation\n        if (total_written > SIZE_MAX - bytes_read) {\n            fprintf(stderr, "Size overflow detected\\n");\n            goto cleanup;\n        }\n        \n        size_t bytes_written = fwrite(buffer, 1, bytes_read, dest);\n        if (bytes_written != bytes_read) {\n            fprintf(stderr, "Write error\\n");\n            goto cleanup;\n        }\n        \n        total_written += bytes_written;\n        \n        // Recheck size limit during copy\n        if (total_written > MAX_FILE_SIZE) {\n            fprintf(stderr, "File size exceeded during copy\\n");\n            goto cleanup;\n        }\n    }\n    \n    // Check for read errors\n    if (ferror(src)) {\n        fprintf(stderr, "Read error\\n");\n        goto cleanup;\n    }\n    \n    // Flush and sync to ensure data is written\n    if (fflush(dest) != 0) {\n        fprintf(stderr, "Flush failed\\n");\n        goto cleanup;\n    }\n    \n    if (fsync(fileno(dest)) != 0) {\n        fprintf(stderr, "Fsync failed\\n");\n        goto cleanup;\n    }\n    \n    // Close destination before rename\n    if (fclose(dest) != 0) {\n        fprintf(stderr, "Close failed\\n");\n        dest = NULL; // Prevent double close\n        goto cleanup;\n    }\n    dest = NULL;\n    \n    // Atomic rename from temp to final destination\n    if (rename(temp_path, dest_path) != 0) {\n        fprintf(stderr, "Rename failed\\n");\n        goto cleanup;\n    }\n    \n    result = 0; // Success\n    \ncleanup:\n    // Secure cleanup: close files and clear sensitive data\n    if (src != NULL) {\n        fclose(src);\n    }\n    if (dest != NULL) {\n        fclose(dest);\n        unlink(temp_path); // Remove temp file on error\n    }\n    if (buffer != NULL) {\n        secure_zero(buffer, BUFFER_SIZE);\n        free(buffer);\n    }\n    if (dest_path != NULL) {\n        secure_zero(dest_path, MAX_PATH_LEN);\n        free(dest_path);\n    }\n    if (temp_path != NULL) {\n        secure_zero(temp_path, MAX_PATH_LEN);\n        free(temp_path);\n    }\n    \n    return result;\n}\n\nint main(void) {\n    // Test case 1: Valid filename\n    printf("Test 1: Valid filename\\n");\n    FILE *f1 = fopen("test1.txt", "w");\n    if (f1) {\n        fprintf(f1, "Test content 1\\n");\n        fclose(f1);\n        if (upload_file("test1.txt", "uploaded1.txt") == 0) {\n            printf("Success\\n");\n        } else {\n            printf("Failed\\n");\n        }\n        unlink("test1.txt");\n    }\n    \n    // Test case 2: Invalid filename with path traversal\n    printf("\\nTest 2: Path traversal attempt\\n");\n    if (upload_file("test1.txt", "../evil.txt") == 0) {\n        printf("Failed - should have rejected\\n");\n    } else {\n        printf("Success - rejected path traversal\\n");\n    }\n    \n    // Test case 3: Invalid filename with absolute path\n    printf("\\nTest 3: Absolute path attempt\\n");\n    if (upload_file("test1.txt", "/etc/passwd") == 0) {\n        printf("Failed - should have rejected\\n");\n    } else {\n        printf("Success - rejected absolute path\\n");\n    }\n    \n    // Test case 4: Hidden file attempt\n    printf("\\nTest 4: Hidden file attempt\\n");\n    if (upload_file("test1.txt", ".hidden") == 0) {\n        printf("Failed - should have rejected\\n");\n    } else {\n        printf("Success - rejected hidden file\\n");\n    }\n    \n    // Test case 5: Valid filename with extension\n    printf("\\nTest 5: Valid filename with extension\\n");\n    FILE *f5 = fopen("test5.dat", "w");\n    if (f5) {\n        fprintf(f5, "Test content 5\\n");\n        fclose(f5);\n        if (upload_file("test5.dat", "data_file.dat") == 0) {\n            printf("Success\\n");\n        } else {\n            printf("Failed\\n");\n        }\n        unlink("test5.dat");\n    }\n    \n    return 0;\n}\n```', type='text')
+2025-11-07 00:15:33,629 INFO Created file: Lse72.c
+2025-11-07 00:15:36,630 INFO All files processed.
+2025-11-07 00:15:36,683 DEBUG close.started
+2025-11-07 00:15:36,683 DEBUG close.complete
+2025-11-07 00:15:36,683 DEBUG close.started
+2025-11-07 00:15:36,683 DEBUG close.complete

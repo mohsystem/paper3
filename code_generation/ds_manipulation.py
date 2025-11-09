@@ -1,7 +1,7 @@
 import json
 
 # 1. Read the dataset from a JSON file.
-file_path = "C:/data/PhD/paper3/cwes_ds/dataset/enriched_cwe_dataset_v5.json"
+file_path = "C:/data/PhD/paper3/cwes_ds/dataset/enriched_cwe_dataset_v6.json"
 with open(file_path, "r", encoding="utf-8") as f:
     cwe_data = json.load(f)
 

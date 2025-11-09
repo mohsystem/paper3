@@ -1,171 +1,150 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <string.h>
-#include <stdbool.h>
-#include <stdint.h>
-
-// For secure file I/O and random number generation on POSIX systems
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
 #include <errno.h>
 
-// On Linux, getrandom is available. On other POSIX systems, fall back to /dev/urandom.
-#if defined(__linux__) && __has_include(<sys/random.h>)
-#include <sys/random.h>
-#define USE_GETRANDOM 1
-#endif
-
 /**
- * Fills a buffer with cryptographically secure random bytes.
- * @param buf The buffer to fill.
- * @param len The number of bytes to generate.
- * @return true on success, false on failure.
+ * @brief Generates 3 random floats, concatenates them into a string, 
+ *        and writes the string to a new file.
+ * 
+ * This function creates a new file and writes to it. It uses exclusive create
+ * mode ("wx") for the file opening, which is an atomic operation that prevents 
+ * race conditions (TOCTOU) and avoids overwriting existing files.
+ *
+ * @param filename The path to the file to be created. The function will fail 
+ *                 if the file already exists. The filename must not be NULL 
+ *                 or an empty string.
+ * @return 0 on success, -1 on failure.
  */
-bool get_secure_random_bytes(void* buf, size_t len) {
-#if USE_GETRANDOM
-    ssize_t bytes_read = getrandom(buf, len, 0);
-    if (bytes_read < 0 || (size_t)bytes_read != len) {
-        return false;
-    }
-    return true;
-#else
-    int fd = open("/dev/urandom", O_RDONLY);
-    if (fd == -1) {
-        perror("Failed to open /dev/urandom");
-        return false;
-    }
-    ssize_t bytes_read = read(fd, buf, len);
-    close(fd);
-    if (bytes_read < 0 || (size_t)bytes_read != len) {
-        return false;
-    }
-    return true;
-#endif
-}
-
-/**
- * Validates a filename to prevent path traversal.
- * @param filename The filename to check.
- * @return true if the filename is simple and does not contain path components.
- */
-bool is_valid_filename(const char* filename) {
-    if (filename == NULL || filename[0] == '\0') return false;
-    // Rule #1: Prevent path traversal.
-    if (strchr(filename, '/') != NULL || strchr(filename, '\\') != NULL ||
-        strcmp(filename, ".") == 0 || strcmp(filename, "..") == 0) {
-        return false;
-    }
-    return true;
-}
-
-/**
- * Generates 3 random floats, concatenates them, and writes to a file securely.
- * @param fileName The name of the file to create.
- * @return true if successful, false otherwise.
- */
-bool generateAndWriteRandomFloats(const char* fileName) {
-    if (!is_valid_filename(fileName)) {
-        fprintf(stderr, "Error: Invalid file name '%s'. Path components are not allowed.\n", fileName);
-        return false;
+int generate_and_write_floats(const char *filename) {
+    // Rule #16: Input validation. Check for NULL or empty filename.
+    if (filename == NULL || filename[0] == '\0') {
+        fprintf(stderr, "Error: Invalid filename provided.\n");
+        return -1;
     }
 
-    // 1. Generate 3 random floats.
-    float random_floats[3];
-    for (int i = 0; i < 3; ++i) {
-        uint32_t random_int;
-        if (!get_secure_random_bytes(&random_int, sizeof(random_int))) {
-            fprintf(stderr, "Error: Failed to generate secure random numbers.\n");
-            return false;
-        }
-        random_floats[i] = (float)random_int / (float)UINT32_MAX;
-    }
+    // Generate 3 random floats between 0.0 and 1.0
+    float f1 = (float)rand() / (float)RAND_MAX;
+    float f2 = (float)rand() / (float)RAND_MAX;
+    float f3 = (float)rand() / (float)RAND_MAX;
 
-    // 2 & 3. Convert to strings and concatenate into a buffer.
+    // Buffer to hold the concatenated string of floats.
+    // A standard float string representation is relatively small.
+    // 128 bytes is a safe size for three floats and separators.
     char buffer[128];
-    int offset = 0;
-    int remaining = sizeof(buffer);
-    for (int i = 0; i < 3; ++i) {
-        int written = snprintf(buffer + offset, remaining, "%f", random_floats[i]);
-        if (written < 0 || written >= remaining) {
-            fprintf(stderr, "Error: snprintf buffer overflow during string construction.\n");
-            return false;
-        }
-        offset += written;
-        remaining -= written;
-    }
-
-    // 4. Write to file securely.
-    // Rules #2, #3: Use open() with O_CREAT | O_EXCL for a race-safe operation.
-    int fd = open(fileName, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-    if (fd == -1) {
-        fprintf(stderr, "Error opening file %s: %s\n", fileName, strerror(errno));
-        return false;
-    }
     
-    ssize_t content_len = strlen(buffer);
-    ssize_t bytes_written = write(fd, buffer, content_len);
-    if (bytes_written < 0 || (size_t)bytes_written != content_len) {
-        fprintf(stderr, "Error writing to file %s: %s\n", fileName, strerror(errno));
-        close(fd);
-        unlink(fileName); // Clean up partially written file.
-        return false;
+    // Rule #36 (C-specific): Use snprintf to prevent buffer overflows.
+    // It returns the number of characters that would have been written.
+    int chars_written = snprintf(buffer, sizeof(buffer), "%.8f, %.8f, %.8f", f1, f2, f3);
+
+    // Check for snprintf errors or truncation.
+    // Rule #22: Check all function return values.
+    if (chars_written < 0) {
+        fprintf(stderr, "Error: snprintf encoding error occurred.\n");
+        return -1;
+    }
+    if ((size_t)chars_written >= sizeof(buffer)) {
+        fprintf(stderr, "Error: snprintf output was truncated. Buffer too small.\n");
+        return -1;
     }
 
-    if (close(fd) == -1) {
-        fprintf(stderr, "Error closing file %s: %s\n", fileName, strerror(errno));
-        return false;
+    FILE *file = NULL;
+
+    // C-Specific Mitigation: Use "wx" mode for atomic file creation.
+    // This prevents TOCTOU (Time-of-Check to Time-of-Use) race conditions
+    // by ensuring the file is created and opened in a single, atomic step.
+    // It fails if the file already exists. This follows Rules #6, #7, #21.
+    file = fopen(filename, "wx");
+    if (file == NULL) {
+        // perror provides a descriptive error message from the OS (e.g., "File exists")
+        // Rule #25: Do not leak internal details. perror is safe.
+        perror("Error opening file for exclusive writing");
+        return -1;
     }
 
-    return true;
+    // Write the concatenated string to the file.
+    if (fputs(buffer, file) == EOF) {
+        perror("Error writing to file");
+        fclose(file); // Attempt to close the file even on write error
+        return -1;
+    }
+
+    // Close the file stream.
+    if (fclose(file) != 0) {
+        perror("Error closing file");
+        return -1;
+    }
+
+    return 0;
 }
-
-void run_test_case(const char* fileName) {
-    unlink(fileName); // Clean up before test.
-
-    printf("Attempting to write to: %s\n", fileName);
-    if (generateAndWriteRandomFloats(fileName)) {
-        printf("Successfully wrote to %s\n", fileName);
-        FILE* f = fopen(fileName, "r");
-        if (f) {
-            char buffer[256] = {0};
-            if (fgets(buffer, sizeof(buffer), f) != NULL) {
-                 printf("File content: %s\n", buffer);
-            } else if (feof(f)) {
-                 printf("File content: (empty)\n");
-            } else {
-                 fprintf(stderr, "Failed to read back file content.\n");
-            }
-            fclose(f);
-        } else {
-            fprintf(stderr, "Failed to open file for reading back.\n");
-        }
-    } else {
-        fprintf(stderr, "Failed to write to %s\n", fileName);
-    }
-    printf("---\n");
-}
-
 
 int main(void) {
-    printf("Running C test cases...\n");
-    
-    const char* testFiles[] = {
-        "c_test1.txt", "c_test2.txt", "c_test3.txt", "c_test4.txt", "c_test5.txt"
-    };
-    int num_tests = sizeof(testFiles) / sizeof(testFiles[0]);
+    // Seed the random number generator once at the beginning of the program.
+    srand((unsigned int)time(NULL));
 
-    for (int i = 0; i < num_tests; ++i) {
-        run_test_case(testFiles[i]);
-    }
+    printf("--- Running Test Cases ---\n\n");
 
-    // Test case with an invalid path.
-    printf("Testing invalid path...\n");
-    if (!generateAndWriteRandomFloats("../invalid_test.txt")) {
-        printf("Correctly failed to write to invalid path.\n");
+    // Test Case 1: Successful creation
+    const char* file1 = "output1.txt";
+    printf("Test 1: Writing to %s\n", file1);
+    // For test repeatability, remove the file if it exists from a previous run.
+    // In a real application, the failure on an existing file would be desired.
+    remove(file1); 
+    if (generate_and_write_floats(file1) == 0) {
+        printf("Test 1: Success. File '%s' created.\n", file1);
     } else {
-        fprintf(stderr, "Incorrectly allowed writing to invalid path.\n");
+        printf("Test 1: Failed.\n");
     }
+    printf("\n");
+
+    // Test Case 2: Another successful creation
+    const char* file2 = "output2.txt";
+    printf("Test 2: Writing to %s\n", file2);
+    remove(file2);
+    if (generate_and_write_floats(file2) == 0) {
+        printf("Test 2: Success. File '%s' created.\n", file2);
+    } else {
+        printf("Test 2: Failed.\n");
+    }
+    printf("\n");
+    
+    // Test Case 3: Test failure on an existing file
+    const char* file3 = "output3.txt";
+    printf("Test 3: Attempting to write to '%s' twice.\n", file3);
+    remove(file3);
+    if (generate_and_write_floats(file3) == 0) {
+        printf("Test 3: First write successful (as expected).\n");
+        // Second attempt should fail because the file now exists.
+        if (generate_and_write_floats(file3) != 0) {
+            printf("Test 3: Second write failed as expected ('File exists').\n");
+        } else {
+            printf("Test 3: Second write succeeded (UNEXPECTED).\n");
+        }
+    } else {
+        printf("Test 3: First write failed (UNEXPECTED).\n");
+    }
+    printf("\n");
+
+    // Test Case 4: Test with NULL filename
+    printf("Test 4: Calling with NULL filename.\n");
+    if (generate_and_write_floats(NULL) != 0) {
+        printf("Test 4: Failed as expected.\n");
+    } else {
+        printf("Test 4: Succeeded (UNEXPECTED).\n");
+    }
+    printf("\n");
+
+    // Test Case 5: Test with empty filename
+    printf("Test 5: Calling with empty filename.\n");
+    if (generate_and_write_floats("") != 0) {
+        printf("Test 5: Failed as expected.\n");
+    } else {
+        printf("Test 5: Succeeded (UNEXPECTED).\n");
+    }
+    printf("\n");
+
+    printf("--- Test Cases Finished ---\n");
 
     return 0;
 }

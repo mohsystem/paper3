@@ -3,189 +3,228 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 #include <openssl/rand.h>
 
-#define SALT_LENGTH 16
-#define USERNAME_MIN 3
-#define USERNAME_MAX 50
-#define PASSWORD_MIN 8
-#define PASSWORD_MAX 128
-#define BASE64_ENCODE_OUT_SIZE(s) (((s) + 2) / 3 * 4 + 1)
+/* Maximum input lengths to prevent buffer overflows */
+#define MAX_USERNAME_LEN 64
+#define MAX_PASSWORD_LEN 128
+#define SALT_LEN 16
+#define HASH_LEN 32
+#define ENCODED_HASH_LEN ((HASH_LEN + SALT_LEN) * 2 + 1)
 
-/* Base64 encoding table */
-static const char base64_chars[] = 
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-/**
- * Encodes binary data to base64 string.
- * Caller must free the returned string.
- */
-char* base64_encode(const unsigned char* data, size_t input_length) {
-    size_t output_length = BASE64_ENCODE_OUT_SIZE(input_length);
-    char* encoded_data = (char*)malloc(output_length);
-    if (encoded_data == NULL) {
-        return NULL;
-    }
-    
-    size_t i, j;
-    for (i = 0, j = 0; i < input_length;) {
-        uint32_t octet_a = i < input_length ? data[i++] : 0;
-        uint32_t octet_b = i < input_length ? data[i++] : 0;
-        uint32_t octet_c = i < input_length ? data[i++] : 0;
-        uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
-        
-        encoded_data[j++] = base64_chars[(triple >> 3 * 6) & 0x3F];
-        encoded_data[j++] = base64_chars[(triple >> 2 * 6) & 0x3F];
-        encoded_data[j++] = base64_chars[(triple >> 1 * 6) & 0x3F];
-        encoded_data[j++] = base64_chars[(triple >> 0 * 6) & 0x3F];
-    }
-    
-    /* Add padding */
-    static const int mod_table[] = {0, 2, 1};
-    for (i = 0; i < mod_table[input_length % 3]; i++) {
-        encoded_data[output_length - 2 - i] = '=';
-    }
-    
-    encoded_data[output_length - 1] = '\\0';
-    return encoded_data;
+/* Secure memory clearing - prevents compiler optimization from removing memset */
+static void secure_zero(void *ptr, size_t len) {
+    if (ptr == NULL || len == 0) return;
+    volatile unsigned char *p = ptr;
+    while (len--) *p++ = 0;
 }
 
-/**
- * Generates cryptographically secure random salt using OpenSSL.
- * Caller must free the returned string.
- */
-char* generate_salt(void) {
-    unsigned char salt[SALT_LENGTH];
+/* Hash password using PBKDF2-HMAC-SHA256 with random salt */
+static int hash_password(const char *password, char *output, size_t output_size) {
+    unsigned char salt[SALT_LEN];
+    unsigned char hash[HASH_LEN];
+    int i;
     
-    /* Use OpenSSL's CSPRNG */\n    if (RAND_bytes(salt, SALT_LENGTH) != 1) {\n        return NULL;\n    }\n    \n    return base64_encode(salt, SALT_LENGTH);\n}\n\n/**\n * Hashes password with salt using SHA-256.\n * Note: For production, use bcrypt, scrypt, or Argon2id.\n * Caller must free the returned string.\n */\nchar* hash_password(const char* password, const char* salt) {\n    if (password == NULL || salt == NULL) {\n        return NULL;\n    }\n    \n    size_t password_len = strlen(password);\n    size_t salt_len = strlen(salt);\n    size_t salted_len = password_len + salt_len;\n    \n    /* Check for overflow */\n    if (salted_len < password_len || salted_len < salt_len) {\n        return NULL;\n    }\n    \n    char* salted_password = (char*)malloc(salted_len + 1);\n    if (salted_password == NULL) {\n        return NULL;\n    }\n    \n    /* Safely combine password and salt */\n    memcpy(salted_password, password, password_len);\n    memcpy(salted_password + password_len, salt, salt_len);\n    salted_password[salted_len] = '\\0';\n    \n    unsigned char hash[SHA256_DIGEST_LENGTH];\n    SHA256((unsigned char*)salted_password, salted_len, hash);\n    \n    /* Clear salted password from memory */\n    memset(salted_password, 0, salted_len);\n    free(salted_password);\n    \n    return base64_encode(hash, SHA256_DIGEST_LENGTH);\n}\n\n/**\n * Validates username format and length.\n */\nint is_valid_username(const char* username) {\n    if (username == NULL) {\n        return 0;\n    }\n    \n    size_t len = strlen(username);\n    if (len < USERNAME_MIN || len > USERNAME_MAX) {\n        return 0;\n    }\n    \n    /* Check for allowed characters only */\n    for (size_t i = 0; i < len; i++) {\n        char c = username[i];\n        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || \n              (c >= '0' && c <= '9') || c == '_' || c == '-')) {
-            return 0;
+    /* Validate inputs - Rules#2: Input validation */
+    if (password == NULL || output == NULL || output_size < ENCODED_HASH_LEN) {
+        return -1;
+    }
+    
+    /* Generate random salt using CSPRNG - Rules#5: Cryptography */
+    if (RAND_bytes(salt, SALT_LEN) != 1) {
+        return -1;
+    }
+    
+    /* Derive key using PBKDF2-HMAC-SHA256 with 210000 iterations - Rules#5 */
+    if (PKCS5_PBKDF2_HMAC(password, (int)strlen(password),
+                          salt, SALT_LEN,
+                          210000,
+                          EVP_sha256(),
+                          HASH_LEN, hash) != 1) {
+        secure_zero(salt, SALT_LEN);
+        return -1;
+    }
+    
+    /* Encode salt and hash as hex string for storage */
+    for (i = 0; i < SALT_LEN; i++) {
+        snprintf(output + (i * 2), 3, "%02x", salt[i]);
+    }
+    for (i = 0; i < HASH_LEN; i++) {
+        snprintf(output + (SALT_LEN * 2) + (i * 2), 3, "%02x", hash[i]);
+    }
+    output[ENCODED_HASH_LEN - 1] = '\\0';
+    
+    /* Clear sensitive data - Rules#9: Sensitive data handling */
+    secure_zero(salt, SALT_LEN);
+    secure_zero(hash, HASH_LEN);
+    
+    return 0;
+}
+
+/* Validate username: alphanumeric only, max length - Rules#2: Input validation */
+static int validate_username(const char *username) {
+    size_t len;
+    size_t i;
+    
+    if (username == NULL) return -1;
+    
+    len = strnlen(username, MAX_USERNAME_LEN + 1);
+    if (len == 0 || len > MAX_USERNAME_LEN) {
+        return -1;
+    }
+    
+    /* Allow list: alphanumeric and underscore only - Rules#25: Use allow lists */
+    for (i = 0; i < len; i++) {
+        if (!((username[i] >= 'a' && username[i] <= 'z') ||
+              (username[i] >= 'A' && username[i] <= 'Z') ||
+              (username[i] >= '0' && username[i] <= '9') ||
+              username[i] == '_')) {
+            return -1;
         }
     }
     
-    return 1;
+    return 0;
 }
 
-/**
- * Validates password length.
- */
-int is_valid_password(const char* password) {
-    if (password == NULL) {
-        return 0;
+/* Validate password: minimum length, max length - Rules#2: Input validation */
+static int validate_password(const char *password) {
+    size_t len;
+    
+    if (password == NULL) return -1;
+    
+    len = strnlen(password, MAX_PASSWORD_LEN + 1);
+    if (len < 8 || len > MAX_PASSWORD_LEN) {
+        return -1;
     }
     
-    size_t len = strlen(password);
-    return (len >= PASSWORD_MIN && len <= PASSWORD_MAX);
+    return 0;
 }
 
-/**
- * Inserts user into database with hashed password.
- * Uses parameterized queries to prevent SQL injection.
- */
-int insert_user(const char* username, const char* password) {
-    sqlite3* db = NULL;
-    sqlite3_stmt* stmt = NULL;
-    char* salt = NULL;
-    char* hashed_password = NULL;
-    int result = 0;
+/* Insert user into database using parameterized query - Rules#32 */
+static int insert_user(const char *username, const char *password_hash) {
+    sqlite3 *db = NULL;
+    sqlite3_stmt *stmt = NULL;
+    int rc;
+    int result = -1;
     
     /* Validate inputs */
-    if (!is_valid_username(username)) {
-        fprintf(stderr, "Invalid username format\\n");
-        return 0;
+    if (username == NULL || password_hash == NULL) {
+        return -1;
     }
     
-    if (!is_valid_password(password)) {
-        fprintf(stderr, "Invalid password format\\n");
-        return 0;
-    }
-    
-    /* Generate salt */
-    salt = generate_salt();
-    if (salt == NULL) {
-        fprintf(stderr, "Failed to generate salt\\n");
-        return 0;
-    }
-    
-    /* Hash password */
-    hashed_password = hash_password(password, salt);
-    if (hashed_password == NULL) {
-        fprintf(stderr, "Failed to hash password\\n");
-        free(salt);
-        return 0;
-    }
-    
-    /* Open database */
-    if (sqlite3_open(":memory:", &db) != SQLITE_OK) {
-        fprintf(stderr, "Database error occurred\\n");
+    /* Open database with restrictive flags */
+    rc = sqlite3_open_v2("users.db", &db, 
+                         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database\\n"); /* Rules#11: Generic error */
         goto cleanup;
     }
     
-    /* Create table */
-    const char* create_table_sql = 
-        "CREATE TABLE IF NOT EXISTS users ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "username TEXT UNIQUE NOT NULL, "
-        "password_hash TEXT NOT NULL, "
-        "salt TEXT NOT NULL)";
-    
-    if (sqlite3_exec(db, create_table_sql, NULL, NULL, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Database error occurred\\n");
+    /* Create table if not exists */
+    rc = sqlite3_exec(db, 
+                      "CREATE TABLE IF NOT EXISTS users ("
+                      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "username TEXT UNIQUE NOT NULL, "
+                      "password_hash TEXT NOT NULL)",
+                      NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to create table\\n");
         goto cleanup;
     }
     
-    /* Prepare parameterized statement */
-    const char* insert_sql = 
-        "INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)";
-    
-    if (sqlite3_prepare_v2(db, insert_sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Database error occurred\\n");
+    /* Prepare parameterized statement - Rules#32: Use parameterized queries */
+    rc = sqlite3_prepare_v2(db,
+                           "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                           -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to prepare statement\\n");
         goto cleanup;
     }
     
-    /* Bind parameters to prevent SQL injection */
-    sqlite3_bind_text(stmt, 1, username, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, hashed_password, -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 3, salt, -1, SQLITE_TRANSIENT);
+    /* Bind parameters - prevents SQL injection */
+    rc = sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to bind username\\n");
+        goto cleanup;
+    }
+    
+    rc = sqlite3_bind_text(stmt, 2, password_hash, -1, SQLITE_STATIC);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to bind password hash\\n");
+        goto cleanup;
+    }
     
     /* Execute statement */
-    if (sqlite3_step(stmt) == SQLITE_DONE) {
-        result = 1;
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_DONE) {
+        printf("User registered successfully\\n");
+        result = 0;
+    } else if (rc == SQLITE_CONSTRAINT) {
+        fprintf(stderr, "Username already exists\\n"); /* Rules#11: Generic error */
+    } else {
+        fprintf(stderr, "Failed to insert user\\n");
     }
     
 cleanup:
+    /* Clean up resources - Rules#8: Memory safety */
     if (stmt != NULL) {
         sqlite3_finalize(stmt);
     }
     if (db != NULL) {
         sqlite3_close(db);
     }
-    if (hashed_password != NULL) {
-        memset(hashed_password, 0, strlen(hashed_password));
-        free(hashed_password);
+    
+    return result;
+}
+
+/* Main registration function */
+int register_user(const char *username, const char *password) {
+    char password_hash[ENCODED_HASH_LEN];
+    int result = -1;
+    
+    /* Validate inputs - Rules#2: Input validation */
+    if (validate_username(username) != 0) {
+        fprintf(stderr, "Invalid username\\n");
+        return -1;
     }
-    if (salt != NULL) {
-        free(salt);
+    
+    if (validate_password(password) != 0) {
+        fprintf(stderr, "Invalid password\\n");
+        return -1;
     }
+    
+    /* Hash password - Rules#5: Cryptography */
+    if (hash_password(password, password_hash, sizeof(password_hash)) != 0) {
+        fprintf(stderr, "Failed to hash password\\n");
+        return -1;
+    }
+    
+    /* Insert into database */
+    result = insert_user(username, password_hash);
+    
+    /* Clear sensitive data - Rules#9: Sensitive data handling */
+    secure_zero(password_hash, sizeof(password_hash));
     
     return result;
 }
 
 int main(void) {
-    /* Test case 1: Valid username and password */
-    printf("Test 1: %d\\n", insert_user("john_doe", "SecurePass123!"));
+    /* Test cases - Rules#10: Logging never logs secrets */
+    printf("Test Case 1: Valid registration\\n");
+    register_user("alice", "SecurePass123!");
     
-    /* Test case 2: Another valid user */
-    printf("Test 2: %d\\n", insert_user("jane-smith", "MyP@ssw0rd2024"));
+    printf("\\nTest Case 2: Valid registration different user\\n");
+    register_user("bob_user", "AnotherPass456");
     
-    /* Test case 3: Invalid username (too short) */
-    printf("Test 3: %d\\n", insert_user("ab", "ValidPassword1"));
+    printf("\\nTest Case 3: Duplicate username (should fail)\\n");
+    register_user("alice", "DifferentPass789");
     
-    /* Test case 4: Invalid password (too short) */
-    printf("Test 4: %d\\n", insert_user("validuser", "short"));
+    printf("\\nTest Case 4: Invalid username (special chars)\\n");
+    register_user("user@invalid", "ValidPass123");
     
-    /* Test case 5: Valid edge case */
-    printf("Test 5: %d\\n", insert_user("user123", "LongPassword123456"));
+    printf("\\nTest Case 5: Invalid password (too short)\\n");
+    register_user("charlie", "short");
     
     return 0;
 }

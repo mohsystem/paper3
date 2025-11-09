@@ -1,189 +1,264 @@
+// Secure user insertion with password hashing using libsodium and SQLite3.
+// Build example (Linux/macOS):
+//   cc -Wall -Wextra -O2 secure_insert.c -lsqlite3 -lsodium -o secure_insert
+// Run:
+//   ./secure_insert
+
 #include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <errno.h>
 
-#include <openssl/evp.h>
-#include <openssl/rand.h>
-#include <openssl/crypto.h>
+#include <sqlite3.h>
+#include <sodium.h>
 
-#define SALT_LEN 16
-#define DK_LEN 32
-#define PBKDF2_ITERS 210000
+#define USERNAME_MIN_LEN 3
+#define USERNAME_MAX_LEN 64
+#define PASSWORD_MIN_LEN 12
+#define PASSWORD_MAX_LEN 256
 
-static bool is_valid_username(const char* username) {
-    if (!username) return false;
-    size_t len = strlen(username);
-    if (len < 3 || len > 32) return false;
+// Application error codes
+enum {
+    APP_OK = 0,
+    APP_ERR_INVALID_INPUT = 1,
+    APP_ERR_WEAK_PASSWORD = 2,
+    APP_ERR_DB = 3,
+    APP_ERR_DUPLICATE = 4,
+    APP_ERR_INTERNAL = 5
+};
+
+// Validate username: length and allowed characters (allow-list)
+int validate_username(const char *username) {
+    if (username == NULL) return APP_ERR_INVALID_INPUT;
+
+    size_t len = strnlen(username, USERNAME_MAX_LEN + 1);
+    if (len < USERNAME_MIN_LEN || len > USERNAME_MAX_LEN) {
+        return APP_ERR_INVALID_INPUT;
+    }
+
     for (size_t i = 0; i < len; i++) {
-        char c = username[i];
-        if (!(isalnum((unsigned char)c) || c == '_')) return false;
-    }
-    return true;
-}
-
-static bool is_strong_password(const char* password) {
-    if (!password) return false;
-    size_t len = strlen(password);
-    if (len < 12) return false;
-    int hasLower = 0, hasUpper = 0, hasDigit = 0, hasSpecial = 0;
-    for (size_t i = 0; i < len; i++) {
-        unsigned char c = (unsigned char)password[i];
-        if (islower(c)) hasLower = 1;
-        else if (isupper(c)) hasUpper = 1;
-        else if (isdigit(c)) hasDigit = 1;
-        else hasSpecial = 1;
-    }
-    return hasLower && hasUpper && hasDigit && hasSpecial;
-}
-
-static char* b64_encode(const unsigned char* data, int len) {
-    int out_len = 4 * ((len + 2) / 3);
-    unsigned char* out = (unsigned char*)calloc((size_t)out_len + 1, 1);
-    if (!out) return NULL;
-    int written = EVP_EncodeBlock(out, data, len);
-    if (written < 0) {
-        free(out);
-        return NULL;
-    }
-    char* s = (char*)out;
-    s[written] = '\0';
-    return s;
-}
-
-static bool ensure_db_file(const char* path) {
-    struct stat st;
-    if (stat(path, &st) == 0) return true;
-    int fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0600);
-    if (fd < 0) return false;
-    // Optional header write (none)
-    close(fd);
-    return true;
-}
-
-static bool username_exists(const char* path, const char* username) {
-    FILE* f = fopen(path, "r");
-    if (!f) return false;
-    char line[4096];
-    bool exists = false;
-    while (fgets(line, sizeof(line), f)) {
-        if (line[0] == '\0') continue;
-        // Extract username until '|'
-        char* p = strchr(line, '|');
-        if (!p) continue;
-        *p = '\0';
-        if (strcmp(line, username) == 0) {
-            exists = true;
-            break;
+        unsigned char c = (unsigned char)username[i];
+        // Allowed: A-Z a-z 0-9 _ . -
+        if (!((c >= 'a' && c <= 'z') ||
+              (c >= 'A' && c <= 'Z') ||
+              (c >= '0' && c <= '9') ||
+              c == '_' || c == '.' || c == '-')) {
+            return APP_ERR_INVALID_INPUT;
         }
     }
-    fclose(f);
-    return exists;
+    return APP_OK;
 }
 
-static bool hash_password(const unsigned char* pass, size_t pass_len, char** outSaltB64, char** outHashB64) {
-    unsigned char salt[SALT_LEN];
-    if (RAND_bytes(salt, SALT_LEN) != 1) {
-        return false;
+// Validate password policy: min length, and presence of upper, lower, digit, special
+int validate_password_policy(const char *password) {
+    if (password == NULL) return APP_ERR_INVALID_INPUT;
+
+    size_t len = strnlen(password, PASSWORD_MAX_LEN + 1);
+    if (len < PASSWORD_MIN_LEN || len > PASSWORD_MAX_LEN) {
+        return APP_ERR_WEAK_PASSWORD;
     }
-    unsigned char dk[DK_LEN];
-    if (PKCS5_PBKDF2_HMAC((const char*)pass, (int)pass_len, salt, SALT_LEN, PBKDF2_ITERS, EVP_sha256(), DK_LEN, dk) != 1) {
-        OPENSSL_cleanse(salt, sizeof(salt));
-        return false;
+
+    bool has_lower = false, has_upper = false, has_digit = false, has_special = false;
+    for (size_t i = 0; i < len; i++) {
+        unsigned char c = (unsigned char)password[i];
+        if (c >= 'a' && c <= 'z') has_lower = true;
+        else if (c >= 'A' && c <= 'Z') has_upper = true;
+        else if (c >= '0' && c <= '9') has_digit = true;
+        else if (c >= 33 && c <= 126) has_special = true; // printable specials
+        // Disallow control characters and spaces to avoid ambiguity
+        else return APP_ERR_WEAK_PASSWORD;
     }
-    char* saltB64 = b64_encode(salt, SALT_LEN);
-    char* hashB64 = b64_encode(dk, DK_LEN);
-    OPENSSL_cleanse(salt, sizeof(salt));
-    OPENSSL_cleanse(dk, sizeof(dk));
-    if (!saltB64 || !hashB64) {
-        free(saltB64);
-        free(hashB64);
-        return false;
+
+    if (!(has_lower && has_upper && has_digit && has_special)) {
+        return APP_ERR_WEAK_PASSWORD;
     }
-    *outSaltB64 = saltB64;
-    *outHashB64 = hashB64;
-    return true;
+    return APP_OK;
 }
 
-static bool insert_user(const char* db_path, const char* username, const char* password) {
-    if (!is_valid_username(username)) return false;
-    if (!is_strong_password(password)) return false;
-    if (!ensure_db_file(db_path)) return false;
-    if (username_exists(db_path, username)) return false;
-
-    unsigned char* passBuf = NULL;
-    size_t pass_len = strlen(password);
-    passBuf = (unsigned char*)malloc(pass_len);
-    if (!passBuf) return false;
-    memcpy(passBuf, password, pass_len);
-
-    char* saltB64 = NULL;
-    char* hashB64 = NULL;
-    bool ok = hash_password(passBuf, pass_len, &saltB64, &hashB64);
-    OPENSSL_cleanse(passBuf, pass_len);
-    free(passBuf);
-    if (!ok) return false;
-
-    // created at
-    char ts[64];
-    time_t t = time(NULL);
-    struct tm tm;
-#if defined(_WIN32) && !defined(__MINGW32__)
-    gmtime_s(&tm, &t);
-#else
-    gmtime_r(&t, &tm);
-#endif
-    strftime(ts, sizeof(ts), "%Y-%m-%dT%H:%M:%SZ", &tm);
-
-    FILE* f = fopen(db_path, "a");
-    if (!f) {
-        free(saltB64);
-        free(hashB64);
-        return false;
+// Hash password with Argon2id (libsodium crypto_pwhash_str), using strong parameters
+int hash_password(const char *password, char *out_hash, size_t out_size) {
+    if (!password || !out_hash || out_size < crypto_pwhash_STRBYTES) {
+        return APP_ERR_INTERNAL;
     }
-    int n = fprintf(f, "%s|%d|%s|%s|%s\n", username, PBKDF2_ITERS, saltB64, hashB64, ts);
-    fflush(f);
-    int ferr = ferror(f);
-    fclose(f);
-    free(saltB64);
-    free(hashB64);
-    return (n > 0 && ferr == 0);
+
+    // Derive a secure hash using Argon2id with SENSITIVE limits.
+    // libsodium generates a random salt internally and encodes parameters + salt in out_hash.
+    if (crypto_pwhash_str(
+            out_hash,
+            password,
+            (unsigned long long)strlen(password),
+            crypto_pwhash_OPSLIMIT_SENSITIVE,
+            crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
+        // Out of memory or internal failure
+        return APP_ERR_INTERNAL;
+    }
+
+    return APP_OK;
+}
+
+// Setup SQLite database and create users table
+int setup_database(sqlite3 **out_db) {
+    if (!out_db) return APP_ERR_INTERNAL;
+    *out_db = NULL;
+
+    // In-memory DB for demonstration; replace ":memory:" with a secure file path as needed.
+    int rc = sqlite3_open_v2(":memory:", out_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+    if (rc != SQLITE_OK) {
+        if (*out_db) sqlite3_close(*out_db);
+        *out_db = NULL;
+        return APP_ERR_DB;
+    }
+
+    const char *create_sql =
+        "PRAGMA foreign_keys = ON; "
+        "CREATE TABLE IF NOT EXISTS users ("
+        "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "  username TEXT NOT NULL UNIQUE,"
+        "  password_hash TEXT NOT NULL,"
+        "  created_at TEXT NOT NULL"
+        ");";
+
+    char *errmsg = NULL;
+    rc = sqlite3_exec(*out_db, create_sql, NULL, NULL, &errmsg);
+    if (rc != SQLITE_OK) {
+        if (errmsg) {
+            // Do not print attacker-controlled data; sqlite error messages are internal.
+            sqlite3_free(errmsg);
+        }
+        sqlite3_close(*out_db);
+        *out_db = NULL;
+        return APP_ERR_DB;
+    }
+
+    return APP_OK;
+}
+
+// Insert user with hashed password using a parameterized statement
+int insert_user(sqlite3 *db, const char *username, const char *password) {
+    if (!db || !username || !password) return APP_ERR_INVALID_INPUT;
+
+    int rc = validate_username(username);
+    if (rc != APP_OK) return rc;
+
+    rc = validate_password_policy(password);
+    if (rc != APP_OK) return rc;
+
+    char hash[crypto_pwhash_STRBYTES];
+    rc = hash_password(password, hash, sizeof(hash));
+    if (rc != APP_OK) {
+        sodium_memzero(hash, sizeof(hash));
+        return rc;
+    }
+
+    const char *insert_sql =
+        "INSERT INTO users (username, password_hash, created_at) "
+        "VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'));";
+
+    sqlite3_stmt *stmt = NULL;
+    int s_rc = sqlite3_prepare_v2(db, insert_sql, -1, &stmt, NULL);
+    if (s_rc != SQLITE_OK) {
+        sodium_memzero(hash, sizeof(hash));
+        return APP_ERR_DB;
+    }
+
+    // Bind parameters safely; never concatenate user input into SQL.
+    s_rc = sqlite3_bind_text(stmt, 1, username, -1, SQLITE_TRANSIENT);
+    if (s_rc == SQLITE_OK) {
+        s_rc = sqlite3_bind_text(stmt, 2, hash, -1, SQLITE_TRANSIENT);
+    }
+
+    // Clear the in-memory hash as soon as it's no longer needed
+    sodium_memzero(hash, sizeof(hash));
+
+    if (s_rc != SQLITE_OK) {
+        sqlite3_finalize(stmt);
+        return APP_ERR_DB;
+    }
+
+    s_rc = sqlite3_step(stmt);
+    int final_rc = APP_OK;
+    if (s_rc != SQLITE_DONE) {
+        if (s_rc == SQLITE_CONSTRAINT || sqlite3_errcode(db) == SQLITE_CONSTRAINT) {
+            final_rc = APP_ERR_DUPLICATE; // likely UNIQUE(username) violation
+        } else {
+            final_rc = APP_ERR_DB;
+        }
+    }
+
+    sqlite3_finalize(stmt);
+    return final_rc;
+}
+
+// Helper: count users in DB (no user input used)
+int count_users(sqlite3 *db, int *out_count) {
+    if (!db || !out_count) return APP_ERR_INTERNAL;
+    *out_count = 0;
+
+    const char *sql = "SELECT COUNT(*) FROM users;";
+    sqlite3_stmt *stmt = NULL;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) return APP_ERR_DB;
+
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW) {
+        *out_count = sqlite3_column_int(stmt, 0);
+        rc = SQLITE_DONE;
+    }
+    sqlite3_finalize(stmt);
+    return (rc == SQLITE_DONE) ? APP_OK : APP_ERR_DB;
 }
 
 int main(void) {
-    const char* db = "users_c.db";
-    unlink(db);
+    // Initialize libsodium once
+    if (sodium_init() < 0) {
+        // Failed to initialize the library
+        fprintf(stderr, "Initialization failed.\n");
+        return EXIT_FAILURE;
+    }
 
-    struct TestCase { const char* u; const char* p; };
-    struct TestCase tests[5] = {
-        {"alice_01", "StrongPass!234"},
-        {"bob_02", "Another$trongP4ss"},
-        {"alice_01", "DupUserGoodP@ss1"}, // duplicate username
-        {"ab", "ValidButUserTooShort1!"},
-        {"charlie_03", "weakpass"} // weak password
+    sqlite3 *db = NULL;
+    if (setup_database(&db) != APP_OK) {
+        fprintf(stderr, "Database setup failed.\n");
+        return EXIT_FAILURE;
+    }
+
+    // Five test cases
+    struct TestCase {
+        const char *username;
+        const char *password;
+        const char *desc;
+    } tests[5] = {
+        { "alice",   "Str0ng!Passw0rd",        "Valid user 1" },
+        { "bob-01",  "Another$trongP4ss",      "Valid user 2" },
+        { "alice",   "DifferentP@ssw0rd!",     "Duplicate username" },
+        { "charlie", "short",                  "Weak password (too short)" },
+        { "bad user","YetAn0ther$trongPass",   "Invalid username (space)" }
     };
 
     for (int i = 0; i < 5; i++) {
-        bool ok = insert_user(db, tests[i].u, tests[i].p);
-        printf("Test %d insert(%s): %s\n", i+1, tests[i].u, ok ? "OK" : "FAIL");
+        int rc = insert_user(db, tests[i].username, tests[i].password);
+        // Use constant format strings, avoid echoing sensitive inputs.
+        if (rc == APP_OK) {
+            printf("Test %d [%s]: OK\n", i + 1, tests[i].desc);
+        } else if (rc == APP_ERR_DUPLICATE) {
+            printf("Test %d [%s]: FAILED (duplicate username)\n", i + 1, tests[i].desc);
+        } else if (rc == APP_ERR_WEAK_PASSWORD) {
+            printf("Test %d [%s]: FAILED (weak password)\n", i + 1, tests[i].desc);
+        } else if (rc == APP_ERR_INVALID_INPUT) {
+            printf("Test %d [%s]: FAILED (invalid input)\n", i + 1, tests[i].desc);
+        } else {
+            printf("Test %d [%s]: FAILED (internal/db error)\n", i + 1, tests[i].desc);
+        }
     }
 
-    // Count records
-    FILE* f = fopen(db, "r");
-    int count = 0;
-    if (f) {
-        char line[4096];
-        while (fgets(line, sizeof(line), f)) {
-            if (line[0] != '\0') count++;
-        }
-        fclose(f);
+    int total = 0;
+    if (count_users(db, &total) == APP_OK) {
+        printf("Total users inserted: %d\n", total);
+    } else {
+        printf("Could not count users.\n");
     }
-    printf("Total records in DB file: %d\n", count);
-    return 0;
+
+    sqlite3_close(db);
+    return EXIT_SUCCESS;
 }

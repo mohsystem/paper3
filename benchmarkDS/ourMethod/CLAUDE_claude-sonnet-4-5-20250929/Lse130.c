@@ -1,257 +1,240 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
+#include <ctype.h>
 
-#define MAX_PARAM_LEN 1000
-#define MAX_TEMPLATE_LEN 100000
-#define MAX_RENDERED_LEN 200000
+#define MAX_NAME_LENGTH 64
+#define MAX_TEMPLATE_SIZE 512
+#define MAX_RESPONSE_SIZE 1024
 
-// Response structure
+/* Environment structure to hold request and template data */
 typedef struct {
-    char* content;
-    int statusCode;
-} Response;
-
-// Request structure
-typedef struct {
-    char* name;
-} Request;
-
-// Environment structure
-typedef struct {
-    Request* request;
-    char* template;
+    const char *request_name;
+    const char *template_string;
 } Environment;
 
-// Initialize response with allocated memory
-Response* createResponse(const char* content, int statusCode) {
-    Response* resp = (Response*)calloc(1, sizeof(Response));
-    if (!resp) return NULL;
-    
-    if (content) {
-        size_t len = strlen(content);
-        resp->content = (char*)calloc(len + 1, sizeof(char));
-        if (!resp->content) {
-            free(resp);
-            return NULL;
-        }
-        strncpy(resp->content, content, len);
-        resp->content[len] = '\\0';
-    } else {
-        resp->content = NULL;
+/* Response structure */
+typedef struct {
+    char *content;
+    size_t length;
+} Response;
+
+/* Validate name parameter - allow only alphanumeric and safe characters */
+static int validate_name(const char *name, size_t max_len) {
+    if (name == NULL) {
+        return 0;
     }
-    resp->statusCode = statusCode;
-    return resp;
+
+    /* Check length - prevent excessive input */
+    size_t len = strnlen(name, max_len + 1);
+    if (len == 0 || len > max_len) {
+        return 0;
+    }
+
+    /* Allow only alphanumeric, spaces, hyphens, and underscores - prevent injection */
+    for (size_t i = 0; i < len; i++) {
+        if (!isalnum((unsigned char)name[i]) &&
+            name[i] != ' ' &&
+            name[i] != '-' &&
+            name[i] != '_') {
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
-// Free response memory
-void freeResponse(Response* resp) {
-    if (resp) {
-        if (resp->content) {
-            // Clear sensitive data before free
-            memset(resp->content, 0, strlen(resp->content));
-            free(resp->content);
-        }
-        free(resp);
+/* Sanitize name by copying only safe characters to prevent template injection */
+static int sanitize_name(const char *input, char *output, size_t output_size) {
+    if (input == NULL || output == NULL || output_size == 0) {
+        return 0;
     }
-}
 
-// HTML escape to prevent XSS - allocates new string
-char* escapeHtml(const char* input) {
-    if (!input) return NULL;
-    
-    size_t inputLen = strlen(input);
-    // Worst case: every character becomes 6 characters (&quot;)
-    size_t maxLen = inputLen * 6 + 1;
-    if (maxLen > MAX_RENDERED_LEN) {
-        maxLen = MAX_RENDERED_LEN;
-    }
-    
-    char* escaped = (char*)calloc(maxLen, sizeof(char));
-    if (!escaped) return NULL;
-    
+    size_t input_len = strnlen(input, MAX_NAME_LENGTH);
     size_t j = 0;
-    for (size_t i = 0; i < inputLen && j < maxLen - 7; i++) {
-        switch (input[i]) {
-            case '<':
-                if (j + 4 < maxLen) {
-                    strcpy(&escaped[j], "&lt;");
-                    j += 4;
-                }
-                break;
-            case '>':
-                if (j + 4 < maxLen) {
-                    strcpy(&escaped[j], "&gt;");
-                    j += 4;
-                }
-                break;
-            case '&':
-                if (j + 5 < maxLen) {
-                    strcpy(&escaped[j], "&amp;");
-                    j += 5;
-                }
-                break;
-            case '"':
-                if (j + 6 < maxLen) {
-                    strcpy(&escaped[j], "&quot;");
-                    j += 6;
-                }
-                break;
-            case '\\'':
-                if (j + 6 < maxLen) {
-                    strcpy(&escaped[j], "&#x27;");
-                    j += 6;
-                }
-                break;
-            case '/':
-                if (j + 6 < maxLen) {
-                    strcpy(&escaped[j], "&#x2F;");
-                    j += 6;
-                }
-                break;
-            default:
-                if (j < maxLen - 1) {
-                    escaped[j++] = input[i];
-                }
+
+    /* Copy only validated characters - defense in depth */
+    for (size_t i = 0; i < input_len && j < output_size - 1; i++) {
+        if (isalnum((unsigned char)input[i]) ||
+            input[i] == ' ' ||
+            input[i] == '-' ||
+            input[i] == '_') {
+            output[j++] = input[i];
         }
     }
-    escaped[j] = '\\0';
-    return escaped;
+
+    /* Ensure null termination */
+    output[j] = '\0';
+    return 1;
 }
 
-// Simple template rendering with XSS protection
-char* renderTemplate(const char* template, const char* name) {
-    if (!template) return NULL;
-    
-    // Escape name to prevent XSS
-    char* safeName = escapeHtml(name ? name : "");
-    if (!safeName) return NULL;
-    
-    size_t templateLen = strlen(template);
-    size_t nameLen = strlen(safeName);
-    
-    // Allocate buffer for rendered output
-    char* rendered = (char*)calloc(MAX_RENDERED_LEN, sizeof(char));
-    if (!rendered) {
-        memset(safeName, 0, strlen(safeName));
-        free(safeName);
+/* Render response from environment - validates input and renders template */
+Response *render_response_from_env(const Environment *env) {
+    Response *response = NULL;
+    char *content = NULL;
+    char sanitized_name[MAX_NAME_LENGTH + 1];
+
+    /* Validate environment pointer */
+    if (env == NULL) {
         return NULL;
     }
-    
-    size_t i = 0, j = 0;
-    while (i < templateLen && j < MAX_RENDERED_LEN - 1) {
-        // Look for {{ name }}
-        if (i + 1 < templateLen && template[i] == '{' && template[i+1] == '{') {
-            i += 2;
-            // Skip whitespace
-            while (i < templateLen && template[i] == ' ') i++;
-            
-            // Check for "name"
-            if (i + 4 <= templateLen && strncmp(&template[i], "name", 4) == 0) {
-                i += 4;
-                // Skip whitespace
-                while (i < templateLen && template[i] == ' ') i++;
-                
-                // Check for }}
-                if (i + 1 < templateLen && template[i] == '}' && template[i+1] == '}') {
-                    i += 2;
-                    // Insert escaped name
-                    size_t copyLen = nameLen;
-                    if (j + copyLen >= MAX_RENDERED_LEN) {
-                        copyLen = MAX_RENDERED_LEN - j - 1;
-                    }
-                    strncpy(&rendered[j], safeName, copyLen);
-                    j += copyLen;
-                    continue;
-                }
-            }
+
+    /* Initialize sanitized name buffer */
+    memset(sanitized_name, 0, sizeof(sanitized_name));
+
+    /* Get name parameter from request - treat as untrusted input */
+    const char *name = env->request_name;
+
+    /* Validate name parameter before use - reject invalid input */
+    if (!validate_name(name, MAX_NAME_LENGTH)) {
+        /* Return error response with generic message - don't leak details */
+        response = (Response *)malloc(sizeof(Response));
+        if (response == NULL) {
+            return NULL;
         }
-        rendered[j++] = template[i++];
+
+        content = (char *)malloc(MAX_RESPONSE_SIZE);
+        if (content == NULL) {
+            free(response);
+            return NULL;
+        }
+
+        /* Use constant format string - prevent format string vulnerability */
+        snprintf(content, MAX_RESPONSE_SIZE, "Error: Invalid input provided");
+
+        response->content = content;
+        response->length = strnlen(content, MAX_RESPONSE_SIZE);
+        return response;
     }
-    rendered[j] = '\\0';
-    
-    // Clear and free escaped name
-    memset(safeName, 0, strlen(safeName));
-    free(safeName);
-    
-    return rendered;
+
+    /* Sanitize name to prevent template injection - defense in depth */
+    if (!sanitize_name(name, sanitized_name, sizeof(sanitized_name))) {
+        return NULL;
+    }
+
+    /* Allocate response structure */
+    response = (Response *)malloc(sizeof(Response));
+    if (response == NULL) {
+        return NULL;
+    }
+
+    /* Allocate buffer for rendered content - check allocation result */
+    content = (char *)malloc(MAX_RESPONSE_SIZE);
+    if (content == NULL) {
+        free(response);
+        return NULL;
+    }
+
+    /* Initialize content buffer */
+    memset(content, 0, MAX_RESPONSE_SIZE);
+
+    /* Get template from environment - validate template exists */
+    const char *template_str = env->template_string;
+    if (template_str == NULL) {
+        snprintf(content, MAX_RESPONSE_SIZE, "Error: Template not found");
+        response->content = content;
+        response->length = strnlen(content, MAX_RESPONSE_SIZE);
+        return response;
+    }
+
+    /* Render template with sanitized name parameter - use snprintf for bounds checking */
+    int written = snprintf(content, MAX_RESPONSE_SIZE, template_str, sanitized_name);
+
+    /* Check for truncation or error - verify snprintf result */
+    if (written < 0 || written >= (int)MAX_RESPONSE_SIZE) {
+        snprintf(content, MAX_RESPONSE_SIZE, "Error: Response too large");
+        response->content = content;
+        response->length = strnlen(content, MAX_RESPONSE_SIZE);
+        return response;
+    }
+
+    /* Set response fields */
+    response->content = content;
+    response->length = (size_t)written;
+    return response;
 }
 
-// Renders response from environment
-// Security: Validates all inputs, escapes output to prevent XSS
-Response* renderResponseFromEnv(Environment* env) {
-    if (!env) {
-        return createResponse("Invalid environment", 400);
+/* Home function - entry point that calls render_response_from_env */
+Response *home(const Environment *env) {
+    /* Validate input pointer */
+    if (env == NULL) {
+        return NULL;
     }
-    
-    if (!env->request) {
-        return createResponse("Invalid request", 400);
-    }
-    
-    // Get name parameter - treat as untrusted
-    const char* name = env->request->name;
-    
-    // Get template
-    if (!env->template || strlen(env->template) == 0) {
-        return createResponse("Template not found", 404);
-    }
-    
-    // Render template with escaped name
-    char* rendered = renderTemplate(env->template, name);
-    if (!rendered) {
-        return createResponse("Internal server error", 500);
-    }
-    
-    Response* resp = createResponse(rendered, 200);
-    
-    // Clear and free rendered content
-    memset(rendered, 0, strlen(rendered));
-    free(rendered);
-    
-    return resp;
+
+    /* Call render function and return result */
+    return render_response_from_env(env);
 }
 
-// Home function that calls renderResponseFromEnv
-Response* home(Environment* env) {
-    return renderResponseFromEnv(env);
+/* Free response memory - ensures proper cleanup */
+void free_response(Response *response) {
+    if (response != NULL) {
+        if (response->content != NULL) {
+            /* Clear sensitive data before free if needed */
+            memset(response->content, 0, response->length);
+            free(response->content);
+        }
+        free(response);
+    }
 }
 
-// Test cases
+/* Main function with test cases */
 int main(void) {
-    // Test 1: Normal input
-    Request req1 = {.name = "John"};
-    Environment env1 = {.request = &req1, .template = "Hello, {{ name }}!"};
-    Response* resp1 = home(&env1);
-    printf("Test 1: %s (Status: %d)\\n", resp1->content, resp1->statusCode);
-    freeResponse(resp1);
-    
-    // Test 2: XSS attempt - should be escaped
-    Request req2 = {.name = "<script>alert('XSS')</script>"};
-    Environment env2 = {.request = &req2, .template = "Hello, {{ name }}!"};
-    Response* resp2 = home(&env2);
-    printf("Test 2: %s (Status: %d)\\n", resp2->content, resp2->statusCode);
-    freeResponse(resp2);
-    
-    // Test 3: Empty name parameter
-    Request req3 = {.name = ""};
-    Environment env3 = {.request = &req3, .template = "Hello, {{ name }}!"};
-    Response* resp3 = home(&env3);
-    printf("Test 3: %s (Status: %d)\\n", resp3->content, resp3->statusCode);
-    freeResponse(resp3);
-    
-    // Test 4: NULL name parameter
-    Request req4 = {.name = NULL};
-    Environment env4 = {.request = &req4, .template = "Hello, {{ name }}!"};
-    Response* resp4 = home(&env4);
-    printf("Test 4: %s (Status: %d)\\n", resp4->content, resp4->statusCode);
-    freeResponse(resp4);
-    
-    // Test 5: NULL environment
-    Response* resp5 = home(NULL);
-    printf("Test 5: %s (Status: %d)\\n", resp5->content, resp5->statusCode);
-    freeResponse(resp5);
-    
+    Response *resp = NULL;
+
+    /* Test case 1: Valid name */
+    Environment env1 = {
+        .request_name = "John_Doe",
+        .template_string = "Hello, %s! Welcome to our site."
+    };
+    resp = home(&env1);
+    if (resp != NULL) {
+        printf("Test 1: %s\n", resp->content);
+        free_response(resp);
+    }
+
+    /* Test case 2: Name with spaces */
+    Environment env2 = {
+        .request_name = "Jane Smith",
+        .template_string = "Hello, %s! Welcome to our site."
+    };
+    resp = home(&env2);
+    if (resp != NULL) {
+        printf("Test 2: %s\n", resp->content);
+        free_response(resp);
+    }
+
+    /* Test case 3: Invalid name with special characters */
+    Environment env3 = {
+        .request_name = "Alice<script>alert('xss')</script>",
+        .template_string = "Hello, %s! Welcome to our site."
+    };
+    resp = home(&env3);
+    if (resp != NULL) {
+        printf("Test 3: %s\n", resp->content);
+        free_response(resp);
+    }
+
+    /* Test case 4: Empty name */
+    Environment env4 = {
+        .request_name = "",
+        .template_string = "Hello, %s! Welcome to our site."
+    };
+    resp = home(&env4);
+    if (resp != NULL) {
+        printf("Test 4: %s\n", resp->content);
+        free_response(resp);
+    }
+
+    /* Test case 5: NULL name */
+    Environment env5 = {
+        .request_name = NULL,
+        .template_string = "Hello, %s! Welcome to our site."
+    };
+    resp = home(&env5);
+    if (resp != NULL) {
+        printf("Test 5: %s\n", resp->content);
+        free_response(resp);
+    }
+
     return 0;
 }

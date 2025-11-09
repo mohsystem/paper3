@@ -1,121 +1,189 @@
 import os
-import shutil
-from flask import Flask, request, redirect, url_for, flash
+import secrets
+from flask import Flask, request, flash, redirect, url_for, send_from_directory
+from werkzeug.utils import secure_filename
+from werkzeug.exceptions import RequestEntityTooLarge
 
-# To run this code:
-# 1. pip install Flask
-# 2. python <filename>.py
-# The server will start on http://127.0.0.1:5000
+# --- Configuration ---
+# It's recommended to load these from environment variables or a config file
+# For this example, we define them here.
 
-UPLOAD_FOLDER = 'uploads'
+# Define the directory to store uploaded files. Use an absolute path.
+# This ensures the path is not relative to the current working directory.
+UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'uploads'))
+
+# Define the allowed file extensions. Using an allow list is more secure.
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
+# Maximum file size (e.g., 16 MB). This helps prevent Denial of Service attacks.
+MAX_FILE_SIZE = 16 * 1024 * 1024
+
+# --- Flask App Initialization ---
 app = Flask(__name__)
+
+# Apply configurations
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
-app.secret_key = os.urandom(24) # Needed for flash messages
+# A secret key is required for flashing messages.
+# In a real application, this MUST be a securely generated, random string
+# and should NOT be hardcoded. Load it from a secret manager or env variable.
+app.config['SECRET_KEY'] = secrets.token_hex(16)
 
-
+# --- Helper Function ---
 def allowed_file(filename):
+    """
+    Checks if the file's extension is in the allowed list.
+    """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def sanitize_filename(filename):
+# --- Main Application Logic ---
+def upload_file_logic(request_object):
     """
-    Sanitizes a filename by removing path components and potentially unsafe characters.
-    This is a simplified version of werkzeug's secure_filename.
+    Handles the file upload logic. Separated from the route for clarity.
+    Accepts a Flask request object as a parameter.
+    Returns a tuple (status_message, category) for flashing.
     """
-    if not filename:
-        return ""
-    
-    # Remove directory separators
-    basename = os.path.basename(filename)
-    
-    # A simple whitelist for characters. 
-    # For a real application, a more robust library function is better.
-    safe_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-. "
-    sanitized = "".join(c for c in basename if c in safe_chars).strip()
-    
-    # Prevent names like '.' or '..'
-    if sanitized in {".", ".."}:
-        return ""
-        
-    return sanitized
+    # Rule #5: Treat all input as untrusted.
+    # Check if the post request has the file part
+    if 'file' not in request_object.files:
+        return 'No file part in the request.', 'error'
 
+    file = request_object.files['file']
 
-@app.route('/upload', methods=['POST'])
-def upload_file_route():
-    return upload_file(request)
-
-def upload_file(req):
-    if 'file' not in req.files:
-        flash('No file part')
-        return redirect(req.url)
-    
-    file = req.files['file']
-    
+    # If the user does not select a file, the browser submits an
+    # empty file without a filename.
     if file.filename == '':
-        flash('No selected file')
-        return redirect(req.url)
-        
-    if file and allowed_file(file.filename):
-        # Sanitize filename to prevent path traversal attacks
-        filename = sanitize_filename(file.filename)
-        if not filename:
-            flash('Invalid filename provided.')
-            return redirect(req.url)
-            
-        destination_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        return 'No file selected.', 'warning'
 
-        # Ensure the path is within the intended directory
-        base_dir = os.path.abspath(app.config['UPLOAD_FOLDER'])
-        resolved_path = os.path.abspath(destination_path)
-        if not resolved_path.startswith(base_dir):
-            flash('Invalid path detected.')
-            return redirect(req.url)
+    # Rule #1, #2: Validate input before use (filename and file type).
+    if file and allowed_file(file.filename):
+        # Rule #39, #40: Sanitize filename to prevent path traversal.
+        # secure_filename handles '../' and other dangerous characters.
+        filename = secure_filename(file.filename)
+        
+        # Rule #41: Ensure the path resolves within the expected directory.
+        # os.path.join with an absolute UPLOAD_FOLDER and a sanitized
+        # filename is a safe way to construct the final path.
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
         try:
-            # Open the destination file in exclusive binary write mode ('xb')
-            # This prevents overwriting existing files and avoids a TOCTOU race condition.
-            with open(destination_path, 'xb') as f:
-                # Copy the file stream in chunks to handle large files efficiently
-                shutil.copyfileobj(file.stream, f)
-            flash('File successfully uploaded')
-            return redirect(url_for('upload_form'))
-        except FileExistsError:
-            flash(f'File "{filename}" already exists.')
-            return redirect(req.url)
+            # Save the file.
+            file.save(save_path)
+            return f'File "{filename}" uploaded successfully.', 'success'
         except Exception as e:
-            flash(f'An error occurred: {e}')
-            return redirect(req.url)
+            # Rule #63: Log detailed errors, but return generic messages.
+            app.logger.error(f"Error saving file: {e}")
+            return 'An error occurred while saving the file.', 'error'
+            
+    else:
+        return 'File type not allowed.', 'error'
 
-    flash('File type not allowed')
-    return redirect(req.url)
-
-@app.route('/')
-def upload_form():
+@app.route('/', methods=['GET', 'POST'])
+def upload_file_route():
+    """
+    Route to display the upload form and handle the POST request.
+    """
+    if request.method == 'POST':
+        try:
+            message, category = upload_file_logic(request)
+            flash(message, category)
+            return redirect(url_for('upload_file_route'))
+        except RequestEntityTooLarge:
+            flash(f'File is too large. Maximum size is {MAX_FILE_SIZE / 1024 / 1024:.0f} MB.', 'error')
+            return redirect(url_for('upload_file_route'))
+        except Exception as e:
+            app.logger.error(f"An unexpected error occurred: {e}")
+            flash('An unexpected server error occurred.', 'error')
+            return redirect(url_for('upload_file_route'))
+            
+    # For GET request, display the upload form.
     return '''
     <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post action="/upload" enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Secure File Upload</title>
+        <style>
+            body { font-family: sans-serif; background-color: #f4f4f4; margin: 40px; }
+            .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+            h1 { color: #333; }
+            form { margin-top: 20px; }
+            input[type="file"] { border: 1px solid #ccc; padding: 10px; border-radius: 4px; width: calc(100% - 24px); }
+            input[type="submit"] { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+            input[type="submit"]:hover { background-color: #0056b3; }
+            .flash { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+            .flash.success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+            .flash.error { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+            .flash.warning { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Upload a New File</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+            <form method=post enctype=multipart/form-data>
+              <input type=file name=file>
+              <input type=submit value=Upload>
+            </form>
+            <p>Allowed file types: txt, pdf, png, jpg, jpeg, gif</p>
+            <p>Max file size: 16 MB</p>
+        </div>
+    </body>
+    </html>
     '''
 
+# Added a route to view uploaded files for testing purposes.
+# In a real application, you would want to secure this route.
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    """
+    Serves an uploaded file. This is for demonstration.
+    Production systems should serve static files via a dedicated web server like Nginx.
+    """
+    # Sanitize the filename again before passing it to the file system
+    safe_filename = secure_filename(filename)
+    if safe_filename != filename:
+        return "Invalid filename", 400
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'],
+                                   safe_filename, as_attachment=False)
+    except FileNotFoundError:
+        return "File not found", 404
+
+
+def main():
+    """
+    Main function to set up and run the web application.
+    """
+    # Create the upload directory if it doesn't exist.
+    # Rule #45, #50: Avoid TOCTOU by attempting to create and handling failure.
+    # os.makedirs with exist_ok=True is a safe way to do this.
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        print(f"Uploads directory is '{app.config['UPLOAD_FOLDER']}'")
+    except OSError as e:
+        print(f"Error creating directory {app.config['UPLOAD_FOLDER']}: {e}")
+        return
+
+    print("\n--- Manual Test Cases ---")
+    print("Please run the application and test the following in your browser at http://127.0.0.1:5000")
+    print("1. Test Case 1 (Success): Upload a valid file like 'test.txt' or 'image.jpg'.")
+    print("2. Test Case 2 (Fail - Type): Upload a disallowed file like 'script.js' or 'program.exe'.")
+    print("3. Test Case 3 (Fail - Size): Try to upload a file larger than 16 MB.")
+    print("4. Test Case 4 (Fail - No File): Click 'Upload' without selecting a file.")
+    print("5. Test Case 5 (Security - Path Traversal): Upload a file named '../../secret.txt'. It should be saved as 'secret.txt' inside the uploads directory.\n")
+
+    # Running with debug=False is crucial for security in production.
+    # The reloader and debugger exposed by debug mode can be exploited.
+    app.run(host='0.0.0.0', port=5000, debug=False)
+
+
 if __name__ == '__main__':
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
-    
-    print("Server starting on http://127.0.0.1:5000")
-    print(f"Uploads will be saved to the '{UPLOAD_FOLDER}' directory.")
-    print("--- How to Test with cURL ---")
-    print("1. Valid file: curl -F \"file=@test.txt\" http://127.0.0.1:5000/upload")
-    print("2. Invalid extension: curl -F \"file=@test.exe\" http://127.0.0.1:5000/upload")
-    print("3. File too large: Create a file > 10MB and use: curl -F \"file=@largefile.dat\" http://127.0.0.1:5000/upload")
-    print("4. Path traversal attempt: curl -F \"file=@test.txt;filename=../../test.txt\" http://127.0.0.1:5000/upload")
-    print("5. Overwrite attempt: Upload a file, then try to upload another with the same name.")
-    
-    app.run(debug=False)
+    main()

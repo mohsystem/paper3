@@ -1,242 +1,242 @@
-/*
- * This code requires libmicrohttpd, a small C library for embedding an HTTP server.
- *
- * Installation (Debian/Ubuntu):
- * sudo apt-get install libmicrohttpd-dev
- *
- * Compilation command:
- * gcc -o server server.c -lmicrohttpd
- *
- * The code implements a file upload handler that saves files to an 'uploads' directory.
- */
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include <errno.h>
+#include <limits.h>
+#include <ctype.h>
 
-#include <microhttpd.h>
+// For mkdir/stat and platform-specific definitions
+#ifdef _WIN32
+#include <direct.h>
+// In MSVC, fopen "x" mode is available since Visual Studio 2015
+#define MKDIR(path) _mkdir(path)
+#define STAT_T _stat
+#define STAT _stat
+#define IS_DIR(mode) ((mode) & _S_IFDIR)
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
+#else
+#include <sys/stat.h>
+#include <sys/types.h>
+#define MKDIR(path) mkdir(path, 0750)
+#define STAT_T stat
+#define STAT stat
+#define IS_DIR(mode) S_ISDIR(mode)
+#endif
 
-#define PORT 8080
+// Configuration constants
 #define UPLOADS_DIR "uploads"
-#define MAX_FILENAME_LEN 256
+#define MAX_FILENAME_LEN 255
 #define MAX_FILE_SIZE (10 * 1024 * 1024) // 10 MB
 
-// Holds information about an ongoing upload connection.
-struct ConnectionInfo {
-    FILE *file_handle;
-    char filename[MAX_FILENAME_LEN];
-    long long total_bytes;
-    int error;
-};
+// Function prototypes
+bool is_filename_valid(const char *filename);
+int ensure_uploads_dir_exists(const char *dir_path);
+int upload_file(const char *filename, const void *content, size_t content_length);
+void run_test_case(int test_num, const char *description, const char *filename, const void *content, size_t content_length);
 
-// Sanitizes a filename by removing directory paths.
-// Returns a pointer to the sanitized name within the original buffer.
-static const char* sanitize_filename(const char* filename) {
-    if (filename == NULL) {
-        return NULL;
+/**
+ * @brief Validates a filename against a strict allow-list.
+ *
+ * This function checks for:
+ * - NULL or empty filename
+ * - Excessive length
+ * - Invalid characters (allows only alphanumeric, '.', '_', '-')
+ * - Path traversal characters ('/' or '\' are blocked by the allow-list)
+ * - Filenames that are special directories ('.' or '..')
+ *
+ * @param filename The filename to validate.
+ * @return true if the filename is valid, false otherwise.
+ */
+bool is_filename_valid(const char *filename) {
+    if (filename == NULL || filename[0] == '\0') {
+        fprintf(stderr, "Error: Filename is NULL or empty.\n");
+        return false;
     }
-    // Find the last occurrence of a path separator
-    const char* last_slash = strrchr(filename, '/');
-    const char* last_backslash = strrchr(filename, '\\');
+
+    size_t len = strlen(filename);
+    if (len > MAX_FILENAME_LEN) {
+        fprintf(stderr, "Error: Filename exceeds maximum length of %d.\n", MAX_FILENAME_LEN);
+        return false;
+    }
+
+    // Use a strict allow-list for characters to prevent path traversal and other attacks.
+    for (size_t i = 0; i < len; ++i) {
+        if (!isalnum((unsigned char)filename[i]) && filename[i] != '.' && filename[i] != '_' && filename[i] != '-') {
+            fprintf(stderr, "Error: Filename '%s' contains invalid characters.\n", filename);
+            return false;
+        }
+    }
     
-    const char* basename = filename;
-    if (last_slash && last_slash > basename) {
-        basename = last_slash + 1;
-    }
-    if (last_backslash && last_backslash > basename) {
-        basename = last_backslash + 1;
+    // Explicitly disallow filenames that could be special directories.
+    if (strcmp(filename, ".") == 0 || strcmp(filename, "..") == 0) {
+        fprintf(stderr, "Error: Filename cannot be '.' or '..'.\n");
+        return false;
     }
 
-    // Basic validation
-    if (strlen(basename) == 0 || strcmp(basename, ".") == 0 || strcmp(basename, "..") == 0) {
-        return NULL; // Invalid filename
+    return true;
+}
+
+
+/**
+ * @brief Ensures the upload directory exists.
+ *
+ * Tries to create the directory. If it already exists, it verifies that the
+ * existing path is indeed a directory.
+ *
+ * @param dir_path The path to the directory.
+ * @return 0 on success (or if directory already exists and is valid), -1 on failure.
+ */
+int ensure_uploads_dir_exists(const char *dir_path) {
+    if (dir_path == NULL) {
+        return -1;
     }
     
-    return basename;
+    if (MKDIR(dir_path) != 0) {
+        if (errno != EEXIST) {
+            perror("Error creating uploads directory");
+            return -1;
+        }
+        // If it exists, verify it's a directory to prevent attacks
+        // where a file named 'uploads' exists.
+        struct STAT_T st;
+        if (STAT(dir_path, &st) != 0) {
+            perror("Error stating uploads path");
+            return -1;
+        }
+        if (!IS_DIR(st.st_mode)) {
+            fprintf(stderr, "Error: '%s' exists but is not a directory.\n", dir_path);
+            return -1;
+        }
+    } else {
+        printf("Directory '%s' created.\n", dir_path);
+    }
+    
+    return 0;
 }
 
-
-static int send_response(struct MHD_Connection *connection, int status_code, const char *page) {
-    struct MHD_Response *response = MHD_create_response_from_buffer(strlen(page), (void *)page, MHD_RESPMEM_PERSISTENT);
-    if (!response) {
-        return MHD_NO;
-    }
-    int ret = MHD_queue_response(connection, status_code, response);
-    MHD_destroy_response(response);
-    return ret;
-}
-
-
-// Iterator for processing POST data.
-static int iterate_post(void *coninfo_cls, enum MHD_ValueKind kind, const char *key,
-                        const char *filename, const char *content_type,
-                        const char *transfer_encoding, const char *data, uint64_t off,
-                        size_t size) {
-    struct ConnectionInfo *con_info = coninfo_cls;
-
-    if (con_info->error) {
-        return MHD_NO; // Stop processing if an error occurred
+/**
+ * @brief Handles a file upload securely.
+ *
+ * This function validates the filename and content length, then attempts to save
+ * the file to the predefined UPLOADS_DIR using an atomic creation operation
+ * to prevent TOCTOU (Time-of-Check to Time-of-Use) race conditions.
+ *
+ * @param filename The name of the file to be saved.
+ * @param content A pointer to the file content buffer.
+ * @param content_length The size of the content buffer in bytes.
+ * @return 0 on success, -1 on failure.
+ */
+int upload_file(const char *filename, const void *content, size_t content_length) {
+    // 1. Validate all inputs before use.
+    if (!is_filename_valid(filename)) {
+        return -1;
     }
 
-    // We only care about the 'file' form field
-    if (0 != strcmp(key, "file")) {
-        return MHD_YES;
+    if (content == NULL) {
+        fprintf(stderr, "Error: File content is NULL.\n");
+        return -1;
     }
 
-    if (filename != NULL && con_info->file_handle == NULL) {
-        // This is the start of a new file upload
-        const char *sanitized = sanitize_filename(filename);
-        if (!sanitized) {
-            con_info->error = 1;
-            return MHD_NO;
-        }
-        
-        snprintf(con_info->filename, MAX_FILENAME_LEN, "%s/%s", UPLOADS_DIR, sanitized);
-        
-        // Use open with O_CREAT | O_EXCL to safely create the file, preventing overwrites and TOCTOU
-        int fd = open(con_info->filename, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-        if (fd == -1) {
-            // File likely exists or another error occurred
-            con_info->error = 1;
-            return MHD_NO;
-        }
-        
-        con_info->file_handle = fdopen(fd, "wb");
-        if (con_info->file_handle == NULL) {
-             close(fd);
-             con_info->error = 1;
-             return MHD_NO;
-        }
-        con_info->total_bytes = 0;
+    if (content_length > MAX_FILE_SIZE) {
+        fprintf(stderr, "Error: File size (%zu bytes) exceeds maximum allowed size (%d bytes).\n",
+                content_length, MAX_FILE_SIZE);
+        return -1;
     }
 
-    if (size > 0) {
-        if (!con_info->file_handle) {
-            return MHD_YES; // Not our file, or an error occurred
-        }
-        
-        con_info->total_bytes += size;
-        if (con_info->total_bytes > MAX_FILE_SIZE) {
-            // File too large, clean up and set error
-            fclose(con_info->file_handle);
-            con_info->file_handle = NULL;
-            remove(con_info->filename); // Delete partial file
-            con_info->error = 2; // Specific error code for "too large"
-            return MHD_NO;
-        }
-        
-        if (fwrite(data, 1, size, con_info->file_handle) != size) {
-            // Write error
-            fclose(con_info->file_handle);
-            con_info->file_handle = NULL;
-            remove(con_info->filename);
-            con_info->error = 1;
-            return MHD_NO;
-        }
+    // 2. Safely construct the destination path.
+    char full_path[PATH_MAX];
+    // Use snprintf to prevent buffer overflows.
+    int path_len = snprintf(full_path, sizeof(full_path), "%s/%s", UPLOADS_DIR, filename);
+
+    if (path_len < 0 || (size_t)path_len >= sizeof(full_path)) {
+        fprintf(stderr, "Error: Constructed file path is too long.\n");
+        return -1;
     }
 
-    return MHD_YES;
-}
-
-// Cleanup function when a request is completed.
-static void request_completed(void *cls, struct MHD_Connection *connection,
-                              void **con_cls, enum MHD_RequestTerminationCode toe) {
-    struct ConnectionInfo *con_info = *con_cls;
-    if (NULL == con_info) {
-        return;
-    }
-    if (con_info->file_handle) {
-        fclose(con_info->file_handle);
-    }
-    free(con_info);
-    *con_cls = NULL;
-}
-
-
-// Main handler for incoming connections.
-static int answer_to_connection(void *cls, struct MHD_Connection *connection,
-                                const char *url, const char *method,
-                                const char *version, const char *upload_data,
-                                size_t *upload_data_size, void **con_cls) {
-    if (NULL == *con_cls) {
-        // First call for this connection, set up state
-        if (0 == strcmp(method, "POST") && 0 == strcmp(url, "/upload")) {
-            struct ConnectionInfo *con_info = malloc(sizeof(struct ConnectionInfo));
-            if (NULL == con_info) return MHD_NO;
-            
-            memset(con_info, 0, sizeof(struct ConnectionInfo));
-            
-            MHD_PostProcessor *pp = MHD_create_post_processor(connection, 1024, iterate_post, (void *)con_info);
-            if (NULL == pp) {
-                free(con_info);
-                return MHD_NO;
-            }
-            
-            *con_cls = (void *)pp;
-            return MHD_YES;
+    // 3. Open the file using a race-condition-safe method.
+    // "wbx" mode provides atomic, exclusive creation of a binary file.
+    // This is a C11 feature and prevents overwriting existing files and TOCTOU attacks.
+    FILE *fp = fopen(full_path, "wbx");
+    if (fp == NULL) {
+        if (errno == EEXIST) {
+            fprintf(stderr, "Error: File '%s' already exists.\n", full_path);
         } else {
-            // Not a valid upload request
-            return send_response(connection, MHD_HTTP_METHOD_NOT_ALLOWED, "Use POST to /upload");
+            perror("Error opening file for writing");
         }
+        return -1;
+    }
+    
+    // 4. Write content and handle errors.
+    size_t bytes_written = 0;
+    if (content_length > 0) {
+        bytes_written = fwrite(content, 1, content_length, fp);
     }
 
-    if (0 == strcmp(method, "POST")) {
-        MHD_PostProcessor *pp = *con_cls;
-        if (*upload_data_size != 0) {
-            MHD_post_process(pp, upload_data, *upload_data_size);
-            *upload_data_size = 0;
-            return MHD_YES;
-        } else {
-            // POST processing finished
-            struct ConnectionInfo *con_info = NULL;
-            MHD_get_post_processor_data(pp, (void**)&con_info);
-            MHD_destroy_post_processor(pp);
-            *con_cls = NULL; // Mark as processed
-            
-            if (con_info && con_info->error) {
-                if (con_info->error == 2) {
-                     return send_response(connection, MHD_HTTP_PAYLOAD_TOO_LARGE, "File too large");
-                }
-                return send_response(connection, MHD_HTTP_BAD_REQUEST, "Upload failed");
-            }
-
-            return send_response(connection, MHD_HTTP_OK, "File uploaded successfully");
-        }
+    // 5. Close the file and check for errors during close.
+    if (fclose(fp) != 0) {
+        perror("Error closing file");
+        // The file might be corrupted. Attempt to remove it.
+        remove(full_path);
+        return -1;
     }
 
-    return send_response(connection, MHD_HTTP_BAD_REQUEST, "Invalid request");
+    // Check for write errors after closing, as data might still be in buffers.
+    if (bytes_written != content_length) {
+        fprintf(stderr, "Error: Failed to write all content to file. Wrote %zu of %zu bytes.\n",
+                bytes_written, content_length);
+        // Clean up the partial file.
+        remove(full_path);
+        return -1;
+    }
+
+    printf("Successfully saved file to '%s'\n", full_path);
+    return 0;
 }
 
+/**
+ * @brief Main function with test cases.
+ * 
+ * Note: Compile with a C11 compliant compiler (e.g., gcc -std=c11) for "wbx" support.
+ */
 int main() {
-    // Create uploads directory if it doesn't exist
-    struct stat st = {0};
-    if (stat(UPLOADS_DIR, &st) == -1) {
-        mkdir(UPLOADS_DIR, 0700);
-    }
-
-    struct MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, PORT, NULL, NULL,
-                                                &answer_to_connection, NULL,
-                                                MHD_OPTION_NOTIFY_COMPLETED, request_completed, NULL,
-                                                MHD_OPTION_END);
-    if (NULL == daemon) {
-        fprintf(stderr, "Failed to start server\n");
+    if (ensure_uploads_dir_exists(UPLOADS_DIR) != 0) {
+        fprintf(stderr, "Fatal: Could not create or access uploads directory. Exiting.\n");
         return 1;
     }
 
-    printf("Server running on port %d\n", PORT);
-    printf("Uploads will be saved to '%s' directory.\n\n", UPLOADS_DIR);
-    printf("--- How to Test with cURL ---\n");
-    printf("1. Create a test file: echo 'c test content' > test_c.txt\n");
-    printf("2. Valid file upload: curl -F \"file=@test_c.txt\" http://localhost:%d/upload\n", PORT);
-    printf("3. File too large: Create a file > 10MB and try to upload it.\n");
-    printf("4. Path traversal: curl -F \"file=@test_c.txt;filename=../../test_c.txt\" http://localhost:%d/upload\n", PORT);
-    printf("5. Overwrite attempt: curl -F \"file=@test_c.txt\" http://localhost:%d/upload (should fail after first success)\n", PORT);
+    const char *content1 = "This is a test file.";
+    const char *long_content = "This is another test file content that is slightly longer.";
 
-    (void)getchar(); // Wait for user input to stop the server
+    // Test Cases
+    run_test_case(1, "Valid file upload", "test1.txt", content1, strlen(content1));
+    run_test_case(2, "Path traversal attempt", "../etc/passwd", "hacker", strlen("hacker"));
+    run_test_case(3, "Invalid characters in filename", "test<2>.txt", "badchars", strlen("badchars"));
+    run_test_case(4, "Filename already exists", "test1.txt", long_content, strlen(long_content));
+    run_test_case(5, "File size too large", "largefile.bin", "dummy", MAX_FILE_SIZE + 1);
 
-    MHD_stop_daemon(daemon);
+
+    // Clean up created files for repeatable tests
+    char cleanup_path[PATH_MAX];
+    snprintf(cleanup_path, sizeof(cleanup_path), "%s/%s", UPLOADS_DIR, "test1.txt");
+    remove(cleanup_path);
+
     return 0;
+}
+
+/**
+ * @brief Helper function to run and print a test case.
+ */
+void run_test_case(int test_num, const char *description, const char *filename, const void *content, size_t content_length) {
+    printf("\n--- Test Case %d: %s ---\n", test_num, description);
+    printf("Filename: '%s', Content Length: %zu\n", filename, content_length);
+    int result = upload_file(filename, content, content_length);
+    if (result == 0) {
+        printf("Result: SUCCESS\n");
+    } else {
+        printf("Result: FAILURE (as expected for negative tests)\n");
+    }
+    printf("--- End Test Case %d ---\n", test_num);
 }

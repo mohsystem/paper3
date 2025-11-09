@@ -1,331 +1,279 @@
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
 import java.io.*;
-import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import javax.servlet.*;
+import javax.servlet.http.*;
+import javax.servlet.annotation.*;
 
-public class Lse52 {
-    // Secure session storage with expiration
-    private static final Map<String, SessionData> sessions = new ConcurrentHashMap<>();
-    // Store hashed passwords with salt - in production use a database
-    private static final Map<String, UserCredentials> users = new ConcurrentHashMap<>();
-    private static final SecureRandom secureRandom = new SecureRandom();
-    private static final int SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-    private static final int MAX_LOGIN_ATTEMPTS = 5;
-    private static final Map<String, LoginAttempt> loginAttempts = new ConcurrentHashMap<>();
-
-    static class UserCredentials {
-        byte[] passwordHash;
-        byte[] salt;
-
-        UserCredentials(byte[] passwordHash, byte[] salt) {
-            this.passwordHash = passwordHash;
-            this.salt = salt;
+@WebServlet(name = "Lse52", urlPatterns = {"/", "/login", "/do_login", "/secret", "/logout"})
+public class Lse52 extends HttpServlet {
+    
+    // Secure password storage simulation - In production, use a proper database with hashed passwords
+    // and a secrets manager for credentials
+    private static final Map<String, String> USER_DATABASE = new HashMap<>();
+    
+    static {
+        // Initialize with a test user - password is hashed using SHA-256
+        // In production: use Argon2id or scrypt with proper salt and iterations
+        // Password for "testuser" is "SecurePass123!" (hashed)
+        try {
+            String salt = "fixed_salt_for_demo"; // In production: generate unique salt per user
+            USER_DATABASE.put("testuser", hashPassword("SecurePass123!", salt));
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Failed to initialize user database", e);
         }
     }
-
-    static class SessionData {
-        String username;
-        long expiry;
-
-        SessionData(String username, long expiry) {
-            this.username = username;
-            this.expiry = expiry;
-        }
-
-        boolean isExpired() {
-            return System.currentTimeMillis() > expiry;
-        }
-    }
-
-    static class LoginAttempt {
-        int attempts;
-        long lastAttempt;
-
-        LoginAttempt() {
-            this.attempts = 0;
-            this.lastAttempt = 0;
-        }
-    }
-
-    // Hash password with salt using SHA-256 and multiple iterations
-    private static byte[] hashPassword(String password, byte[] salt) throws NoSuchAlgorithmException {
+    
+    // Hash password using SHA-256 with salt
+    // In production: use Argon2id with proper parameters
+    private static String hashPassword(String password, String salt) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(salt);
+        md.update(salt.getBytes(StandardCharsets.UTF_8));
         byte[] hash = md.digest(password.getBytes(StandardCharsets.UTF_8));
-        // Multiple iterations for stronger security
-        for (int i = 0; i < 10000; i++) {
-            md.reset();
-            hash = md.digest(hash);
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) hexString.append('0');
+            hexString.append(hex);
         }
-        return hash;
+        return hexString.toString();
     }
-
-    // Create a new user with hashed password
-    private static void createUser(String username, String password) throws NoSuchAlgorithmException {
-        // Generate unique random salt for this user
-        byte[] salt = new byte[16];
-        secureRandom.nextBytes(salt);
-        byte[] hash = hashPassword(password, salt);
-        users.put(username, new UserCredentials(hash, salt));
-    }
-
-    // Verify password against stored hash
-    private static boolean verifyPassword(String username, String password) throws NoSuchAlgorithmException {
-        UserCredentials creds = users.get(username);
-        if (creds == null) {
-            return false;
+    
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        // Set secure headers for all responses
+        response.setHeader("X-Content-Type-Options", "nosniff");
+        response.setHeader("X-Frame-Options", "DENY");
+        response.setHeader("Content-Security-Policy", "default-src 'self'");
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
+        
+        String path = request.getServletPath();
+        
+        // Route requests to appropriate handlers
+        switch (path) {
+            case "/":
+                showIndex(request, response);
+                break;
+            case "/login":
+                showLogin(request, response);
+                break;
+            case "/secret":
+                showSecret(request, response);
+                break;
+            case "/logout":
+                doLogout(request, response);
+                break;
+            default:
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
-        byte[] hash = hashPassword(password, creds.salt);
-        return MessageDigest.isEqual(hash, creds.passwordHash); // Constant-time comparison
     }
-
-    // Generate secure session token
-    private static String generateSessionToken() {
-        byte[] token = new byte[32];
-        secureRandom.nextBytes(token);
-        return Base64.getEncoder().encodeToString(token);
-    }
-
-    // Validate session token and return username if valid
-    private static String validateSession(String token) {
-        if (token == null || token.isEmpty()) {
-            return null;
-        }
-        SessionData session = sessions.get(token);
-        if (session == null || session.isExpired()) {
-            if (session != null) {
-                sessions.remove(token); // Clean up expired session
-            }
-            return null;
-        }
-        return session.username;
-    }
-
-    // Get session token from cookie
-    private static String getSessionToken(HttpExchange exchange) {
-        String cookie = exchange.getRequestHeaders().getFirst("Cookie");
-        if (cookie != null) {
-            for (String c : cookie.split(";")) {
-                c = c.trim();
-                if (c.startsWith("session=")) {
-                    return c.substring(8);
-                }
-            }
-        }
-        return null;
-    }
-
-    // Set secure cookie
-    private static void setSessionCookie(HttpExchange exchange, String token) {
-        // Secure cookie with HttpOnly and SameSite flags
-        exchange.getResponseHeaders().add("Set-Cookie", 
-            "session=" + token + "; HttpOnly; Secure; SameSite=Strict; Max-Age=1800; Path=/");
-    }
-
-    // Check rate limiting for login attempts
-    private static boolean isRateLimited(String username) {
-        LoginAttempt attempt = loginAttempts.get(username);
-        if (attempt == null) {
-            return false;
-        }
-        long timeSinceLastAttempt = System.currentTimeMillis() - attempt.lastAttempt;
-        if (timeSinceLastAttempt > 300000) { // 5 minutes cooldown
-            loginAttempts.remove(username);
-            return false;
-        }
-        return attempt.attempts >= MAX_LOGIN_ATTEMPTS;
-    }
-
-    // Record login attempt
-    private static void recordLoginAttempt(String username, boolean success) {
-        if (success) {
-            loginAttempts.remove(username);
+    
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        // Set secure headers
+        response.setHeader("X-Content-Type-Options", "nosniff");
+        response.setHeader("X-Frame-Options", "DENY");
+        response.setHeader("Content-Security-Policy", "default-src 'self'");
+        response.setCharacterEncoding("UTF-8");
+        
+        String path = request.getServletPath();
+        
+        if ("/do_login".equals(path)) {
+            doLogin(request, response);
         } else {
-            LoginAttempt attempt = loginAttempts.computeIfAbsent(username, k -> new LoginAttempt());
-            attempt.attempts++;
-            attempt.lastAttempt = System.currentTimeMillis();
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         }
     }
-
-    static class IndexHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            String response = "<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"><title>Index</title></head>" +
-                "<body><h1>Welcome</h1><p><a href=\\"/login\\">Login</a></p></body></html>";
-            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-            exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
-            exchange.getResponseHeaders().set("X-Frame-Options", "DENY");
-            exchange.sendResponseHeaders(200, response.getBytes(StandardCharsets.UTF_8).length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes(StandardCharsets.UTF_8));
-            }
+    
+    // Display index page with link to login
+    private void showIndex(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        PrintWriter out = response.getWriter();
+        out.println("<!DOCTYPE html>");
+        out.println("<html>");
+        out.println("<head>");
+        out.println("<meta charset=\\"UTF-8\\">");
+        out.println("<title>Home</title>");
+        out.println("</head>");
+        out.println("<body>");
+        out.println("<h1>Welcome to the Home Page</h1>");
+        
+        // Check if user is already logged in
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("username") != null) {
+            // Sanitize output to prevent XSS
+            String username = sanitizeOutput((String) session.getAttribute("username"));
+            out.println("<p>You are logged in as: " + username + "</p>");
+            out.println("<p><a href=\\"/secret\\">Go to Secret Page</a></p>");
+            out.println("<p><a href=\\"/logout\\">Logout</a></p>");
+        } else {
+            out.println("<p><a href=\\"/login\\">Login</a></p>");
         }
+        
+        out.println("</body>");
+        out.println("</html>");
     }
-
-    static class LoginHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            if ("GET".equals(exchange.getRequestMethod())) {
-                String response = "<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"><title>Login</title></head>" +
-                    "<body><h1>Login</h1>" +
-                    "<form method=\\"POST\\" action=\\"/login\\">" +
-                    "<label>Username: <input type=\\"text\\" name=\\"username\\" required maxlength=\\"50\\"></label><br>" +
-                    "<label>Password: <input type=\\"password\\" name=\\"password\\" required maxlength=\\"100\\"></label><br>" +
-                    "<button type=\\"submit\\">Login</button>" +
-                    "</form></body></html>";
-                exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-                exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
-                exchange.getResponseHeaders().set("X-Frame-Options", "DENY");
-                exchange.sendResponseHeaders(200, response.getBytes(StandardCharsets.UTF_8).length);
-                try (OutputStream os = exchange.getResponseBody()) {
-                    os.write(response.getBytes(StandardCharsets.UTF_8));
-                }
-            } else if ("POST".equals(exchange.getRequestMethod())) {
-                doLogin(exchange);
-            } else {
-                exchange.sendResponseHeaders(405, -1);
-            }
+    
+    // Display login form
+    private void showLogin(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        PrintWriter out = response.getWriter();
+        out.println("<!DOCTYPE html>");
+        out.println("<html>");
+        out.println("<head>");
+        out.println("<meta charset=\\"UTF-8\\">");
+        out.println("<title>Login</title>");
+        out.println("</head>");
+        out.println("<body>");
+        out.println("<h1>Login</h1>");
+        
+        // Display error message if present (sanitized)
+        String error = request.getParameter("error");
+        if (error != null) {
+            out.println("<p style=\\"color: red;\\">Invalid credentials</p>");
         }
-
-        private void doLogin(HttpExchange exchange) throws IOException {
-            // Read and validate input length
-            InputStream is = exchange.getRequestBody();
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            byte[] data = new byte[1024];
-            int bytesRead;
-            int totalBytes = 0;
-            int maxSize = 4096; // Maximum request size
+        
+        out.println("<form method=\\"post\\" action=\\"/do_login\\">");
+        out.println("<div>");
+        out.println("<label for=\\"username\\">Username:</label>");
+        out.println("<input type=\\"text\\" id=\\"username\\" name=\\"username\\" required maxlength=\\"50\\">");
+        out.println("</div>");
+        out.println("<div>");
+        out.println("<label for=\\"password\\">Password:</label>");
+        out.println("<input type=\\"password\\" id=\\"password\\" name=\\"password\\" required maxlength=\\"100\\">");
+        out.println("</div>");
+        out.println("<div>");
+        out.println("<button type=\\"submit\\">Login</button>");
+        out.println("</div>");
+        out.println("</form>");
+        out.println("<p><a href=\\"/\\">Back to Home</a></p>");
+        out.println("</body>");
+        out.println("</html>");
+    }
+    
+    // Process login form submission
+    private void doLogin(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        
+        // Input validation: check parameters exist and are not empty
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        
+        // Validate input is not null and within acceptable length
+        if (username == null || password == null || 
+            username.trim().isEmpty() || password.trim().isEmpty() ||
+            username.length() > 50 || password.length() > 100) {
+            response.sendRedirect("/login?error=1");
+            return;
+        }
+        
+        // Sanitize username - allow only alphanumeric and underscore
+        username = username.trim();
+        if (!username.matches("^[a-zA-Z0-9_]+$")) {
+            response.sendRedirect("/login?error=1");
+            return;
+        }
+        
+        try {
+            // Hash the provided password with the same salt used in storage
+            String hashedPassword = hashPassword(password, "fixed_salt_for_demo");
             
-            while ((bytesRead = is.read(data)) != -1) {
-                totalBytes += bytesRead;
-                if (totalBytes > maxSize) {
-                    exchange.sendResponseHeaders(413, -1); // Request too large
-                    return;
+            // Verify credentials
+            if (USER_DATABASE.containsKey(username) && 
+                USER_DATABASE.get(username).equals(hashedPassword)) {
+                
+                // Invalidate any existing session to prevent session fixation
+                HttpSession oldSession = request.getSession(false);
+                if (oldSession != null) {
+                    oldSession.invalidate();
                 }
-                buffer.write(data, 0, bytesRead);
+                
+                // Create new session with secure settings
+                HttpSession session = request.getSession(true);
+                session.setAttribute("username", username);
+                
+                // Set session timeout (30 minutes)
+                session.setMaxInactiveInterval(1800);
+                
+                // Configure secure cookie settings
+                Cookie sessionCookie = new Cookie("JSESSIONID", session.getId());
+                sessionCookie.setHttpOnly(true); // Prevent XSS access to cookie
+                sessionCookie.setSecure(true);   // Only send over HTTPS
+                sessionCookie.setPath("/");
+                sessionCookie.setMaxAge(-1);     // Session cookie
+                response.addCookie(sessionCookie);
+                
+                // Redirect to secret page after successful login
+                response.sendRedirect("/secret");
+            } else {
+                // Invalid credentials - redirect back to login with error
+                response.sendRedirect("/login?error=1");
             }
-
-            String body = buffer.toString(StandardCharsets.UTF_8.name());
-            Map<String, String> params = parseFormData(body);
-
-            String username = params.get("username");
-            String password = params.get("password");
-
-            // Input validation
-            if (username == null || password == null || 
-                username.isEmpty() || password.isEmpty() ||
-                username.length() > 50 || password.length() > 100) {
-                sendErrorResponse(exchange, "Invalid input");
-                return;
-            }
-
-            // Sanitize username to alphanumeric only
-            if (!username.matches("^[a-zA-Z0-9_]+$")) {
-                sendErrorResponse(exchange, "Invalid username format");
-                return;
-            }
-
-            // Check rate limiting
-            if (isRateLimited(username)) {
-                sendErrorResponse(exchange, "Too many login attempts. Please try again later.");
-                return;
-            }
-
-            try {
-                // Verify credentials
-                boolean valid = verifyPassword(username, password);
-                recordLoginAttempt(username, valid);
-
-                if (valid) {
-                    // Create session
-                    String token = generateSessionToken();
-                    long expiry = System.currentTimeMillis() + SESSION_TIMEOUT_MS;
-                    sessions.put(token, new SessionData(username, expiry));
-                    
-                    // Set secure cookie and redirect
-                    setSessionCookie(exchange, token);
-                    exchange.getResponseHeaders().set("Location", "/secret");
-                    exchange.sendResponseHeaders(302, -1);
-                } else {
-                    sendErrorResponse(exchange, "Invalid credentials");
-                }
-            } catch (NoSuchAlgorithmException e) {
-                sendErrorResponse(exchange, "Authentication error");
-            }
-        }
-
-        private Map<String, String> parseFormData(String body) {
-            Map<String, String> params = new HashMap<>();
-            if (body == null || body.isEmpty()) {
-                return params;
-            }
-            for (String pair : body.split("&")) {
-                String[] kv = pair.split("=", 2);
-                if (kv.length == 2) {
-                    try {
-                        String key = java.net.URLDecoder.decode(kv[0], StandardCharsets.UTF_8.name());
-                        String value = java.net.URLDecoder.decode(kv[1], StandardCharsets.UTF_8.name());
-                        params.put(key, value);
-                    } catch (UnsupportedEncodingException e) {
-                        // Should not happen with UTF-8
-                    }
-                }
-            }
-            return params;
-        }
-
-        private void sendErrorResponse(HttpExchange exchange, String message) throws IOException {
-            String response = "<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"><title>Login Error</title></head>" +
-                "<body><h1>Error</h1><p>" + escapeHtml(message) + "</p>" +
-                "<p><a href=\\"/login\\">Try again</a></p></body></html>";
-            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-            exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
-            exchange.getResponseHeaders().set("X-Frame-Options", "DENY");
-            exchange.sendResponseHeaders(401, response.getBytes(StandardCharsets.UTF_8).length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes(StandardCharsets.UTF_8));
-            }
+        } catch (NoSuchAlgorithmException e) {
+            // Log error securely without exposing details to user
+            System.err.println("Authentication error occurred");
+            response.sendRedirect("/login?error=1");
         }
     }
-
-    static class SecretHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            String token = getSessionToken(exchange);
-            String username = validateSession(token);
-
-            if (username == null) {
-                // Redirect to login if not authenticated
-                exchange.getResponseHeaders().set("Location", "/login");
-                exchange.sendResponseHeaders(302, -1);
-                return;
-            }
-
-            String response = "<!DOCTYPE html><html><head><meta charset=\\"UTF-8\\"><title>Secret</title></head>" +
-                "<body><h1>Secret settings</h1>" +
-                "<p>Welcome, " + escapeHtml(username) + "!</p>" +
-                "<p><a href=\\"/\\">Home</a></p></body></html>";
-            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-            exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
-            exchange.getResponseHeaders().set("X-Frame-Options", "DENY");
-            exchange.getResponseHeaders().set("Cache-Control", "no-store, no-cache, must-revalidate");
-            exchange.sendResponseHeaders(200, response.getBytes(StandardCharsets.UTF_8).length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes(StandardCharsets.UTF_8));
-            }
+    
+    // Display secret page (requires authentication)
+    private void showSecret(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        
+        // Check if user is authenticated
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("username") == null) {
+            // Not authenticated - redirect to login
+            response.sendRedirect("/login");
+            return;
         }
+        
+        // User is authenticated - show secret page
+        PrintWriter out = response.getWriter();
+        out.println("<!DOCTYPE html>");
+        out.println("<html>");
+        out.println("<head>");
+        out.println("<meta charset=\\"UTF-8\\">");
+        out.println("<title>Secret Settings</title>");
+        out.println("</head>");
+        out.println("<body>");
+        out.println("<h1>Secret settings</h1>");
+        
+        // Sanitize username before displaying
+        String username = sanitizeOutput((String) session.getAttribute("username"));
+        out.println("<p>Welcome, " + username + "!</p>");
+        
+        out.println("<p><a href=\\"/\\">Back to Home</a></p>");
+        out.println("<p><a href=\\"/logout\\">Logout</a></p>");
+        out.println("</body>");
+        out.println("</html>");
     }
-
-    // HTML escape to prevent XSS
-    private static String escapeHtml(String input) {
+    
+    // Handle logout
+    private void doLogout(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        
+        // Invalidate session
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        
+        // Redirect to home page
+        response.sendRedirect("/");
+    }
+    
+    // Sanitize output to prevent XSS attacks
+    private String sanitizeOutput(String input) {
         if (input == null) {
             return "";
         }
@@ -335,33 +283,47 @@ public class Lse52 {
                     .replace("\\"", "&quot;")
                     .replace("'", "&#x27;");
     }
-
+    
+    // Main method with test cases
     public static void main(String[] args) {
+        System.out.println("=== Lse52 Security Test Cases ===\\n");
+        
+        // Test Case 1: Valid password hashing
         try {
-            // Create test users with secure password hashing
-            createUser("admin", "SecureP@ss123!");
-            createUser("user1", "TestUser#456");
-            createUser("user2", "Demo$Pass789");
-            createUser("testuser", "MyTest&Pass000");
-            createUser("guest", "Guest!Pass321");
-
-            HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-            server.createContext("/", new IndexHandler());
-            server.createContext("/login", new LoginHandler());
-            server.createContext("/secret", new SecretHandler());
-            server.setExecutor(null);
-            server.start();
-
-            System.out.println("Server started on port 8000");
-            System.out.println("Test users created:");
-            System.out.println("  admin / SecureP@ss123!");
-            System.out.println("  user1 / TestUser#456");
-            System.out.println("  user2 / Demo$Pass789");
-            System.out.println("  testuser / MyTest&Pass000");
-            System.out.println("  guest / Guest!Pass321");
-
-        } catch (Exception e) {
-            System.err.println("Server error: " + e.getMessage());
+            String hash1 = hashPassword("SecurePass123!", "fixed_salt_for_demo");
+            String hash2 = hashPassword("SecurePass123!", "fixed_salt_for_demo");
+            System.out.println("Test 1 - Password hashing consistency: " + hash1.equals(hash2));
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("Test 1 - Failed: " + e.getMessage());
         }
+        
+        // Test Case 2: Different passwords produce different hashes
+        try {
+            String hash1 = hashPassword("Password1", "salt");
+            String hash2 = hashPassword("Password2", "salt");
+            System.out.println("Test 2 - Different passwords: " + !hash1.equals(hash2));
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("Test 2 - Failed: " + e.getMessage());
+        }
+        
+        // Test Case 3: XSS sanitization
+        Lse52 servlet = new Lse52();
+        String xssInput = "<script>alert('xss')</script>";
+        String sanitized = servlet.sanitizeOutput(xssInput);
+        System.out.println("Test 3 - XSS sanitization: " + !sanitized.contains("<script>"));
+        
+        // Test Case 4: Username validation pattern
+        String validUsername = "testuser123";
+        String invalidUsername = "test<script>";
+        System.out.println("Test 4 - Username validation: " + 
+            validUsername.matches("^[a-zA-Z0-9_]+$") && 
+            !invalidUsername.matches("^[a-zA-Z0-9_]+$"));
+        
+        // Test Case 5: User database lookup
+        boolean userExists = USER_DATABASE.containsKey("testuser");
+        boolean fakeUserExists = USER_DATABASE.containsKey("fakeuser");
+        System.out.println("Test 5 - User database: " + (userExists && !fakeUserExists));
+        
+        System.out.println("\\nAll security tests completed.");
     }
 }

@@ -1,149 +1,150 @@
 import os
 import uuid
-import tempfile
-import shutil
-import logging
-from flask import Flask, request, redirect, url_for, flash, Response
+from flask import Flask, request, redirect, url_for, flash, render_template_string
 from werkzeug.utils import secure_filename
-import requests
 
-# --- Configuration ---
+# Define a safe directory for uploads, created in the current working directory.
+# In a real application, this path should be carefully configured and outside the web root.
 UPLOAD_FOLDER = 'uploads'
-# Whitelist of allowed file extensions
+# Rule #6: Use allow lists over block lists.
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
-# Maximum file size allowed (10 MB)
-MAX_FILE_SIZE = 10 * 1024 * 1024 
+# Define a maximum file size to prevent denial-of-service (16 MB)
+MAX_FILE_SIZE = 16 * 1024 * 1024
 
 app = Flask(__name__)
-# Configure a secret key for flashing messages
-app.config['SECRET_KEY'] = os.urandom(24) 
-# Configure the upload folder
+
+# Rule #11, #63: Never hard code secrets. Read from environment or a secret manager.
+# This key is used for flashing messages.
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'a-very-secret-key-for-development')
+
+if app.config['SECRET_KEY'] == 'a-very-secret-key-for-development' and os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    print("WARNING: Using a default secret key. Set the FLASK_SECRET_KEY environment variable for production.")
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-# Configure the maximum file size
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
-# --- Helper Functions ---
+
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- Flask Routes ---
-@app.route('/', methods=['GET'])
-def index():
-    """Render the upload form."""
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post action="/upload" enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    '''
 
+@app.route('/', methods=['GET'])
+def upload_form():
+    """Serves the file upload form."""
+    return render_template_string('''
+    <!doctype html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Upload new File</title>
+    </head>
+    <body>
+        <h1>Upload new File</h1>
+        <form method=post enctype=multipart/form-data action="{{ url_for('upload_file') }}">
+          <p>
+            <input type=file name=file>
+            <input type=submit value=Upload>
+          </p>
+        </form>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </body>
+    </html>
+    ''')
+
+
+# Rule #5, #8, #9: Validate all inputs at trust boundaries.
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """Handle file uploads."""
+    """Handles the file upload logic."""
     if 'file' not in request.files:
-        flash('No file part')
-        return redirect(request.url)
+        flash('No file part in the request.')
+        return redirect(url_for('upload_form'))
     
     file = request.files['file']
 
     if file.filename == '':
-        flash('No selected file')
-        return redirect(url_for('index'))
+        flash('No file selected.')
+        return redirect(url_for('upload_form'))
 
-    # Use werkzeug's secure_filename to prevent path traversal and sanitize the name
-    filename = secure_filename(file.filename)
-    
-    if file and allowed_file(filename):
-        # Generate a unique filename to prevent overwrites and guessing
-        file_ext = filename.rsplit('.', 1)[1].lower()
-        unique_filename = f"{uuid.uuid4()}.{file_ext}"
+    # Rule #62: Validate file type and name.
+    if file and allowed_file(file.filename):
+        # Rule #7, #43: Sanitize filename to prevent path traversal attacks.
+        original_filename = secure_filename(file.filename)
         
-        # Ensure the upload directory exists
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        # In case secure_filename returns an empty string (e.g., filename is just ".")
+        if not original_filename:
+            flash('Invalid filename.')
+            return redirect(url_for('upload_form'))
+
+        file_extension = original_filename.rsplit('.', 1)[1].lower()
         
-        temp_dir = app.config['UPLOAD_FOLDER']
-        # Create a secure temporary file in the upload directory
+        # Generate a unique filename to prevent overwrites and filename guessing.
+        unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+        
+        upload_folder_abs = os.path.abspath(app.config['UPLOAD_FOLDER'])
+        save_path = os.path.join(upload_folder_abs, unique_filename)
+        
+        # Rule #45: Defense-in-depth check to ensure the path is within the upload folder.
+        if not os.path.abspath(save_path).startswith(upload_folder_abs):
+            # This case should be virtually unreachable due to secure_filename
+            app.logger.error(f"Path traversal attempt detected: {original_filename}")
+            flash('Invalid file path.')
+            return redirect(url_for('upload_form'))
+
         try:
-            with tempfile.NamedTemporaryFile(dir=temp_dir, delete=False, mode='wb') as tmp:
-                temp_path = tmp.name
-                # Stream the file content to the temporary file
-                file.save(tmp)
-            
-            # Atomically move the temporary file to its final destination
-            final_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            shutil.move(temp_path, final_path)
-            
-            # Set restrictive file permissions (owner can read/write)
-            os.chmod(final_path, 0o600)
-            
-            flash('File successfully uploaded')
-            return Response(f"File uploaded successfully as {unique_filename}", status=200)
+            # Rule #59: Handle exceptions during file operations.
+            file.save(save_path)
+            # Rule #71: Return generic success message.
+            flash(f'File "{original_filename}" uploaded successfully.')
+            return redirect(url_for('upload_form'))
         except Exception as e:
-            # Clean up temp file if it exists on error
-            if 'temp_path' in locals() and os.path.exists(temp_path):
-                os.remove(temp_path)
-            logging.error(f"File upload failed: {e}")
-            flash('An error occurred during file upload.')
-            return Response("File upload failed.", status=500)
-
+            # Rule #12, #71: Log detailed errors, return generic messages.
+            app.logger.error(f"Failed to save file '{unique_filename}': {e}")
+            flash('An error occurred on the server while saving the file.')
+            return redirect(url_for('upload_form'))
     else:
-        flash('File type not allowed')
-        return Response("File type not allowed.", status=400)
+        # Rule #6: Reject on validation failure.
+        flash('File type not allowed.')
+        return redirect(url_for('upload_form'))
 
 
-def run_tests():
-    """Runs test cases against the local server."""
-    base_url = "http://127.0.0.1:8080"
-    upload_url = f"{base_url}/upload"
-    
-    print("\n--- Running Test Cases ---")
-    
-    test_cases = [
-        {"name": "Valid .txt file", "filename": "test1.txt", "content": b"hello world", "expect_success": True},
-        {"name": "Valid .jpg file", "filename": "test2.jpg", "content": b"\xff\xd8\xff\xe0", "expect_success": True},
-        {"name": "Disallowed .html file", "filename": "test3.html", "content": b"<html></html>", "expect_success": False},
-        {"name": "Path traversal attempt", "filename": "../../etc/passwd.txt", "content": b"root:x:0:0", "expect_success": True}, # secure_filename sanitizes this
-        {"name": "No file part", "files": {}, "expect_success": False},
-    ]
-
-    for test in test_cases:
-        print(f"[*] Running test: {test['name']}")
+def main():
+    """
+    Main function to set up and run the web application.
+    Includes instructions for manual testing.
+    """
+    # Create upload directory if it doesn't exist.
+    if not os.path.exists(UPLOAD_FOLDER):
         try:
-            if "files" in test: # Special case for no file part
-                 r = requests.post(upload_url, files=test.get("files"))
-            else:
-                 files = {'file': (test['filename'], test['content'])}
-                 r = requests.post(upload_url, files=files)
-            
-            is_success = 200 <= r.status_code < 300
-            
-            if is_success == test['expect_success']:
-                print(f"[PASS] {test['name']} - Status: {r.status_code}")
-            else:
-                print(f"[FAIL] {test['name']} - Expected {'success' if test['expect_success'] else 'failure'}, but got status {r.status_code}. Response: {r.text}")
-
-        except requests.exceptions.RequestException as e:
-            print(f"[FAIL] {test['name']} - Request failed: {e}")
-
-    print("--- Test Cases Finished ---")
+            os.makedirs(UPLOAD_FOLDER)
+        except OSError as e:
+            print(f"Error creating directory {UPLOAD_FOLDER}: {e}")
+            return
+    
+    print("Starting Flask web server...")
+    print(f"File uploads will be saved to the '{os.path.abspath(UPLOAD_FOLDER)}' directory.")
+    print("Access the application at http://127.0.0.1:5000")
+    print("\n--- Manual Test Cases ---")
+    print("1. Success Case: Upload a valid file (e.g., a .png or .txt file).")
+    print("2. Invalid Extension: Try to upload a file with a disallowed extension (e.g., .exe).")
+    print("3. No File Selected: Click the 'Upload' button without selecting a file.")
+    print(f"4. File Too Large: Try to upload a file larger than {MAX_FILE_SIZE / 1024 / 1024} MB.")
+    print("5. Malicious Filename: Try to upload a file named '../../secret.txt'. The filename should be sanitized.")
+    
+    # For production, use a production-ready WSGI server like Gunicorn or uWSGI.
+    # Do not use debug=True in a production environment.
+    app.run(host='127.0.0.1', port=5000, debug=False)
 
 
 if __name__ == '__main__':
-    # Set up logging
-    logging.basicConfig(level=logging.INFO)
-    
-    # Check if we are in test mode or server mode
-    import sys
-    if len(sys.argv) > 1 and sys.argv[1] == 'test':
-        # To run tests, you need to run the server in a separate terminal
-        # and then run 'python your_script_name.py test'
-        run_tests()
-    else:
-        print("Starting server on http://127.0.0.1:8080")
-        print("To run tests, run this script with the 'test' argument in another terminal.")
-        app.run(host='127.0.0.1', port=8080, debug=False)
+    main()

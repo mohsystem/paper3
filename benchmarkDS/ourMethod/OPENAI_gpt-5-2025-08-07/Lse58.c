@@ -1,358 +1,334 @@
+// Simple secure login system in C with email change functionality.
+// Uses PBKDF2-HMAC-SHA256 with per-user random salt and strong password policy.
+// Requires OpenSSL libcrypto for PBKDF2, RNG, and constant-time compare.
+//
+// Build example (may vary by system):
+//   gcc -Wall -Wextra -O2 login_email_change.c -o login_email_change -lcrypto
+//
+// This file is self-contained and includes a main() with 5 test cases.
+
 #include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <stdint.h>
 
-// Self-contained simple login system with PBKDF2-HMAC-SHA256 for password hashing
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#include <openssl/crypto.h>
 
-// ===== SHA-256 implementation =====
-typedef struct {
-    uint32_t state[8];
-    uint64_t bitlen;
-    uint8_t data[64];
-    size_t datalen;
-} SHA256_CTX;
+#define SALT_LEN 16u
+#define HASH_LEN 32u
+#define PBKDF2_ITERS 210000
 
-static const uint32_t K256[64] = {
-    0x428a2f98ul,0x71374491ul,0xb5c0fbcful,0xe9b5dba5ul,0x3956c25bul,0x59f111f1ul,0x923f82a4ul,0xab1c5ed5ul,
-    0xd807aa98ul,0x12835b01ul,0x243185beul,0x550c7dc3ul,0x72be5d74ul,0x80deb1feul,0x9bdc06a7ul,0xc19bf174ul,
-    0xe49b69c1ul,0xefbe4786ul,0x0fc19dc6ul,0x240ca1ccul,0x2de92c6ful,0x4a7484aaul,0x5cb0a9dcul,0x76f988daul,
-    0x983e5152ul,0xa831c66dul,0xb00327c8ul,0xbf597fc7ul,0xc6e00bf3ul,0xd5a79147ul,0x06ca6351ul,0x14292967ul,
-    0x27b70a85ul,0x2e1b2138ul,0x4d2c6dfcul,0x53380d13ul,0x650a7354ul,0x766a0abbul,0x81c2c92eul,0x92722c85ul,
-    0xa2bfe8a1ul,0xa81a664bul,0xc24b8b70ul,0xc76c51a3ul,0xd192e819ul,0xd6990624ul,0xf40e3585ul,0x106aa070ul,
-    0x19a4c116ul,0x1e376c08ul,0x2748774cul,0x34b0bcb5ul,0x391c0cb3ul,0x4ed8aa4aul,0x5b9cca4ful,0x682e6ff3ul,
-    0x748f82eeul,0x78a5636ful,0x84c87814ul,0x8cc70208ul,0x90befffaul,0xa4506cebul,0xbef9a3f7ul,0xc67178f2ul
-};
-
-static inline uint32_t ROTR(uint32_t x, uint32_t n){ return (x>>n) | (x<<(32-n)); }
-static inline uint32_t CH(uint32_t x, uint32_t y, uint32_t z){ return (x & y) ^ (~x & z); }
-static inline uint32_t MAJ(uint32_t x, uint32_t y, uint32_t z){ return (x & y) ^ (x & z) ^ (y & z); }
-static inline uint32_t EP0(uint32_t x){ return ROTR(x,2) ^ ROTR(x,13) ^ ROTR(x,22); }
-static inline uint32_t EP1(uint32_t x){ return ROTR(x,6) ^ ROTR(x,11) ^ ROTR(x,25); }
-static inline uint32_t SIG0(uint32_t x){ return ROTR(x,7) ^ ROTR(x,18) ^ (x>>3); }
-static inline uint32_t SIG1(uint32_t x){ return ROTR(x,17) ^ ROTR(x,19) ^ (x>>10); }
-
-static void sha256_transform(SHA256_CTX* ctx, const uint8_t data[64]){
-    uint32_t m[64];
-    for (int i=0;i<16;i++){
-        m[i] = ((uint32_t)data[i*4]<<24) | ((uint32_t)data[i*4+1]<<16) | ((uint32_t)data[i*4+2]<<8) | (uint32_t)data[i*4+3];
-    }
-    for (int i=16;i<64;i++){
-        m[i] = SIG1(m[i-2]) + m[i-7] + SIG0(m[i-15]) + m[i-16];
-    }
-    uint32_t a=ctx->state[0], b=ctx->state[1], c=ctx->state[2], d=ctx->state[3];
-    uint32_t e=ctx->state[4], f=ctx->state[5], g=ctx->state[6], h=ctx->state[7];
-    for (int i=0;i<64;i++){
-        uint32_t t1 = h + EP1(e) + CH(e,f,g) + K256[i] + m[i];
-        uint32_t t2 = EP0(a) + MAJ(a,b,c);
-        h=g; g=f; f=e; e=d + t1; d=c; c=b; b=a; a=t1 + t2;
-    }
-    ctx->state[0]+=a; ctx->state[1]+=b; ctx->state[2]+=c; ctx->state[3]+=d;
-    ctx->state[4]+=e; ctx->state[5]+=f; ctx->state[6]+=g; ctx->state[7]+=h;
-}
-
-static void sha256_init(SHA256_CTX* ctx){
-    ctx->datalen = 0;
-    ctx->bitlen = 0;
-    ctx->state[0]=0x6a09e667ul; ctx->state[1]=0xbb67ae85ul; ctx->state[2]=0x3c6ef372ul; ctx->state[3]=0xa54ff53aul;
-    ctx->state[4]=0x510e527ful; ctx->state[5]=0x9b05688cul; ctx->state[6]=0x1f83d9abul; ctx->state[7]=0x5be0cd19ul;
-}
-
-static void sha256_update(SHA256_CTX* ctx, const uint8_t* data, size_t len){
-    for (size_t i=0;i<len;i++){
-        ctx->data[ctx->datalen++] = data[i];
-        if (ctx->datalen == 64){
-            sha256_transform(ctx, ctx->data);
-            ctx->bitlen += 512;
-            ctx->datalen = 0;
-        }
-    }
-}
-
-static void sha256_final(SHA256_CTX* ctx, uint8_t out[32]){
-    uint32_t i = (uint32_t)ctx->datalen;
-    ctx->data[i++] = 0x80;
-    if (i > 56){
-        while (i<64) ctx->data[i++] = 0x00;
-        sha256_transform(ctx, ctx->data);
-        i = 0;
-    }
-    while (i<56) ctx->data[i++] = 0x00;
-    ctx->bitlen += ctx->datalen * 8ull;
-    for (int j=7;j>=0;j--){
-        ctx->data[56 + (7-j)] = (uint8_t)((ctx->bitlen >> (j*8)) & 0xffu);
-    }
-    sha256_transform(ctx, ctx->data);
-    for (int j=0;j<8;j++){
-        out[j*4  ] = (uint8_t)((ctx->state[j] >> 24) & 0xffu);
-        out[j*4+1] = (uint8_t)((ctx->state[j] >> 16) & 0xffu);
-        out[j*4+2] = (uint8_t)((ctx->state[j] >> 8) & 0xffu);
-        out[j*4+3] = (uint8_t)(ctx->state[j] & 0xffu);
-    }
-    memset(ctx, 0, sizeof(*ctx));
-}
-
-// ===== HMAC-SHA256 =====
-static void hmac_sha256(const uint8_t* key, size_t keylen, const uint8_t* data, size_t datalen, uint8_t out[32]){
-    const size_t block = 64;
-    uint8_t k0[64];
-    if (keylen > block) {
-        SHA256_CTX c;
-        sha256_init(&c);
-        sha256_update(&c, key, keylen);
-        sha256_final(&c, k0);
-        memset(k0+32, 0, 32);
-    } else {
-        memset(k0, 0, sizeof(k0));
-        memcpy(k0, key, keylen);
-    }
-    uint8_t ipad[64], opad[64];
-    for (size_t i=0;i<64;i++){ ipad[i] = (uint8_t)(k0[i] ^ 0x36u); opad[i] = (uint8_t)(k0[i] ^ 0x5cu); }
-    SHA256_CTX ci;
-    sha256_init(&ci);
-    sha256_update(&ci, ipad, 64);
-    sha256_update(&ci, data, datalen);
-    uint8_t inner[32];
-    sha256_final(&ci, inner);
-
-    SHA256_CTX co;
-    sha256_init(&co);
-    sha256_update(&co, opad, 64);
-    sha256_update(&co, inner, 32);
-    sha256_final(&co, out);
-
-    memset(k0, 0, sizeof(k0));
-    memset(ipad, 0, sizeof(ipad));
-    memset(opad, 0, sizeof(opad));
-    memset(inner, 0, sizeof(inner));
-}
-
-// ===== PBKDF2-HMAC-SHA256 =====
-static void pbkdf2_hmac_sha256(const uint8_t* password, size_t passlen,
-                               const uint8_t* salt, size_t saltlen,
-                               uint32_t iterations,
-                               uint8_t* dk, size_t dkLen){
-    size_t hLen = 32;
-    uint32_t blocks = (uint32_t)((dkLen + hLen - 1) / hLen);
-    uint8_t* U = (uint8_t*)calloc(hLen, 1);
-    uint8_t* T = (uint8_t*)calloc(hLen, 1);
-    uint8_t* saltBlock = (uint8_t*)calloc(saltlen + 4, 1);
-    if (!U || !T || !saltBlock) {
-        if (U) { memset(U, 0, hLen); free(U); }
-        if (T) { memset(T, 0, hLen); free(T); }
-        if (saltBlock) { memset(saltBlock, 0, saltlen + 4); free(saltBlock); }
-        return;
-    }
-    memcpy(saltBlock, salt, saltlen);
-
-    for (uint32_t i=1; i<=blocks; i++){
-        saltBlock[saltlen]   = (uint8_t)((i >> 24) & 0xffu);
-        saltBlock[saltlen+1] = (uint8_t)((i >> 16) & 0xffu);
-        saltBlock[saltlen+2] = (uint8_t)((i >> 8) & 0xffu);
-        saltBlock[saltlen+3] = (uint8_t)(i & 0xffu);
-
-        hmac_sha256(password, passlen, saltBlock, saltlen + 4, U);
-        memcpy(T, U, hLen);
-        for (uint32_t j=2; j<=iterations; j++){
-            hmac_sha256(password, passlen, U, hLen, U);
-            for (size_t k=0; k<hLen; k++) T[k] ^= U[k];
-        }
-        size_t offset = (size_t)(i - 1) * hLen;
-        size_t cp = (hLen < (dkLen - offset)) ? hLen : (dkLen - offset);
-        memcpy(dk + offset, T, cp);
-    }
-
-    memset(U, 0, hLen); free(U);
-    memset(T, 0, hLen); free(T);
-    memset(saltBlock, 0, saltlen + 4); free(saltBlock);
-}
-
-static void secure_zero(void* v, size_t n){
-    volatile uint8_t* p = (volatile uint8_t*)v;
-    while (n--) *p++ = 0;
-}
-
-static int get_secure_random_bytes(uint8_t* out, size_t len){
-    FILE* f = fopen("/dev/urandom", "rb");
-    if (f){
-        size_t r = fread(out, 1, len, f);
-        fclose(f);
-        if (r == len) return 1;
-    }
-    // fallback to rand (not cryptographically secure, but ensures program runs)
-    for (size_t i=0;i<len;i++) out[i] = (uint8_t)(rand() & 0xFF);
-    return 1;
-}
-
-static bool is_password_strong(const char* pw){
-    if (!pw) return false;
-    size_t n = strlen(pw);
-    if (n < 12) return false;
-    int u=0,l=0,d=0,s=0;
-    for (size_t i=0;i<n;i++){
-        char c = pw[i];
-        if (c>='A'&&c<='Z') u=1;
-        else if (c>='a'&&c<='z') l=1;
-        else if (c>='0'&&c<='9') d=1;
-        else s=1;
-    }
-    return u&&l&&d&&s;
-}
-
-static bool is_email_valid(const char* email){
-    if (!email) return false;
-    size_t n = strlen(email);
-    if (n < 5 || n > 254) return false;
-    const char* at = strchr(email, '@');
-    if (!at || at==email || at==email + n - 1) return false;
-    const char* dot = strchr(at+1, '.');
-    if (!dot || dot == email + n - 1) return false;
-    return true;
-}
+#define EMAIL_MAX 255u
+#define USER_EMAIL_BUF (EMAIL_MAX + 1u)
 
 typedef struct {
-    char* username;
-    char* email;
-    uint8_t salt[16];
-    uint8_t hash[32];
-    int has_hash;
+    char email[USER_EMAIL_BUF];
+    unsigned char salt[SALT_LEN];
+    unsigned char pw_hash[HASH_LEN];
+    int iterations;
     int logged_in;
 } User;
 
-static void user_init(User* u, const char* username, const char* email){
-    u->username = strdup(username ? username : "");
-    u->email = strdup(email ? email : "");
-    memset(u->salt, 0, sizeof(u->salt));
-    memset(u->hash, 0, sizeof(u->hash));
-    u->has_hash = 0;
-    u->logged_in = 0;
+enum {
+    ERR_OK = 0,
+    ERR_INVALID_ARG = 1,
+    ERR_WEAK_PASSWORD = 2,
+    ERR_INVALID_EMAIL = 3,
+    ERR_CRYPTO = 4,
+    ERR_AUTH_FAILED = 5,
+    ERR_NOT_LOGGED_IN = 6,
+    ERR_EMAIL_MISMATCH = 7
+};
+
+static void secure_zero(void *ptr, size_t len) {
+    if (ptr == NULL || len == 0) return;
+    OPENSSL_cleanse(ptr, len);
 }
 
-static void user_free(User* u){
-    if (!u) return;
-    if (u->username) { free(u->username); u->username = NULL; }
-    if (u->email) { free(u->email); u->email = NULL; }
-    secure_zero(u->salt, sizeof(u->salt));
-    secure_zero(u->hash, sizeof(u->hash));
-    u->has_hash = 0;
-    u->logged_in = 0;
+static int generate_salt(unsigned char *salt, size_t salt_len) {
+    if (salt == NULL || salt_len == 0) return ERR_INVALID_ARG;
+    if (RAND_bytes(salt, (int)salt_len) != 1) return ERR_CRYPTO;
+    return ERR_OK;
 }
 
-static bool set_password(User* u, const char* password){
-    if (!u || !password) return false;
-    if (!is_password_strong(password)) return false;
-    if (!get_secure_random_bytes(u->salt, sizeof(u->salt))) return false;
-    pbkdf2_hmac_sha256((const uint8_t*)password, strlen(password),
-                       u->salt, sizeof(u->salt),
-                       210000, u->hash, sizeof(u->hash));
-    u->has_hash = 1;
-    return true;
-}
-
-static bool verify_password(const User* u, const char* password){
-    if (!u || !password || !u->has_hash) return false;
-    uint8_t derived[32];
-    pbkdf2_hmac_sha256((const uint8_t*)password, strlen(password),
-                       u->salt, sizeof(u->salt),
-                       210000, derived, sizeof(derived));
-    uint8_t diff = 0;
-    for (size_t i=0;i<32;i++) diff |= (uint8_t)(derived[i] ^ u->hash[i]);
-    secure_zero(derived, sizeof(derived));
-    return diff == 0;
-}
-
-static bool login(User* u, const char* username, const char* password){
-    if (!u || !username || !password) return false;
-    if (strcmp(u->username, username) != 0) return false;
-    if (verify_password(u, password)) {
-        u->logged_in = 1;
-        return true;
+static int derive_key(const char *password,
+                      const unsigned char *salt, size_t salt_len,
+                      int iterations,
+                      unsigned char *out_key, size_t out_len) {
+    if (!password || !salt || !out_key || salt_len == 0 || out_len == 0 || iterations <= 0) {
+        return ERR_INVALID_ARG;
     }
-    return false;
-}
-
-static bool change_email(User* u, const char* old_email, const char* new_email, const char* confirm_password){
-    if (!u || !old_email || !new_email || !confirm_password) return false;
-    if (!u->logged_in) return false;
-    if (strcmp(u->email, old_email) != 0) return false;
-    if (!is_email_valid(new_email)) return false;
-    if (!verify_password(u, confirm_password)) return false;
-    char* ne = strdup(new_email);
-    if (!ne) return false;
-    free(u->email);
-    u->email = ne;
-    return true;
-}
-
-static void generate_strong_password(char* out, size_t outsz){
-    const char* upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const char* lower = "abcdefghijklmnopqrstuvwxyz";
-    const char* digits = "0123456789";
-    const char* special = "!@#$%^&*()-_=+[]{};:,.?/|";
-    char all[256];
-    snprintf(all, sizeof(all), "%s%s%s%s", upper, lower, digits, special);
-    size_t len = 16;
-    if (outsz < len + 1) len = outsz > 1 ? outsz - 1 : 0;
-    if (len < 12) len = 12;
-    if (len + 1 > outsz) len = outsz > 0 ? outsz - 1 : 0;
-    if (len == 0) { if (outsz > 0) out[0] = '\0'; return; }
-
-    // Ensure policy requirements
-    out[0] = upper[rand()%26];
-    out[1] = lower[rand()%26];
-    out[2] = digits[rand()%10];
-    out[3] = special[rand()%strlen(special)];
-    size_t all_len = strlen(all);
-    for (size_t i=4;i<len;i++){
-        uint8_t b;
-        get_secure_random_bytes(&b, 1);
-        out[i] = all[b % all_len];
+    if (PKCS5_PBKDF2_HMAC(password, (int)strlen(password),
+                          salt, (int)salt_len,
+                          iterations,
+                          EVP_sha256(),
+                          (int)out_len, out_key) != 1) {
+        return ERR_CRYPTO;
     }
-    // shuffle
-    for (size_t i=len-1;i>0;i--){
-        uint8_t b;
-        get_secure_random_bytes(&b, 1);
-        size_t j = b % (i+1);
-        char tmp = out[i]; out[i] = out[j]; out[j] = tmp;
-    }
-    out[len] = '\0';
+    return ERR_OK;
 }
 
-int main(void){
-    User user;
-    user_init(&user, "alice", "alice@example.com");
+static int validate_email(const char *email) {
+    if (email == NULL) return 0;
+    size_t len = strnlen(email, USER_EMAIL_BUF);
+    if (len == 0 || len > EMAIL_MAX) return 0;
 
-    char password[64];
-    generate_strong_password(password, sizeof(password));
-    if (!set_password(&user, password)) {
-        printf("Setup failed\n");
-        user_free(&user);
+    // Basic format checks: must contain exactly one '@', local and domain parts valid
+    const char *at = strchr(email, '@');
+    if (at == NULL) return 0;
+    if (strchr(at + 1, '@') != NULL) return 0; // more than one '@'
+
+    size_t local_len = (size_t)(at - email);
+    size_t domain_len = len - local_len - 1u;
+    if (local_len == 0 || domain_len < 3) return 0; // domain like a.b
+
+    // Allowed chars: local [A-Za-z0-9._%+-], domain [A-Za-z0-9.-], domain must contain '.'
+    for (size_t i = 0; i < local_len; i++) {
+        unsigned char c = (unsigned char)email[i];
+        if (!(isalnum(c) || c == '.' || c == '_' || c == '%' || c == '+' || c == '-')) {
+            return 0;
+        }
+    }
+    const char *domain = at + 1;
+    if (domain[0] == '-' || domain[0] == '.' || domain[domain_len - 1] == '-' || domain[domain_len - 1] == '.') {
         return 0;
     }
+    int dot_found = 0;
+    for (size_t i = 0; i < domain_len; i++) {
+        unsigned char c = (unsigned char)domain[i];
+        if (c == '.') dot_found = 1;
+        if (!(isalnum(c) || c == '.' || c == '-')) {
+            return 0;
+        }
+    }
+    if (!dot_found) return 0;
+    return 1;
+}
 
-    // Test 1: Attempt change while not logged in -> false
-    bool t1 = change_email(&user, "alice@example.com", "newalice@example.com", password);
-    printf("Test1 change while not logged in: %s\n", t1 ? "true" : "false");
+static int password_is_strong(const char *pwd) {
+    if (pwd == NULL) return 0;
+    size_t len = strnlen(pwd, 1024);
+    if (len < 12 || len > 256) return 0;
+    int has_lower = 0, has_upper = 0, has_digit = 0, has_special = 0;
+    const char *specials = "!@#$%^&*()-_=+[]{};:,.?/";
+    for (size_t i = 0; i < len; i++) {
+        unsigned char c = (unsigned char)pwd[i];
+        if (isspace(c)) return 0; // disallow whitespace
+        if (islower(c)) has_lower = 1;
+        else if (isupper(c)) has_upper = 1;
+        else if (isdigit(c)) has_digit = 1;
+        else {
+            // check if in allowed specials
+            for (const char *p = specials; *p; ++p) {
+                if (c == (unsigned char)*p) { has_special = 1; break; }
+            }
+        }
+    }
+    return has_lower && has_upper && has_digit && has_special;
+}
 
-    // Test 2: Login with correct password -> true
-    bool t2 = login(&user, "alice", password);
-    printf("Test2 login with correct password: %s\n", t2 ? "true" : "false");
+int create_user(User *u, const char *email, const char *password) {
+    if (u == NULL || email == NULL || password == NULL) return ERR_INVALID_ARG;
+    memset(u, 0, sizeof(*u));
 
-    // Test 3: Change with wrong old email -> false
-    bool t3 = change_email(&user, "wrong@example.com", "newalice@example.com", password);
-    printf("Test3 change with wrong old email: %s\n", t3 ? "true" : "false");
+    if (!validate_email(email)) return ERR_INVALID_EMAIL;
+    if (!password_is_strong(password)) return ERR_WEAK_PASSWORD;
 
-    // Test 4: Change with wrong password -> false
-    bool t4 = change_email(&user, "alice@example.com", "newalice@example.com", "WrongPass!234");
-    printf("Test4 change with wrong password: %s\n", t4 ? "true" : "false");
+    int rc = generate_salt(u->salt, SALT_LEN);
+    if (rc != ERR_OK) return rc;
 
-    // Test 5: Change with correct old email and password -> true
-    bool t5 = change_email(&user, "alice@example.com", "newalice@example.com", password);
-    printf("Test5 change with correct old email and password: %s\n", t5 ? "true" : "false");
+    u->iterations = PBKDF2_ITERS;
 
-    // Zeroize password and free
-    secure_zero(password, sizeof(password));
-    user_free(&user);
+    rc = derive_key(password, u->salt, SALT_LEN, u->iterations, u->pw_hash, HASH_LEN);
+    if (rc != ERR_OK) {
+        secure_zero(u->salt, SALT_LEN);
+        secure_zero(u->pw_hash, HASH_LEN);
+        u->iterations = 0;
+        return rc;
+    }
+
+    // Store email safely
+    int n = snprintf(u->email, sizeof(u->email), "%s", email);
+    if (n < 0 || (size_t)n >= sizeof(u->email)) {
+        secure_zero(u->salt, SALT_LEN);
+        secure_zero(u->pw_hash, HASH_LEN);
+        u->iterations = 0;
+        memset(u->email, 0, sizeof(u->email));
+        return ERR_INVALID_EMAIL;
+    }
+
+    u->logged_in = 0;
+    return ERR_OK;
+}
+
+int login(User *u, const char *email, const char *password) {
+    if (u == NULL || email == NULL || password == NULL) return ERR_INVALID_ARG;
+    // Email check first
+    size_t given_len = strnlen(email, USER_EMAIL_BUF);
+    if (given_len == 0 || given_len > EMAIL_MAX) return ERR_INVALID_EMAIL;
+    if (strcmp(u->email, email) != 0) return ERR_AUTH_FAILED;
+
+    unsigned char dk[HASH_LEN];
+    int rc = derive_key(password, u->salt, SALT_LEN, u->iterations, dk, HASH_LEN);
+    if (rc != ERR_OK) {
+        secure_zero(dk, sizeof(dk));
+        return rc;
+    }
+    int same = (CRYPTO_memcmp(dk, u->pw_hash, HASH_LEN) == 0);
+    secure_zero(dk, sizeof(dk));
+    if (!same) {
+        u->logged_in = 0;
+        return ERR_AUTH_FAILED;
+    }
+    u->logged_in = 1;
+    return ERR_OK;
+}
+
+int logout(User *u) {
+    if (u == NULL) return ERR_INVALID_ARG;
+    u->logged_in = 0;
+    return ERR_OK;
+}
+
+int change_email(User *u, const char *old_email, const char *password, const char *new_email) {
+    if (u == NULL || old_email == NULL || password == NULL || new_email == NULL) return ERR_INVALID_ARG;
+    if (!u->logged_in) return ERR_NOT_LOGGED_IN;
+
+    if (strcmp(u->email, old_email) != 0) return ERR_EMAIL_MISMATCH;
+
+    unsigned char dk[HASH_LEN];
+    int rc = derive_key(password, u->salt, SALT_LEN, u->iterations, dk, HASH_LEN);
+    if (rc != ERR_OK) {
+        secure_zero(dk, sizeof(dk));
+        return rc;
+    }
+    int same = (CRYPTO_memcmp(dk, u->pw_hash, HASH_LEN) == 0);
+    secure_zero(dk, sizeof(dk));
+    if (!same) return ERR_AUTH_FAILED;
+
+    if (!validate_email(new_email)) return ERR_INVALID_EMAIL;
+    int n = snprintf(u->email, sizeof(u->email), "%s", new_email);
+    if (n < 0 || (size_t)n >= sizeof(u->email)) {
+        return ERR_INVALID_EMAIL;
+    }
+    return ERR_OK;
+}
+
+// Utility: generate a strong random password meeting the policy.
+// out_len must be >= 16 to reliably include all categories; we will use 16.
+static int generate_strong_password(char *out, size_t out_len) {
+    if (out == NULL || out_len < 16) return 0;
+    const char *lower = "abcdefghijklmnopqrstuvwxyz";
+    const char *upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char *digits = "0123456789";
+    const char *special = "!@#$%^&*()-_=+[]{};:,.?/";
+    const char *all = "abcdefghijklmnopqrstuvwxyz"
+                      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                      "0123456789"
+                      "!@#$%^&*()-_=+[]{};:,.?/";
+
+    size_t L = strlen(lower), U = strlen(upper), D = strlen(digits), S = strlen(special), A = strlen(all);
+    unsigned char rnd[64];
+    if (out_len > sizeof(rnd)) return 0;
+
+    // Ensure at least one from each category
+    if (RAND_bytes(rnd, 4) != 1) return 0;
+    out[0] = lower[rnd[0] % L];
+    out[1] = upper[rnd[1] % U];
+    out[2] = digits[rnd[2] % D];
+    out[3] = special[rnd[3] % S];
+
+    size_t idx = 4;
+    size_t remaining = out_len - 1; // leave space for NUL
+    if (remaining < 4) return 0;
+
+    remaining -= 4;
+    if (remaining > 0) {
+        if (RAND_bytes(rnd, (int)remaining) != 1) return 0;
+        for (size_t i = 0; i < remaining; i++) {
+            out[idx++] = all[rnd[i] % A];
+        }
+    }
+
+    // Simple shuffle (Fisher-Yates) to avoid predictable placement
+    size_t total_chars = out_len - 1;
+    if (RAND_bytes(rnd, (int)total_chars) != 1) return 0;
+    for (size_t i = total_chars - 1; i > 0; i--) {
+        size_t j = rnd[i] % (i + 1);
+        char tmp = out[i];
+        out[i] = out[j];
+        out[j] = tmp;
+    }
+
+    out[out_len - 1] = '\0';
+    secure_zero(rnd, sizeof(rnd));
+    return password_is_strong(out);
+}
+
+// Simple test assertion printer without leaking secrets.
+static void print_result(const char *name, int condition) {
+    printf("[TEST] %s: %s\n", name, condition ? "PASS" : "FAIL");
+}
+
+int main(void) {
+    // Test setup: create a user with a strong random password
+    User u;
+    char strong_pwd[32];
+    if (!generate_strong_password(strong_pwd, sizeof(strong_pwd))) {
+        printf("Failed to generate strong password. Aborting tests.\n");
+        return 1;
+    }
+
+    const char *initial_email = "user@example.com";
+    int rc = create_user(&u, initial_email, strong_pwd);
+    print_result("Create user with strong password", rc == ERR_OK);
+    if (rc != ERR_OK) return 1;
+
+    // Test 1: Successful login and email change with correct old email and password
+    rc = login(&u, initial_email, strong_pwd);
+    print_result("Login with correct credentials (initial email)", rc == ERR_OK);
+
+    const char *new_email_1 = "new.user@example.org";
+    int rc_change = change_email(&u, initial_email, strong_pwd, new_email_1);
+    print_result("Change email with correct old email and password", rc_change == ERR_OK);
+    int email_changed_ok = (strcmp(u.email, new_email_1) == 0);
+    print_result("Email updated verification", email_changed_ok);
+
+    // Test 2: Attempt change with wrong old email (should fail)
+    // Ensure logged in with current email
+    rc = login(&u, new_email_1, strong_pwd);
+    print_result("Re-login with updated email", rc == ERR_OK);
+    const char *wrong_old = "wrong@example.com";
+    rc_change = change_email(&u, wrong_old, strong_pwd, "another@example.net");
+    print_result("Change email with wrong old email (should fail)", rc_change == ERR_EMAIL_MISMATCH);
+    print_result("Email remains unchanged after failed attempt", strcmp(u.email, new_email_1) == 0);
+
+    // Test 3: Attempt change with wrong password (should fail)
+    rc = login(&u, new_email_1, strong_pwd);
+    print_result("Login before wrong-password change attempt", rc == ERR_OK);
+    const char *bad_pwd = "BadPassword123!";
+    rc_change = change_email(&u, new_email_1, bad_pwd, "third@example.com");
+    print_result("Change email with wrong password (should fail)", rc_change == ERR_AUTH_FAILED);
+    print_result("Email remains unchanged after wrong password attempt", strcmp(u.email, new_email_1) == 0);
+
+    // Test 4: Attempt change without being logged in (should fail)
+    rc = logout(&u);
+    print_result("Logout user", rc == ERR_OK);
+    rc_change = change_email(&u, new_email_1, strong_pwd, "logoutchange@example.com");
+    print_result("Change email while logged out (should fail)", rc_change == ERR_NOT_LOGGED_IN);
+    print_result("Email remains unchanged after logged-out attempt", strcmp(u.email, new_email_1) == 0);
+
+    // Test 5: Weak password is rejected at user creation
+    User u2;
+    const char *weak_pwd = "weakpwd";
+    rc = create_user(&u2, "weak@example.com", weak_pwd);
+    print_result("Create user with weak password (should fail)", rc == ERR_WEAK_PASSWORD);
+
+    // Clear sensitive password buffers before exit
+    secure_zero(strong_pwd, sizeof(strong_pwd));
+
     return 0;
 }
