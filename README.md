@@ -1,14 +1,16 @@
 ## Introduction
-Dataset for evaluating LLMs generated code, developed for "An Empirical Evaluation of LLM-Generated Code Security Across Prompting Methods" research paper.
+Dataset for evaluating LLMs generated code, developed for "Mitigation-Aware Prompt Engineering for Secure Code Generation" research paper.
+The current benchmark focuses on self-contained tasks at the function and file level. These tasks are designed to isolate core building blocks that frequently appear in real applications, while still being small enough to analyze systematically and at scale.
+
 
 ## Getting Started
 To get started with the project, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/mohkharma/paper2.git`
+1. Clone the repository: `git clone https://github.com/mohsystem/paper3.git`
 2. Review the prompt description files existing in the repository - dataset/promptDescription-XXX.
 3. Review the prompt description schema to understand the dataset instance attributes [directory](dataset/promptDescriptionSchema.json).
 
-
+ 
 ## Usage
 Here's a brief guide on how to use the project, inside the code_generation directory:
 
@@ -23,10 +25,9 @@ Here's a brief guide on how to use the project, inside the code_generation direc
 
 ## Generated Code and Unit Tests Repositories:
 
-- [C Language Generated Code](https://github.com/mohsystem/llm-generated-code-c-paper2)
-- [Python Generated Code](https://github.com/mohsystem/llm-generated-code-python-paper2)
-- [C++ Generated Code](https://github.com/mohsystem/llm-generated-code-cpp-paper2)
-- [Java Generated Code](https://github.com/mohsystem/llm-generated-code-java-paper2)
+- [Python Generated Code](https://github.com/mohsystem/llm-generated-code-python-paper3)
+- [Java Generated Code](https://github.com/mohsystem/llm-generated-code-java-paper3)
+- [C Language Generated Code](https://github.com/mohsystem/llm-generated-code-c-paper3)
 
 
 ## SonarQube Scanning
@@ -45,8 +46,7 @@ https://stackoverflow.com/questions/42111566/elasticsearch-in-windows-docker-ima
 https://docs.sonarsource.com/sonarqube-server/latest/analyzing-source-code/languages/c-family/running-the-analysis/
 
 ## DS Summary and results analysis
-[analysis-statistical](analysis-statistical)
-
+[sast-analysis](sast-analysis)
 [analysis-cwe-severity](analysis-cwe-severity)
 
 https://docs.google.com/spreadsheets/d/16HwGvOLxTP7EBbEPBX9tfmVBFcXTtGTtzLYPcA6K83U/edit?usp=sharing
