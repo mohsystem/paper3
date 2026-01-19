@@ -14,6 +14,7 @@ The benchmark consists of self-contained tasks at the function and file level. T
 
 2. Review the prompt description files:
    - `dataset/promptDescription-XXX`
+   - `benchmarkDS/LLMSecEval-Prompts_dataset.csv`
 
 3. Review the prompt description schema:
    - `dataset/promptDescriptionSchema.json`
@@ -45,9 +46,9 @@ A brief guide for running the pipeline from the `code_generation/` directory:
 
 Standardized, language-specific vulnerability attribution reports (SonarQube findings mapped to attribution layers and mechanisms):
 
-- `sast-analysis/c_vulnerability_analysis_standardized.xlsx`
-- `sast-analysis/Java-vulnerability_analysis_standardized.xlsx`
-- `sast-analysis/Python - vulnerability_analysis_standardized.xlsx`
+- `sast-analysis/c_vulnerability_analysis_language-aware.xlsx`
+- `sast-analysis/Java-vulnerability_analysis_language-aware.xlsx`
+- `sast-analysis/Python - vulnerability_analysis_language-aware.xlsx`
 
 ## SonarQube Scanning
 
@@ -69,7 +70,3 @@ https://docs.sonarsource.com/sonarqube-server/latest/analyzing-source-code/langu
 ## Results and Analysis
 
 - SAST outputs and standardized attribution reports: `sast-analysis/`
-- CWE and severity aggregation scripts/results: `analysis-cwe-severity/`
-
-Reference spreadsheet (overview):
-https://docs.google.com/spreadsheets/d/16HwGvOLxTP7EBbEPBX9tfmVBFcXTtGTtzLYPcA6K83U/edit?usp=sharing
