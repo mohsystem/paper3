@@ -3,8 +3,7 @@ from openai import OpenAI
 
 class DeepseekIntegration:
     def __init__(self):
-        os.environ['OPENAI_API_KEY'] = 'sk-e941d0bfbe044c928e7c8ab4e92c83e8'
-        # os.environ['OPENAI_API_KEY'] = 'sk-proj-tVYBVKignUJEbsNfZQulT3BlbkFJfKB5rof08KoYvqx0o3S8' #my account
+        os.environ['OPENAI_API_KEY'] = ''
         self.client = OpenAI()
 
     def get_completion_content(self, prompt, selected_model="deepseek-chat"):
