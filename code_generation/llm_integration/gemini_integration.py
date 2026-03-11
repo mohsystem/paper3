@@ -6,10 +6,7 @@ from google.genai import types
 class GeminiIntegration:
     def __init__(self, model_name="gemini-2.5-pro"):
         # Configure your API key
-        self.client = genai.Client(api_key="AIzaSyDGNBMVcoK_7UE1UlSLloY1RxxJ8mteecY")
-        # genai.configure(api_key="AIzaSyDGNBMVcoK_7UE1UlSLloY1RxxJ8mteecY")
-        # https://console.cloud.google.com/vertex-ai/generative/language/create/text?createType=code&project=gen-lang-client-0375481745
-        # https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models?_gl=1*x4pqgs*_ga*MTYyMTczNjUwMC4xNzE5MzE0MjQz*_ga_WH2QY8WWF5*MTcyMDIyMDU0NC44LjEuMTcyMDIyMDU0NS41OS4wLjA.&_ga=2.122733579.-1621736500.1719314243
+        self.client = genai.Client(api_key="")
         self.model_name=model_name
         # Initialize the model
         # self.model = genai.GenerativeModel(model_name)
