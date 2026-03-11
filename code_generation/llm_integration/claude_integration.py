@@ -6,7 +6,7 @@ class ClaudeIntegration:
         # https://docs.anthropic.com/en/docs/about-claude/models
         # https://console.anthropic.com/settings/plans
         self.model = model_name
-        SESSION_KEY = "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"
+        SESSION_KEY = ""
         self.client = anthropic.Anthropic(api_key=SESSION_KEY,)
 
     def generate_content(self, prompt_system, prompt_desc):
