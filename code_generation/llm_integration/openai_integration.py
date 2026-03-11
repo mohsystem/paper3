@@ -3,8 +3,7 @@ from openai import OpenAI
 
 class OpenAIIntegration:
     def __init__(self):
-        os.environ['OPENAI_API_KEY'] = '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'
-        # os.environ['OPENAI_API_KEY'] = 'sk-proj-tVYBVKignUJEbsNfZQulT3BlbkFJfKB5rof08KoYvqx0o3S8' #my account
+        os.environ['OPENAI_API_KEY'] = ''
         self.client = OpenAI()
 
     def get_completion_content(self, prompt, selected_model="gpt-4o"):
